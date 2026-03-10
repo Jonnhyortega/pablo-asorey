@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary-orange: #dda124;
+  --color-primary-hover: #b88114;
+  --color-dark-bg: #2d0b3f;
+  --color-light-bg: #f4f5f7;
+  --color-text-white: #ffffff;
+  --color-text-dark: #333333;
+  --color-text-gray: #666666;
+  
+  --font-inter: "Inter", sans-serif;
+  --font-funnel: "Funnel Display", sans-serif;
+  --font-sans: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-inter);
+    background-color: var(--color-light-bg);
+    color: var(--color-text-dark);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-funnel);
+  }
+}
