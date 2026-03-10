@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
+import prisma from "@/lib/prisma";
 
 export default async function LeadsPage() {
   const leads = await prisma.contactMessage.findMany({

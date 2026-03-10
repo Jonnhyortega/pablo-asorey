@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+export const dynamic = 'force-dynamic';
+import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { Users, MessageSquare, ArrowRight } from "lucide-react";
-
-// Instancia global de Prisma
-const prisma = new PrismaClient();
 
 export default async function AdminDashboard() {
   const [messagesCount, subscribersCount, recentMessages] = await Promise.all([
