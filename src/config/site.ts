@@ -25,7 +25,7 @@ export const siteConfig = {
   entrena: {
     watermark: "ENTRENA",
     subtitle: "ASESORIA ONLINE",
-    description: "Descubre esta modalidad en la cual podrás entrenar con un plan 100% personalizado, mejorar tus hábitos y progresá semana a semana con cambios reales y seguimiento constante.  Asesoría online para entrenar desde cualquier lugar del mundo, con un plan adaptado a tus objetivos, tu tiempo y tus materiales.",
+    description: "Descubre esta modalidad en la cual podrás entrenar con un plan 100% personalizado, mejorar tus hábitos y progresar semana a semana con cambios reales y seguimiento constante.  Asesoría online para entrenar desde cualquier lugar del mundo, con un plan adaptado a tus objetivos, tu tiempo y tus materiales.",
     ctaText: "QUIERO EMPEZAR",
   },
   

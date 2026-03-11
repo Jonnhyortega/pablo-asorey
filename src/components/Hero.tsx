@@ -21,49 +21,49 @@ export default function Hero() {
         <FadeIn direction="down" duration={1} delay={0.2} className="flex flex-col items-center w-full">
           
           {/* Subtítulo Superior con líneas doradas */}
-          <div className="flex items-center gap-4 mb-4 md:mb-6">
-              <div className="w-12 md:w-16 h-[2px] bg-[#dda124] shadow-[0_0_5px_rgba(221,161,36,0.5)]"></div>
-              <h3 className="text-white text-[10px] md:text-sm tracking-[6px] md:tracking-[8px] font-black italic drop-shadow-md whitespace-nowrap">
+          <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-6">
+              <div className="w-8 md:w-16 h-[2px] bg-[#dda124] shadow-[0_0_5px_rgba(221,161,36,0.5)]"></div>
+              <h3 className="text-white text-[9px] md:text-sm tracking-[3px] md:tracking-[8px] font-black italic drop-shadow-md whitespace-nowrap">
                   {siteConfig.hero.subtitle}
               </h3>
-              <div className="w-12 md:w-16 h-[2px] bg-[#dda124] shadow-[0_0_5px_rgba(221,161,36,0.5)]"></div>
+              <div className="w-8 md:w-16 h-[2px] bg-[#dda124] shadow-[0_0_5px_rgba(221,161,36,0.5)]"></div>
           </div>
 
           {/* GRAN TÍTULO PRINCIPAL DIVIDIDO */}
           <div className="flex flex-col items-center">
             <h1 
-                className="text-white font-black italic m-0 p-0 leading-[0.85] tracking-tight text-center drop-shadow-[5px_10px_15px_rgba(0,0,0,0.6)]"
-                style={{ fontSize: 'clamp(3rem, 14vw, 12rem)' }}
+                className="text-white font-black italic m-0 p-0 leading-[0.95] tracking-tight text-center drop-shadow-[5px_10px_15px_rgba(0,0,0,0.6)]"
+                style={{ fontSize: 'clamp(4rem, 16vw, 12rem)' }}
             >
                 PABLO
             </h1>
 
-            {/* Botón Call to Action Intercalado */}
-            <div className="my-4 md:my-6 pointer-events-auto z-50">
-              <a 
-                  href="https://wa.me/541160218709"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-[#fc581e] to-[#fb4208] text-white px-8 md:px-10 py-3 md:py-4 text-xs md:text-sm font-black italic tracking-[3px] md:tracking-[4px] rounded-[30px] shadow-[0_15px_30px_rgba(252,88,30,0.5)] hover:scale-105 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 md:gap-3 relative overflow-hidden group border-2 border-transparent hover:border-white/20"
-              >
-                  <span className="relative z-10">{siteConfig.hero.ctaText}</span>
-                  <span className="text-lg md:text-xl font-normal relative z-10 group-hover:translate-x-1 transition-transform">&rarr;</span>
-                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </a>
-            </div>
-
             <h1 
-                className="text-white font-black italic m-0 p-0 leading-[0.85] tracking-tight text-center drop-shadow-[5px_10px_15px_rgba(0,0,0,0.6)]"
-                style={{ fontSize: 'clamp(3rem, 14vw, 12rem)' }}
+                className="text-white font-black italic m-0 p-0 leading-[0.95] tracking-tight text-center drop-shadow-[5px_10px_15px_rgba(0,0,0,0.6)]"
+                style={{ fontSize: 'clamp(4rem, 16vw, 12rem)' }}
             >
                 ASOREY
             </h1>
           </div>
 
           {/* Subtítulo Inferior */}
-          <h2 className="text-gray-300 text-[10px] md:text-xs tracking-[5px] md:tracking-[7px] font-medium mt-6 md:mt-8 uppercase drop-shadow-lg opacity-90 z-20">
+          <h2 className="text-gray-300 text-[9px] md:text-xs tracking-[4px] md:tracking-[7px] font-medium mt-4 md:mt-6 uppercase drop-shadow-lg opacity-90 z-20 text-center">
               {siteConfig.hero.secondarySubtitle}
           </h2>
+
+          {/* Botón Call to Action Intercalado */}
+          <div className="mt-8 md:mt-10 pointer-events-auto z-50">
+            <a 
+                href="https://wa.me/541160218709"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gradient-to-r from-[#fc581e] to-[#fb4208] text-white px-8 md:px-10 py-3 md:py-4 text-xs md:text-sm font-black italic tracking-[3px] md:tracking-[4px] rounded-[30px] shadow-[0_15px_30px_rgba(252,88,30,0.5)] hover:scale-105 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2 md:gap-3 relative overflow-hidden group border-2 border-transparent hover:border-white/20"
+            >
+                <span className="relative z-10">{siteConfig.hero.ctaText}</span>
+                <span className="text-lg md:text-xl font-normal relative z-10 group-hover:translate-x-1 transition-transform">&rarr;</span>
+                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </a>
+          </div>
 
         </FadeIn>
       </div>
