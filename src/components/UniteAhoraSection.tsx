@@ -1,5 +1,6 @@
 import { siteConfig } from '@/config/site';
 import FadeIn from './animations/FadeIn';
+import Image from 'next/image';
 
 export default function UniteAhoraSection() {
   const { uniteAhora, planes } = siteConfig;
@@ -9,10 +10,17 @@ export default function UniteAhoraSection() {
     <section className="relative w-full min-h-[50vh] md:min-h-[60vh] flex items-center justify-center my-20 overflow-hidden 
       [clip-path:polygon(0_10%,100%_0%,100%_90%,0%_100%)] md:[clip-path:polygon(0_15%,100%_0%,100%_85%,0%_100%)]">
       
-      <div 
-        className="absolute inset-0 w-full h-full z-0 bg-cover bg-center bg-fixed bg-no-repeat transition-transform duration-[10s] hover:scale-105"
-        style={{ backgroundImage: `url(${uniteAhora.image})` }}
-      >
+      <div className="absolute inset-0 w-full h-full z-0">
+        {/* Usamos next/image que maneja mejor la carga en iOS y eliminamos animations de hardware acceleration problematicas en Safari */}
+        <div className="absolute inset-0 md:fixed w-full h-full -z-10">
+          <Image 
+            src={uniteAhora.image}
+            alt={uniteAhora.title}
+            fill
+            className="object-cover object-center"
+            priority
+          />
+        </div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.3)_0%,rgba(0,0,0,0.8)_100%)] z-10"></div>
       </div>
       
