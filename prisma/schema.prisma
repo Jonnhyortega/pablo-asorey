@@ -35,3 +35,23 @@ model ContactMessage {
   createdAt DateTime @default(now())
   read      Boolean  @default(false)
 }
+
+model Student {
+  id               String   @id @default(cuid())
+  name             String
+  email            String?
+  whatsapp         String
+  trainingDays     String
+  sessionDuration  String
+  age              Int
+  height           Float
+  weight           Float
+  sportsExperience String
+  injuries         String
+  lastTraining     String
+  goals            String
+  gym              String
+  photos           String   // JSON string of photo URLs
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}

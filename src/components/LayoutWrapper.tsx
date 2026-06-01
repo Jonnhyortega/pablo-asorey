@@ -8,6 +8,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdminPath = pathname?.startsWith("/admin");
+  const isStudentPath = pathname?.startsWith("/student");
 
   if (isAdminPath) {
     return <>{children}</>;
@@ -15,12 +16,12 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   return (
     <>
-      <Navbar />
+      {!isStudentPath && <Navbar />}
       <main className="flex-grow">
         {children}
       </main>
-      <Footer />
-      <FloatingWhatsApp />
+      {!isStudentPath && <Footer />}
+      {!isStudentPath && <FloatingWhatsApp />}
     </>
   );
 }
