@@ -10,6 +10,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const {
       name,
       email,
+      whatsapp,
       trainingDays,
       sessionDuration,
       age,
@@ -28,6 +29,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       data: {
         name,
         email,
+        whatsapp,
         trainingDays,
         sessionDuration,
         age: Number(age),

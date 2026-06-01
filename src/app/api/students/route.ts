@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     const {
       name,
       email,
+      whatsapp,
       trainingDays,
       sessionDuration,
       age,
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
       data: {
         name,
         email,
+        whatsapp,
         trainingDays,
         sessionDuration,
         age: Number(age),
