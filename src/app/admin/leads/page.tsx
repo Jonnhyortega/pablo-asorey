@@ -15,7 +15,7 @@ export default async function LeadsPage() {
         </h2>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
         {leads.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
             No tienes mensajes en la bandeja de entrada.

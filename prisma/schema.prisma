@@ -15,7 +15,8 @@ model User {
   email     String   @unique
   password  String
   name      String?
-  role      String   @default("USER") // USER, ADMIN
+  role      String   @default("USER") // USER, ADMIN, STUDENT
+  student   Student?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -38,6 +39,8 @@ model ContactMessage {
 
 model Student {
   id               String   @id @default(cuid())
+  userId           String?  @unique
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
   email            String?
   whatsapp         String   @default("")
@@ -52,6 +55,48 @@ model Student {
   goals            String
   gym              String
   photos           String   // JSON string of photo URLs
+  paymentDate      DateTime?
+  paymentStatus    String   @default("UP_TO_DATE") // UP_TO_DATE, PENDING, OVERDUE
+  generatedPassword String?
+  routines         Routine[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model Routine {
+  id        String       @id @default(cuid())
+  studentId String
+  student   Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
+  days      RoutineDay[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model RoutineDay {
+  id          String     @id @default(cuid())
+  routineId   String
+  routine     Routine    @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  dayName     String
+  order       Int
+  completedAt DateTime?
+  exercises   Exercise[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Exercise {
+  id           String     @id @default(cuid())
+  routineDayId String
+  routineDay   RoutineDay @relation(fields: [routineDayId], references: [id], onDelete: Cascade)
+  name         String
+  sets_reps    String
+  rest         String
+  weight       String     @default("")
+  observations String     @default("")
+  videoUrl     String     @default("")
+  isCompleted  Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }

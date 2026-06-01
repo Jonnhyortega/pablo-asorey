@@ -1,333 +1,476 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, X, CheckCircle, Loader2, Camera, Dumbbell, Clock, Activity, Target, ShieldAlert } from "lucide-react";
-import Link from "next/link";
+import { LogOut, Calendar, Activity, Dumbbell, Wallet, CheckCircle, ChevronDown, ChevronUp, PlaySquare, Loader2, Save, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-export default function StudentForm() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    trainingDays: "",
-    sessionDuration: "",
-    age: "",
-    height: "",
-    weight: "",
-    sportsExperience: "",
-    injuries: "",
-    lastTraining: "",
-    goals: "",
-    gym: "",
-  });
+export default function StudentDashboard() {
+  const [student, setStudent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [expandedDayId, setExpandedDayId] = useState<string | null>(null);
+  const [expandedCompletedDayId, setExpandedCompletedDayId] = useState<string | null>(null);
+  const [exerciseEdits, setExerciseEdits] = useState<{ [key: string]: { weight: string, observations: string, isCompleted: boolean } }>({});
+  
+  // Overlay state
+  const [completingDayId, setCompletingDayId] = useState<string | null>(null);
+  const [completionDate, setCompletionDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [saving, setSaving] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
 
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [error, setError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const getEmbedUrl = (url: string) => {
+    if (!url) return "";
+    try {
+      if (url.includes("youtube.com/watch")) {
+        const videoId = new URL(url).searchParams.get("v");
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      if (url.includes("youtu.be/")) {
+        const videoId = url.split("youtu.be/")[1]?.split("?")[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      if (url.includes("youtube.com/shorts/")) {
+        const videoId = url.split("youtube.com/shorts/")[1]?.split("?")[0];
+        return `https://www.youtube.com/embed/${videoId}`;
+      }
+      // Convertir url normal de embed de instagram u otros
+      return url;
+    } catch(e) {
+      return url;
+    }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const router = useRouter();
 
-    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
-    const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default"; // Usually a default preset if not configured
+  useEffect(() => {
+    fetchMe();
+  }, []);
 
-    if (!CLOUD_NAME) {
-      setError("Por favor, configura tu NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME y NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET en el archivo .env.local para subir fotos.");
-      return;
+  // Save edits to localStorage automatically
+  useEffect(() => {
+    if (student && Object.keys(exerciseEdits).length > 0) {
+      localStorage.setItem(`student_edits_${student.id}`, JSON.stringify(exerciseEdits));
     }
+  }, [exerciseEdits, student]);
 
-    setIsUploading(true);
-    setError("");
-
+  const fetchMe = async () => {
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", UPLOAD_PRESET);
+      const res = await fetch("/api/students/me");
+      if (!res.ok) {
+        if (res.status === 401) router.push("/login");
+        return;
+      }
+      const data = await res.json();
+      setStudent(data);
+      
+      // Initialize local state for exercise inputs
+      const initialEdits: any = {};
+      const savedLocal = localStorage.getItem(`student_edits_${data.id}`);
+      let localEdits: any = {};
+      if (savedLocal) {
+        try {
+          localEdits = JSON.parse(savedLocal);
+        } catch(e) {}
+      }
 
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-          method: "POST",
-          body: formData,
+      data.routines.forEach((r: any) => {
+        r.days.forEach((d: any) => {
+          d.exercises.forEach((ex: any) => {
+            const localEx = localEdits[ex.id];
+            initialEdits[ex.id] = { 
+              weight: localEx?.weight !== undefined ? localEx.weight : (ex.weight || ""), 
+              observations: localEx?.observations !== undefined ? localEx.observations : (ex.observations || ""),
+              isCompleted: localEx?.isCompleted !== undefined ? localEx.isCompleted : (ex.isCompleted || false)
+            };
+          });
         });
-
-        if (!response.ok) {
-          throw new Error("Failed to upload image");
-        }
-
-        const data = await response.json();
-        return data.secure_url;
       });
-
-      const uploadedUrls = await Promise.all(uploadPromises);
-      setPhotos((prev) => [...prev, ...uploadedUrls]);
+      setExerciseEdits(initialEdits);
     } catch (err) {
       console.error(err);
-      setError("Hubo un error al subir las imágenes. Revisa que tu Cloud Name y Upload Preset de Cloudinary sean correctos y permitan uploads sin firma.");
     } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setLoading(false);
     }
   };
 
-  const removePhoto = (indexToRemove: number) => {
-    setPhotos((prev) => prev.filter((_, index) => index !== indexToRemove));
+  const handleLogout = async () => {
+    // Para simplificar, simplemente borramos el cookie mediante redirección o llamada a API
+    document.cookie = "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    router.push("/login");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError("");
+  const handleExerciseChange = (exId: string, field: 'weight' | 'observations' | 'isCompleted', value: any) => {
+    setExerciseEdits(prev => ({
+      ...prev,
+      [exId]: { ...prev[exId], [field]: value }
+    }));
+  };
+
+  const handleCompleteDay = async () => {
+    if (!completingDayId) return;
+    setSaving(true);
+    
+    // Buscar los ejercicios del día
+    let exercisesToUpdate = [];
+    for (const routine of student.routines) {
+      const day = routine.days.find((d: any) => d.id === completingDayId);
+      if (day) {
+        exercisesToUpdate = day.exercises.map((ex: any) => ({
+          id: ex.id,
+          weight: exerciseEdits[ex.id]?.weight,
+          observations: exerciseEdits[ex.id]?.observations,
+          isCompleted: exerciseEdits[ex.id]?.isCompleted
+        }));
+        break;
+      }
+    }
 
     try {
-      const response = await fetch("/api/students", {
-        method: "POST",
+      const res = await fetch(`/api/routines/days/${completingDayId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, photos }),
+        body: JSON.stringify({
+          completedAt: completionDate,
+          exercises: exercisesToUpdate
+        })
       });
-
-      if (!response.ok) throw new Error("Error submitting form");
-
-      setSubmitSuccess(true);
+      if (res.ok) {
+        setCompletingDayId(null);
+        fetchMe(); // Recargar datos
+      }
     } catch (err) {
       console.error(err);
-      setError("Ocurrió un error al enviar el formulario. Intenta de nuevo.");
     } finally {
-      setIsSubmitting(false);
+      setSaving(false);
     }
   };
 
-  if (submitSuccess) {
-    return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-white">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl"
-        >
-          <CheckCircle className="w-20 h-20 text-emerald-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold mb-4">¡Formulario Enviado!</h2>
-          <p className="text-neutral-400 mb-8">
-            Tus datos han sido registrados correctamente. Pronto nos pondremos en contacto contigo para comenzar a entrenar.
-          </p>
-          <Link href="/" className="inline-block bg-white text-black font-semibold py-3 px-8 rounded-full hover:bg-neutral-200 transition-colors">
-            Volver al inicio
-          </Link>
-        </motion.div>
-      </div>
-    );
+  if (loading) {
+    return <div className="min-h-screen bg-neutral-950 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-blue-500" /></div>;
   }
 
+  if (!student) return <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-white">Estudiante no encontrado</div>;
+
+  // Separar días pendientes y completados de la rutina actual y anteriores
+  let pendingDays: any[] = [];
+  let completedDays: any[] = [];
+  
+  student.routines.forEach((routine: any) => {
+    routine.days.forEach((day: any) => {
+      const dayWithRoutineInfo = { ...day, routineDates: `${new Date(routine.startDate).toLocaleDateString()} al ${new Date(routine.endDate).toLocaleDateString()}` };
+      if (day.completedAt) {
+        completedDays.push(dayWithRoutineInfo);
+      } else {
+        pendingDays.push(dayWithRoutineInfo);
+      }
+    });
+  });
+
+  // Ordenar completados por fecha de completado (descendente, más reciente primero)
+  completedDays.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+
   return (
-    <div className="min-h-screen bg-neutral-950 text-white py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-              Comenzá tu <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Transformación</span>
-            </h1>
-            <p className="text-neutral-400 text-lg max-w-2xl mx-auto">
-              Completá este formulario para conocerte mejor y diseñar un plan de entrenamiento 100% adaptado a tus objetivos y necesidades.
+    <div className="min-h-screen bg-neutral-950 text-white font-sans pb-12">
+      {/* Header */}
+      <header className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-xl font-bold">
+              {student.name.charAt(0)}
+            </div>
+            <div>
+              <h1 className="font-bold text-lg leading-tight">Hola, {student.name.split(' ')[0]}</h1>
+              <p className="text-xs text-neutral-400">Panel de Entrenamiento</p>
+            </div>
+          </div>
+          <button onClick={handleLogout} className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        
+        {/* Resumen y Pagos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <Activity className="w-5 h-5 text-blue-400" />
+              <h3 className="font-semibold text-neutral-300">Tus Datos</h3>
+            </div>
+            <p className="text-2xl font-bold">{student.weight} kg</p>
+            <p className="text-sm text-neutral-400 mt-1">Meta: {student.goals.length > 30 ? student.goals.substring(0, 30) + '...' : student.goals}</p>
+          </div>
+          
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <Wallet className={`w-5 h-5 ${student.paymentStatus === 'UP_TO_DATE' ? 'text-emerald-400' : student.paymentStatus === 'OVERDUE' ? 'text-red-400' : 'text-orange-400'}`} />
+              <h3 className="font-semibold text-neutral-300">Estado de Cuota</h3>
+            </div>
+            <p className={`text-xl font-bold ${student.paymentStatus === 'UP_TO_DATE' ? 'text-emerald-400' : student.paymentStatus === 'OVERDUE' ? 'text-red-400' : 'text-orange-400'}`}>
+              {student.paymentStatus === 'UP_TO_DATE' ? 'Al Día' : student.paymentStatus === 'OVERDUE' ? 'Deuda' : 'Pendiente'}
             </p>
-          </motion.div>
+            {student.paymentDate && <p className="text-sm text-neutral-400 mt-1">Vence: {new Date(student.paymentDate).toLocaleDateString()}</p>}
+          </div>
+
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <CheckCircle className="w-5 h-5 text-purple-400" />
+              <h3 className="font-semibold text-neutral-300">Progreso</h3>
+            </div>
+            <p className="text-2xl font-bold">{completedDays.length}</p>
+            <p className="text-sm text-neutral-400 mt-1">Sesiones completadas</p>
+          </div>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-neutral-900/50 backdrop-blur-xl border border-neutral-800 rounded-lg p-6 sm:p-10 shadow-2xl"
-        >
-          <form onSubmit={handleSubmit} className="space-y-8">
-            
-            {/* Datos Personales */}
-            <section className="space-y-6">
-              <h2 className="text-2xl font-bold border-b border-neutral-800 pb-2 flex items-center gap-2">
-                <Activity className="w-6 h-6 text-blue-400" />
-                Datos Personales
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Nombre Completo</label>
-                  <input required name="name" value={formData.name} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Ej: Juan Pérez" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Email (Opcional)</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="ejemplo@correo.com" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Edad</label>
-                  <input required type="number" name="age" value={formData.age} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Años" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Altura (cm)</label>
-                  <input required type="number" name="height" value={formData.height} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Ej: 175" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium text-neutral-300">Peso aproximado (kg)</label>
-                  <input required type="number" name="weight" value={formData.weight} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Ej: 70" />
-                </div>
+        {/* Próximas Rutinas */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Dumbbell className="w-6 h-6 text-emerald-400" />
+            <h2 className="text-xl font-bold">Próximos Entrenamientos</h2>
+          </div>
+          
+          <div className="space-y-4">
+            {pendingDays.length === 0 ? (
+              <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500">
+                <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No tienes rutinas pendientes. ¡Buen trabajo!</p>
               </div>
-            </section>
-
-            {/* Entrenamiento */}
-            <section className="space-y-6">
-              <h2 className="text-2xl font-bold border-b border-neutral-800 pb-2 flex items-center gap-2 mt-8">
-                <Dumbbell className="w-6 h-6 text-emerald-400" />
-                Preferencias de Entrenamiento
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">¿Cuántos días querés entrenar por semana?</label>
-                  <select required name="trainingDays" value={formData.trainingDays} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white appearance-none">
-                    <option value="" disabled>Selecciona una opción</option>
-                    {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                      <option key={num} value={`${num} día${num > 1 ? 's' : ''}`}>{num} día{num > 1 ? 's' : ''}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">¿Cuánto tiempo querés que dure cada sesión?</label>
-                  <select required name="sessionDuration" value={formData.sessionDuration} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white appearance-none">
-                    <option value="" disabled>Selecciona una opción</option>
-                    <option value="1hs">1 hora</option>
-                    <option value="2hs">2 horas</option>
-                    <option value="3hs">3 horas</option>
-                    <option value="Mas horas">Más de 3 horas</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300">Experiencia en deportes</label>
-                <textarea required name="sportsExperience" value={formData.sportsExperience} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="¿Qué deportes practicaste y por cuánto tiempo?" />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-red-400" />
-                  Lesiones y/o cirugías
-                </label>
-                <textarea required name="injuries" value={formData.injuries} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="Detalla cualquier lesión o cirugía relevante para tu entrenamiento" />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-orange-400" />
-                  Último entrenamiento (¿cuándo fue y qué hiciste?)
-                </label>
-                <textarea required name="lastTraining" value={formData.lastTraining} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="Cuentanos sobre tu última sesión de entrenamiento..." />
-              </div>
-            </section>
-
-            {/* Objetivos y Entorno */}
-            <section className="space-y-6">
-              <h2 className="text-2xl font-bold border-b border-neutral-800 pb-2 flex items-center gap-2 mt-8">
-                <Target className="w-6 h-6 text-purple-400" />
-                Objetivos y Entorno
-              </h2>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300">Objetivos</label>
-                <textarea required name="goals" value={formData.goals} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="¿Qué esperas lograr con este entrenamiento? (Ej: Perder peso, ganar masa muscular, mejorar rendimiento)" />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300">Gimnasio en donde entrenás / entrenarías</label>
-                <textarea required name="gym" value={formData.gym} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="Describe el gimnasio o los materiales que tienes disponibles en casa." />
-              </div>
-
-              {/* Upload de Fotos */}
-              <div className="space-y-4 pt-4">
-                <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-neutral-400" />
-                  Fotos y videos del gym o materiales (Opcional)
-                </label>
-                
-                <div className="flex flex-wrap gap-4">
-                  <AnimatePresence>
-                    {photos.map((url, idx) => (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        key={idx} 
-                        className="relative w-24 h-24 rounded-xl overflow-hidden border border-neutral-700 group"
-                      >
-                        <img src={url} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removePhoto(idx)}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                        >
-                          <X className="text-white w-6 h-6" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="w-24 h-24 rounded-xl border-2 border-dashed border-neutral-700 flex flex-col items-center justify-center text-neutral-500 hover:text-white hover:border-neutral-500 transition-colors bg-neutral-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            ) : (
+              pendingDays.map((day) => (
+                <div key={day.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden transition-all shadow-lg hover:border-neutral-700">
+                  <button 
+                    onClick={() => setExpandedDayId(expandedDayId === day.id ? null : day.id)}
+                    className="w-full flex justify-between items-center p-5 text-left focus:outline-none"
                   >
-                    {isUploading ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : (
-                      <>
-                        <Upload className="w-6 h-6 mb-1" />
-                        <span className="text-xs">Subir</span>
-                      </>
-                    )}
+                    <div>
+                      <h3 className="font-bold text-lg text-white">{day.dayName}</h3>
+                      <p className="text-xs text-neutral-400 mt-1">Rutina: {day.routineDates}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400">{day.exercises.length} Ejercicios</span>
+                      {expandedDayId === day.id ? <ChevronUp className="w-5 h-5 text-neutral-400" /> : <ChevronDown className="w-5 h-5 text-neutral-400" />}
+                    </div>
                   </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    multiple
-                    accept="image/*,video/*"
-                    className="hidden"
-                  />
+
+                  <AnimatePresence>
+                    {expandedDayId === day.id && (
+                      <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
+                        <div className="p-5 pt-0 border-t border-neutral-800 space-y-4 mt-2">
+                          {day.exercises.map((ex: any) => (
+                            <div key={ex.id} className="bg-neutral-950 border border-neutral-800 rounded-xl p-4">
+                              <div className="flex justify-between items-start gap-3 mb-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start gap-2 mb-1.5">
+                                    <input 
+                                      type="checkbox" 
+                                      className="w-4 h-4 rounded border-neutral-700 text-emerald-500 focus:ring-emerald-500 bg-neutral-900 cursor-pointer mt-1 shrink-0"
+                                      checked={exerciseEdits[ex.id]?.isCompleted || false}
+                                      onChange={(e) => handleExerciseChange(ex.id, 'isCompleted', e.target.checked)}
+                                    />
+                                    <h4 className={`font-bold text-base transition-colors leading-tight break-words ${exerciseEdits[ex.id]?.isCompleted ? 'text-neutral-500 line-through' : 'text-white'}`}>{ex.name}</h4>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-neutral-400 pl-6">
+                                    <span className="text-purple-400 break-words max-w-full">{ex.sets_reps}</span>
+                                    <span className="text-neutral-600">•</span>
+                                    <span className="break-words max-w-full">Descanso: {ex.rest}</span>
+                                  </div>
+                                </div>
+                                {ex.videoUrl && (
+                                  <button 
+                                    onClick={() => setSelectedVideoUrl(ex.videoUrl)}
+                                    className="shrink-0 text-blue-400 hover:text-blue-300 flex items-center gap-1.5 bg-blue-500/10 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors mt-0.5">
+                                    <PlaySquare className="w-3.5 h-3.5" /> Ver Video
+                                  </button>
+                                )}
+                              </div>
+                              
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-neutral-800">
+                                <div>
+                                  <label className="block text-xs font-medium text-neutral-500 mb-1">Peso utilizado</label>
+                                  <input 
+                                    type="text" 
+                                    placeholder="Ej: 20kg por lado"
+                                    value={exerciseEdits[ex.id]?.weight || ""}
+                                    onChange={(e) => handleExerciseChange(ex.id, 'weight', e.target.value)}
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-neutral-600"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-neutral-500 mb-1">Observaciones</label>
+                                  <input 
+                                    type="text" 
+                                    placeholder="Ej: Costó la última serie"
+                                    value={exerciseEdits[ex.id]?.observations || ""}
+                                    onChange={(e) => handleExerciseChange(ex.id, 'observations', e.target.value)}
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-neutral-600"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          <button 
+                            onClick={() => setCompletingDayId(day.id)}
+                            className="w-full mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/20"
+                          >
+                            <CheckCircle className="w-5 h-5" />
+                            Marcar Día como Realizado
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
-            </section>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm">
-                {error}
-              </div>
+              ))
             )}
+          </div>
+        </section>
 
-            <div className="pt-6">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center disabled:opacity-70 shadow-lg shadow-blue-900/20"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Enviando...
-                  </span>
-                ) : (
-                  "Enviar Formulario"
-                )}
-              </button>
+        {/* Historial de Rutinas Realizadas */}
+        {completedDays.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="w-6 h-6 text-blue-400" />
+              <h2 className="text-xl font-bold">Rutinas Realizadas</h2>
             </div>
-          </form>
-        </motion.div>
-      </div>
+            
+            <div className="space-y-3">
+              {completedDays.map((day) => (
+                <div key={day.id} className="bg-neutral-900/60 border border-neutral-800 rounded-xl overflow-hidden transition-all">
+                  <button 
+                    onClick={() => setExpandedCompletedDayId(expandedCompletedDayId === day.id ? null : day.id)}
+                    className="w-full flex justify-between items-center p-4 text-left focus:outline-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                        <CheckCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base text-white">{day.dayName}</h3>
+                        <p className="text-xs text-neutral-400 mt-0.5">Realizado el: {new Date(day.completedAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    {expandedCompletedDayId === day.id ? <ChevronUp className="w-5 h-5 text-neutral-500" /> : <ChevronDown className="w-5 h-5 text-neutral-500" />}
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedCompletedDayId === day.id && (
+                      <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
+                        <div className="p-4 pt-0 border-t border-neutral-800/50 space-y-3 mt-2">
+                          {day.exercises.map((ex: any) => (
+                            <div key={ex.id} className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-3 text-sm">
+                              <div className="flex items-center gap-2 mb-1">
+                                {ex.isCompleted ? (
+                                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                ) : (
+                                  <div className="w-4 h-4 rounded-full border-2 border-neutral-600 flex items-center justify-center">
+                                    <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full"></div>
+                                  </div>
+                                )}
+                                <h4 className={`font-bold ${ex.isCompleted ? 'text-neutral-300' : 'text-neutral-500'}`}>{ex.name}</h4>
+                              </div>
+                              <p className="text-xs text-neutral-500 mb-2 pl-6">{ex.sets_reps}</p>
+                              {(ex.weight || ex.observations) ? (
+                                <div className="flex flex-wrap gap-4 mt-2 pt-2 border-t border-neutral-800/50">
+                                  {ex.weight && <div className="text-neutral-400"><span className="text-neutral-500">Peso:</span> {ex.weight}</div>}
+                                  {ex.observations && <div className="text-neutral-400"><span className="text-neutral-500">Obs:</span> {ex.observations}</div>}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-neutral-600 italic mt-2 block pt-2 border-t border-neutral-800/50">Sin notas de peso o observaciones</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+
+      {/* Overlay de Confirmación de Fecha */}
+      <AnimatePresence>
+        {completingDayId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setCompletingDayId(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4">
+                <CheckCircle className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">¡Día Completado!</h2>
+              <p className="text-sm text-neutral-400 mb-6">Selecciona qué día realizaste esta rutina.</p>
+              
+              <div className="w-full text-left mb-6">
+                <label className="block text-sm font-medium text-neutral-300 mb-2">Fecha de realización</label>
+                <input 
+                  type="date" 
+                  value={completionDate}
+                  onChange={(e) => setCompletionDate(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                />
+              </div>
+
+              <div className="w-full flex gap-3">
+                <button 
+                  onClick={() => setCompletingDayId(null)}
+                  className="flex-1 py-3 text-neutral-400 font-medium hover:bg-neutral-800 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleCompleteDay}
+                  disabled={saving}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlay de Video */}
+      <AnimatePresence>
+        {selectedVideoUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+              onClick={() => setSelectedVideoUrl(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-4xl aspect-video bg-neutral-900 rounded-xl overflow-hidden shadow-2xl z-10"
+            >
+              <button 
+                onClick={() => setSelectedVideoUrl(null)}
+                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full z-20 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <iframe
+                src={getEmbedUrl(selectedVideoUrl)}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

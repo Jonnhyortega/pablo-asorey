@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GraduationCap, Search, Calendar, Target, Activity, Dumbbell, ShieldAlert, Clock, Loader2, X, Edit2, Trash2 } from "lucide-react";
+import { GraduationCap, Search, Calendar, Target, Activity, Dumbbell, ShieldAlert, Clock, Loader2, X, Edit2, Trash2, Key, Wallet, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 type Student = {
   id: string;
@@ -19,6 +20,9 @@ type Student = {
   goals: string;
   gym: string;
   photos: string; // JSON string
+  paymentDate: string | null;
+  paymentStatus: string;
+  generatedPassword: string | null;
   createdAt: string;
 };
 
@@ -68,18 +72,18 @@ export default function AdminStudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 gap-4">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-purple-100 text-purple-600 rounded-xl">
             <GraduationCap className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Alumnos</h1>
-            <p className="text-gray-500 text-sm">Gestiona los formularios de registro de nuevos alumnos</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Alumnos</h1>
+            <p className="text-gray-500 text-xs sm:text-sm">Gestiona los formularios de registro de nuevos alumnos</p>
           </div>
         </div>
         
-        <div className="relative w-72">
+        <div className="relative w-full sm:w-72">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-gray-400" />
           </div>
@@ -155,11 +159,14 @@ function StudentCard({ student, onEdit, onDelete }: { student: Student; onEdit: 
           <h3 className="text-xl font-bold text-gray-800">{student.name}</h3>
           {student.email && <p className="text-sm text-gray-500">{student.email}</p>}
         </div>
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={onEdit} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+        <div className="flex gap-2">
+          <Link href={`/admin/students/${student.id}/routines`} className="p-2 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors flex items-center gap-1" title="Cargar Rutina">
+            <Dumbbell className="w-4 h-4" />
+          </Link>
+          <button onClick={onEdit} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors" title="Editar Alumno">
             <Edit2 className="w-4 h-4" />
           </button>
-          <button onClick={onDelete} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <button onClick={onDelete} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors" title="Eliminar">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
@@ -205,6 +212,26 @@ function StudentCard({ student, onEdit, onDelete }: { student: Student; onEdit: 
             )}
           </div>
         )}
+
+        <div className="pt-2">
+           <div className="flex items-center gap-2 mb-2">
+             <Wallet className={`w-4 h-4 ${student.paymentStatus === 'UP_TO_DATE' ? 'text-emerald-500' : student.paymentStatus === 'OVERDUE' ? 'text-red-500' : 'text-orange-500'}`} />
+             <span className={`text-xs font-semibold ${student.paymentStatus === 'UP_TO_DATE' ? 'text-emerald-600' : student.paymentStatus === 'OVERDUE' ? 'text-red-600' : 'text-orange-600'}`}>
+               {student.paymentStatus === 'UP_TO_DATE' ? 'Al Día' : student.paymentStatus === 'OVERDUE' ? 'Deuda' : 'Pendiente'}
+             </span>
+             {student.paymentDate && <span className="text-xs text-gray-400">• Vence: {new Date(student.paymentDate).toLocaleDateString()}</span>}
+           </div>
+           
+           {student.generatedPassword && (
+             <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
+               <Key className="w-4 h-4 text-gray-400" />
+               <div className="flex flex-col">
+                 <span className="text-[10px] text-gray-400 font-medium uppercase">Clave Temporal</span>
+                 <span className="text-xs font-mono text-gray-700 font-bold">{student.generatedPassword}</span>
+               </div>
+             </div>
+           )}
+        </div>
       </div>
       
       <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-400">
@@ -296,6 +323,18 @@ function EditStudentModal({ student, onClose, onSave }: { student: Student; onCl
                   <option value="3hs">3 horas</option>
                   <option value="Mas horas">Más horas</option>
                 </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-gray-700">Estado de Pago</label>
+                <select required value={formData.paymentStatus} onChange={e => setFormData({...formData, paymentStatus: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                  <option value="UP_TO_DATE">Al Día</option>
+                  <option value="PENDING">Pendiente</option>
+                  <option value="OVERDUE">Atrasado / Deuda</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-gray-700">Fecha de Vencimiento de Pago</label>
+                <input type="date" value={formData.paymentDate ? new Date(formData.paymentDate).toISOString().split('T')[0] : ''} onChange={e => setFormData({...formData, paymentDate: e.target.value ? new Date(e.target.value).toISOString() : null})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
               </div>
             </div>
 

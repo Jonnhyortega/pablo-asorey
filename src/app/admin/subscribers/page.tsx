@@ -15,7 +15,7 @@ export default async function SubscribersPage() {
         </h2>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
         {subscribers.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
             Nadie se ha suscrito a tu newsletter por el momento.

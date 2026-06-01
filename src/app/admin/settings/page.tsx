@@ -44,7 +44,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <h3 className="text-xl font-bold text-gray-700 border-b pb-2 mb-4">Datos de Contacto</h3>
           

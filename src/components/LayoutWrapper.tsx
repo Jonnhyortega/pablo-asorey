@@ -9,19 +9,22 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const isAdminPath = pathname?.startsWith("/admin");
   const isStudentPath = pathname?.startsWith("/student");
+  const isLoginPath = pathname?.startsWith("/login");
 
   if (isAdminPath) {
     return <>{children}</>;
   }
 
+  const hideUiElements = isStudentPath || isLoginPath;
+
   return (
     <>
-      {!isStudentPath && <Navbar />}
+      {!hideUiElements && <Navbar />}
       <main className="flex-grow">
         {children}
       </main>
-      {!isStudentPath && <Footer />}
-      {!isStudentPath && <FloatingWhatsApp />}
+      {!hideUiElements && <Footer />}
+      {!hideUiElements && <FloatingWhatsApp />}
     </>
   );
 }

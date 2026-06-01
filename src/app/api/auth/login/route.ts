@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secreto-cambiar-en-produccio
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const { email, password, rememberMe } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -19,9 +19,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Buscamos al usuario en la base de datos
+    // Buscamos al usuario en la base de datos (normalizando el email)
+    const normalizedEmail = email.toLowerCase();
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (!user) {
@@ -43,27 +44,25 @@ export async function POST(request: Request) {
 
     // Generamos el token JWT
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user.id, userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: rememberMe ? '30d' : '1d' }
     );
 
-    // Creamos una respuesta configurando también la cookie del token para manejo de sesión más fácil
-    const response = NextResponse.json({
-      message: 'Login exitoso',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      }
-    }, { status: 200 });
+    // 5. Configurar la respuesta con la cookie
+    const response = NextResponse.json(
+      { message: "Login exitoso", user: { id: user.id, name: user.name, role: user.role } },
+      { status: 200 }
+    );
+
+    const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24; // 30 días o 1 día
 
     response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 // 1 dia
+      sameSite: 'lax',
+      path: '/',
+      maxAge: maxAge,
     });
 
     return response;
