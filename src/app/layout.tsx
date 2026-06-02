@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
+import { Inter, Funnel_Display } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import { siteConfig } from "@/config/site";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const funnel = Funnel_Display({ subsets: ["latin"], variable: "--font-funnel" });
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} | ${siteConfig.subtitle}`,
@@ -35,17 +39,21 @@ export const metadata: Metadata = {
   },
 };
 
+import { ThemeProvider } from "@/components/ThemeProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className="flex flex-col min-h-screen">
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
+    <html lang="es" suppressHydrationWarning className={`${inter.variable} ${funnel.variable}`}>
+      <body className="flex flex-col min-h-screen bg-white dark:bg-[#0f0f13] text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

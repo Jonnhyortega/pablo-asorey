@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Inter:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   --color-primary-orange: #dda124;
@@ -10,14 +11,12 @@
   --color-text-dark: #333333;
   --color-text-gray: #666666;
   
-  --font-inter: "Inter", sans-serif;
-  --font-funnel: "Funnel Display", sans-serif;
-  --font-sans: "Inter", sans-serif;
+  --font-sans: var(--font-inter);
 }
 
 @layer base {
   body {
-    font-family: var(--font-inter);
+    font-family: var(--font-sans);
     background-color: var(--color-light-bg);
     color: var(--color-text-dark);
   }

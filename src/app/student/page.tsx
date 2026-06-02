@@ -204,11 +204,11 @@ export default function StudentDashboard() {
           
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg">
             <div className="flex items-center gap-3 mb-2">
-              <Wallet className={`w-5 h-5 ${student.paymentStatus === 'UP_TO_DATE' ? 'text-emerald-400' : student.paymentStatus === 'OVERDUE' ? 'text-red-400' : 'text-orange-400'}`} />
+              <Wallet className={`w-5 h-5 ${!student.paymentDate ? 'text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-400' : 'text-emerald-400')}`} />
               <h3 className="font-semibold text-neutral-300">Estado de Cuota</h3>
             </div>
-            <p className={`text-xl font-bold ${student.paymentStatus === 'UP_TO_DATE' ? 'text-emerald-400' : student.paymentStatus === 'OVERDUE' ? 'text-red-400' : 'text-orange-400'}`}>
-              {student.paymentStatus === 'UP_TO_DATE' ? 'Al Día' : student.paymentStatus === 'OVERDUE' ? 'Deuda' : 'Pendiente'}
+            <p className={`text-xl font-bold ${!student.paymentDate ? 'text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-400' : 'text-emerald-400')}`}>
+              {!student.paymentDate ? 'Pendiente' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'Deuda' : 'Al Día')}
             </p>
             {student.paymentDate && <p className="text-sm text-neutral-400 mt-1">Vence: {new Date(student.paymentDate).toLocaleDateString()}</p>}
           </div>

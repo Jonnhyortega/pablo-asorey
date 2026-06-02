@@ -100,3 +100,12 @@ model Exercise {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
+
+model ExerciseLibrary {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  videoUrl  String?
+  createdAt DateTime @default(now())
+}
+
+

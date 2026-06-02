@@ -30,72 +30,72 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-gray-800">
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
           Configuración Web
         </h2>
       </div>
 
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-md">
+      <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded-r-md">
         <div className="flex gap-3">
-          <AlertCircle className="text-yellow-600 mt-0.5" size={20} />
-          <p className="text-sm text-yellow-800">
+          <AlertCircle className="text-yellow-600 dark:text-yellow-500 mt-0.5" size={20} />
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
             <strong>Panel en construcción de demostración.</strong> Aquí el administrador podrá cambiar sus datos sociales y textos clave del sitio web sin necesidad de tocar código. 
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-8">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 p-4 sm:p-8 transition-colors">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <h3 className="text-xl font-bold text-gray-700 border-b pb-2 mb-4">Datos de Contacto</h3>
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-slate-700 pb-2 mb-4">Datos de Contacto</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-600">WhatsApp (Sin '+', código de país primero)</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">WhatsApp (Sin '+', código de país primero)</label>
               <input 
                 type="text" 
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] transition-all outline-none" 
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] text-gray-900 dark:text-gray-100 transition-all outline-none" 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-600">Email Oficial</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Email Oficial</label>
               <input 
                 type="email" 
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] transition-all outline-none" 
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] text-gray-900 dark:text-gray-100 transition-all outline-none" 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-600">Enlace a Instagram</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Enlace a Instagram</label>
               <input 
                 type="url" 
                 value={formData.instagram}
                 onChange={(e) => setFormData({...formData, instagram: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] transition-all outline-none" 
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] text-gray-900 dark:text-gray-100 transition-all outline-none" 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-600">Enlace a YouTube</label>
+              <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Enlace a YouTube</label>
               <input 
                 type="url" 
                 value={formData.youtube}
                 onChange={(e) => setFormData({...formData, youtube: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] transition-all outline-none" 
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] text-gray-900 dark:text-gray-100 transition-all outline-none" 
               />
             </div>
           </div>
 
-          <h3 className="text-xl font-bold text-gray-700 border-b pb-2 mb-4 mt-8">Textos Clave</h3>
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-slate-700 pb-2 mb-4 mt-8">Textos Clave</h3>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-600">Eslogan / Tagline SEO (Aparece en las tarjetas al compartir url)</label>
+            <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">Eslogan / Tagline SEO (Aparece en las tarjetas al compartir url)</label>
             <textarea 
               rows={3}
               value={formData.tagline}
               onChange={(e) => setFormData({...formData, tagline: e.target.value})}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] transition-all outline-none resize-none" 
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#dda124] focus:border-[#dda124] text-gray-900 dark:text-gray-100 transition-all outline-none resize-none" 
             />
           </div>
 
