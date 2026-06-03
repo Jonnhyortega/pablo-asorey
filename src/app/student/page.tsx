@@ -2,21 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Calendar, Activity, Dumbbell, Wallet, CheckCircle, ChevronDown, ChevronUp, PlaySquare, Loader2, Save, X } from "lucide-react";
+import { LogOut, Calendar, Activity, Dumbbell, Wallet, CheckCircle, ChevronDown, ChevronUp, PlaySquare, Loader2, Save, X, Ban, Edit2, Trash2, Settings, Upload, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function StudentDashboard() {
   const [student, setStudent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [expandedDayId, setExpandedDayId] = useState<string | null>(null);
   const [expandedCompletedDayId, setExpandedCompletedDayId] = useState<string | null>(null);
-  const [exerciseEdits, setExerciseEdits] = useState<{ [key: string]: { weight: string, observations: string, isCompleted: boolean } }>({});
+  const [exerciseEdits, setExerciseEdits] = useState<{ [key: string]: { weight: string, observations: string, isCompleted: boolean, loggedSets?: any[] } }>({});
   
   // Overlay state
   const [completingDayId, setCompletingDayId] = useState<string | null>(null);
+  const [skippingDayId, setSkippingDayId] = useState<string | null>(null);
+  const [editingDateDayId, setEditingDateDayId] = useState<string | null>(null);
   const [completionDate, setCompletionDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [saving, setSaving] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
+
+  // Settings State
+  const [showSettings, setShowSettings] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [settingsForm, setSettingsForm] = useState<{weight: string, goals: string[], profilePicture: string}>({ weight: "", goals: [], profilePicture: "" });
+
+  const GOAL_OPTIONS = [
+    "Pérdida de Grasa",
+    "Aumento de Masa Muscular",
+    "Aumento de Fuerza",
+    "Mantenimiento",
+    "Recomposición Corporal",
+    "Salud y Bienestar General",
+    "Rendimiento Deportivo",
+    "Recuperación / Rehabilitación"
+  ];
 
   const getEmbedUrl = (url: string) => {
     if (!url) return "";
@@ -40,6 +60,17 @@ export default function StudentDashboard() {
     }
   };
 
+  const formatDateUTC = (dateString: string | null) => {
+    if (!dateString) return "";
+    try {
+      const datePart = typeof dateString === 'string' ? dateString.split('T')[0] : new Date(dateString).toISOString().split('T')[0];
+      const [year, month, day] = datePart.split('-');
+      return `${parseInt(day, 10)}/${parseInt(month, 10)}/${year}`;
+    } catch (e) {
+      return new Date(dateString).toLocaleDateString();
+    }
+  };
+
   const router = useRouter();
 
   useEffect(() => {
@@ -52,6 +83,20 @@ export default function StudentDashboard() {
       localStorage.setItem(`student_edits_${student.id}`, JSON.stringify(exerciseEdits));
     }
   }, [exerciseEdits, student]);
+
+  // Prevent body scroll when any modal is open
+  const isAnyModalOpen = showSettings || completingDayId || skippingDayId || editingDateDayId || selectedVideoUrl;
+  
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isAnyModalOpen]);
 
   const fetchMe = async () => {
     try {
@@ -77,10 +122,17 @@ export default function StudentDashboard() {
         r.days.forEach((d: any) => {
           d.exercises.forEach((ex: any) => {
             const localEx = localEdits[ex.id];
+            let parsedLoggedSets = [];
+            try {
+              if (localEx?.loggedSets) parsedLoggedSets = localEx.loggedSets;
+              else if (ex.loggedSets) parsedLoggedSets = JSON.parse(ex.loggedSets);
+            } catch(e) {}
+
             initialEdits[ex.id] = { 
               weight: localEx?.weight !== undefined ? localEx.weight : (ex.weight || ""), 
               observations: localEx?.observations !== undefined ? localEx.observations : (ex.observations || ""),
-              isCompleted: localEx?.isCompleted !== undefined ? localEx.isCompleted : (ex.isCompleted || false)
+              isCompleted: localEx?.isCompleted !== undefined ? localEx.isCompleted : (ex.isCompleted || false),
+              loggedSets: parsedLoggedSets
             };
           });
         });
@@ -106,6 +158,37 @@ export default function StudentDashboard() {
     }));
   };
 
+  const addSet = (exId: string) => {
+    setExerciseEdits(prev => {
+      const currentSets = prev[exId]?.loggedSets || [];
+      return {
+        ...prev,
+        [exId]: { ...prev[exId], loggedSets: [...currentSets, { reps: "", weight: "" }] }
+      };
+    });
+  };
+
+  const removeSet = (exId: string, index: number) => {
+    setExerciseEdits(prev => {
+      const currentSets = prev[exId]?.loggedSets || [];
+      return {
+        ...prev,
+        [exId]: { ...prev[exId], loggedSets: currentSets.filter((_, i) => i !== index) }
+      };
+    });
+  };
+
+  const updateSet = (exId: string, index: number, field: 'reps' | 'weight', value: string) => {
+    setExerciseEdits(prev => {
+      const currentSets = [...(prev[exId]?.loggedSets || [])];
+      currentSets[index] = { ...currentSets[index], [field]: value };
+      return {
+        ...prev,
+        [exId]: { ...prev[exId], loggedSets: currentSets }
+      };
+    });
+  };
+
   const handleCompleteDay = async () => {
     if (!completingDayId) return;
     setSaving(true);
@@ -119,8 +202,23 @@ export default function StudentDashboard() {
           id: ex.id,
           weight: exerciseEdits[ex.id]?.weight,
           observations: exerciseEdits[ex.id]?.observations,
-          isCompleted: exerciseEdits[ex.id]?.isCompleted
+          isCompleted: exerciseEdits[ex.id]?.isCompleted,
+          loggedSets: exerciseEdits[ex.id]?.loggedSets ? JSON.stringify(exerciseEdits[ex.id].loggedSets) : "[]"
         }));
+        
+        // Clean localStorage if it's a success
+        if (student) {
+          const savedLocal = localStorage.getItem(`student_edits_${student.id}`);
+          if (savedLocal) {
+            let localEdits = {};
+            try { localEdits = JSON.parse(savedLocal); } catch(e) {}
+            // Remove the exercises from this day
+            day.exercises.forEach((ex: any) => {
+              delete (localEdits as any)[ex.id];
+            });
+            localStorage.setItem(`student_edits_${student.id}`, JSON.stringify(localEdits));
+          }
+        }
         break;
       }
     }
@@ -145,6 +243,108 @@ export default function StudentDashboard() {
     }
   };
 
+  const handleSkipDay = async () => {
+    if (!skippingDayId) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/routines/days/${skippingDayId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isSkipped: true, completedAt: null })
+      });
+      if (res.ok) {
+        setSkippingDayId(null);
+        fetchMe();
+      }
+    } catch (err) { console.error(err); } finally { setSaving(false); }
+  };
+
+  const handleRevertDay = async (dayId: string) => {
+    try {
+      const res = await fetch(`/api/routines/days/${dayId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isSkipped: false, completedAt: null })
+      });
+      if (res.ok) fetchMe();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleEditDate = async () => {
+    if (!editingDateDayId) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/routines/days/${editingDateDayId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completedAt: completionDate })
+      });
+      if (res.ok) {
+        setEditingDateDayId(null);
+        fetchMe();
+      }
+    } catch (err) { console.error(err); } finally { setSaving(false); }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "";
+    const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default";
+
+    if (!CLOUD_NAME) {
+      alert("Faltan configurar las variables de entorno de Cloudinary.");
+      return;
+    }
+
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.secure_url) {
+        setSettingsForm(prev => ({ ...prev, profilePicture: data.secure_url }));
+        // Mantenemos uploadingImage en true hasta que el <img> dispare onLoad
+      } else {
+        setUploadingImage(false);
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setUploadingImage(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const payload = {
+        weight: settingsForm.weight,
+        goals: settingsForm.goals.join(', '),
+        profilePicture: settingsForm.profilePicture
+      };
+      const res = await fetch("/api/students/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        setShowSettings(false);
+        fetchMe();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-neutral-950 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-blue-500" /></div>;
   }
@@ -154,11 +354,14 @@ export default function StudentDashboard() {
   // Separar días pendientes y completados de la rutina actual y anteriores
   let pendingDays: any[] = [];
   let completedDays: any[] = [];
+  let skippedDays: any[] = [];
   
   student.routines.forEach((routine: any) => {
     routine.days.forEach((day: any) => {
-      const dayWithRoutineInfo = { ...day, routineDates: `${new Date(routine.startDate).toLocaleDateString()} al ${new Date(routine.endDate).toLocaleDateString()}` };
-      if (day.completedAt) {
+      const dayWithRoutineInfo = { ...day, routineDates: `${formatDateUTC(routine.startDate)} al ${formatDateUTC(routine.endDate)}` };
+      if (day.isSkipped) {
+        skippedDays.push(dayWithRoutineInfo);
+      } else if (day.completedAt) {
         completedDays.push(dayWithRoutineInfo);
       } else {
         pendingDays.push(dayWithRoutineInfo);
@@ -170,22 +373,55 @@ export default function StudentDashboard() {
   completedDays.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white font-sans pb-12">
-      {/* Header */}
-      <header className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-xl font-bold">
-              {student.name.charAt(0)}
-            </div>
-            <div>
-              <h1 className="font-bold text-lg leading-tight">Hola, {student.name.split(' ')[0]}</h1>
-              <p className="text-xs text-neutral-400">Panel de Entrenamiento</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f13] text-gray-900 dark:text-white font-sans pb-12 transition-colors duration-300">
+      {/* Header Tecnológico / Moderno */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-[#0f0f13]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 transition-colors duration-300 shadow-sm dark:shadow-none">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+          
+          <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+            {student.profilePicture ? (
+              <img src={student.profilePicture} alt="Profile" className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white dark:border-neutral-800 shadow-md shrink-0" />
+            ) : (
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-lg sm:text-xl font-bold text-white shadow-md shrink-0">
+                {student.name.charAt(0)}
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="font-bold text-base sm:text-lg leading-tight text-gray-900 dark:text-white truncate">
+                Hola, {student.name.split(' ')[0]}
+              </h1>
+              <p className="text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider truncate">
+                Panel Atleta
+              </p>
             </div>
           </div>
-          <button onClick={handleLogout} className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
-            <LogOut className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <button 
+              onClick={() => {
+                setSettingsForm({
+                  weight: student.weight || "",
+                  goals: student.goals ? student.goals.split(', ').filter(Boolean) : [],
+                  profilePicture: student.profilePicture || ""
+                });
+                setShowSettings(true);
+              }}
+              className="p-2 sm:p-2.5 text-gray-500 dark:text-neutral-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all duration-200"
+              title="Configuración"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <div className="scale-90 sm:scale-100 origin-right">
+              <ThemeToggle />
+            </div>
+            <button 
+              onClick={handleLogout} 
+              className="p-2 sm:p-2.5 text-gray-500 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-200"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -193,130 +429,177 @@ export default function StudentDashboard() {
         
         {/* Resumen y Pagos */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors">
             <div className="flex items-center gap-3 mb-2">
-              <Activity className="w-5 h-5 text-blue-400" />
-              <h3 className="font-semibold text-neutral-300">Tus Datos</h3>
+              <Activity className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+              <h3 className="font-semibold text-gray-700 dark:text-neutral-300">Tus Datos</h3>
             </div>
             <p className="text-2xl font-bold">{student.weight} kg</p>
-            <p className="text-sm text-neutral-400 mt-1">Meta: {student.goals.length > 30 ? student.goals.substring(0, 30) + '...' : student.goals}</p>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Meta: {student.goals.length > 30 ? student.goals.substring(0, 30) + '...' : student.goals}</p>
           </div>
           
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors">
             <div className="flex items-center gap-3 mb-2">
-              <Wallet className={`w-5 h-5 ${!student.paymentDate ? 'text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-400' : 'text-emerald-400')}`} />
-              <h3 className="font-semibold text-neutral-300">Estado de Cuota</h3>
+              <Wallet className={`w-5 h-5 ${!student.paymentDate ? 'text-orange-500 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400')}`} />
+              <h3 className="font-semibold text-gray-700 dark:text-neutral-300">Estado de Cuota</h3>
             </div>
-            <p className={`text-xl font-bold ${!student.paymentDate ? 'text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-400' : 'text-emerald-400')}`}>
+            <p className={`text-xl font-bold ${!student.paymentDate ? 'text-orange-500 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400')}`}>
               {!student.paymentDate ? 'Pendiente' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'Deuda' : 'Al Día')}
             </p>
-            {student.paymentDate && <p className="text-sm text-neutral-400 mt-1">Vence: {new Date(student.paymentDate).toLocaleDateString()}</p>}
+            {student.paymentDate && <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Vence: {formatDateUTC(student.paymentDate)}</p>}
           </div>
 
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors">
             <div className="flex items-center gap-3 mb-2">
-              <CheckCircle className="w-5 h-5 text-purple-400" />
-              <h3 className="font-semibold text-neutral-300">Progreso</h3>
+              <CheckCircle className="w-5 h-5 text-purple-500 dark:text-purple-400" />
+              <h3 className="font-semibold text-gray-700 dark:text-neutral-300">Progreso</h3>
             </div>
             <p className="text-2xl font-bold">{completedDays.length}</p>
-            <p className="text-sm text-neutral-400 mt-1">Sesiones completadas</p>
+            <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Sesiones completadas</p>
           </div>
         </div>
 
         {/* Próximas Rutinas */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Dumbbell className="w-6 h-6 text-emerald-400" />
-            <h2 className="text-xl font-bold">Próximos Entrenamientos</h2>
+            <Dumbbell className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Próximos Entrenamientos</h2>
           </div>
           
           <div className="space-y-4">
             {pendingDays.length === 0 ? (
-              <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500">
+              <div className="bg-white dark:bg-neutral-900/50 border border-gray-200 dark:border-neutral-800 rounded-2xl p-8 text-center text-gray-500 dark:text-neutral-500 transition-colors">
                 <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>No tienes rutinas pendientes. ¡Buen trabajo!</p>
               </div>
             ) : (
               pendingDays.map((day) => (
-                <div key={day.id} className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden transition-all shadow-lg hover:border-neutral-700">
+                <div key={day.id} className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-all shadow-sm dark:shadow-lg hover:border-gray-300 dark:hover:border-neutral-700">
                   <button 
                     onClick={() => setExpandedDayId(expandedDayId === day.id ? null : day.id)}
                     className="w-full flex justify-between items-center p-5 text-left focus:outline-none"
                   >
                     <div>
-                      <h3 className="font-bold text-lg text-white">{day.dayName}</h3>
-                      <p className="text-xs text-neutral-400 mt-1">Rutina: {day.routineDates}</p>
+                      <h3 className="font-bold text-lg text-gray-900 dark:text-white">{day.dayName}</h3>
+                      <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">Rutina: {day.routineDates}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400">{day.exercises.length} Ejercicios</span>
-                      {expandedDayId === day.id ? <ChevronUp className="w-5 h-5 text-neutral-400" /> : <ChevronDown className="w-5 h-5 text-neutral-400" />}
+                      <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">{day.exercises.length} Ejercicios</span>
+                      {expandedDayId === day.id ? <ChevronUp className="w-5 h-5 text-gray-400 dark:text-neutral-400" /> : <ChevronDown className="w-5 h-5 text-gray-400 dark:text-neutral-400" />}
                     </div>
                   </button>
 
                   <AnimatePresence>
                     {expandedDayId === day.id && (
                       <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
-                        <div className="p-5 pt-0 border-t border-neutral-800 space-y-4 mt-2">
+                        <div className="p-5 pt-0 border-t border-gray-100 dark:border-neutral-800 space-y-6 mt-4 transition-colors">
                           {day.exercises.map((ex: any) => (
-                            <div key={ex.id} className="bg-neutral-950 border border-neutral-800 rounded-xl p-4">
+                            <div key={ex.id} className="bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl p-4 mt-8 transition-colors">
                               <div className="flex justify-between items-start gap-3 mb-3">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-start gap-2 mb-1.5">
                                     <input 
                                       type="checkbox" 
-                                      className="w-4 h-4 rounded border-neutral-700 text-emerald-500 focus:ring-emerald-500 bg-neutral-900 cursor-pointer mt-1 shrink-0"
+                                      className="w-4 h-4 rounded border-gray-300 dark:border-neutral-700 text-emerald-500 focus:ring-emerald-500 bg-white dark:bg-neutral-900 cursor-pointer mt-1 shrink-0 transition-colors"
                                       checked={exerciseEdits[ex.id]?.isCompleted || false}
                                       onChange={(e) => handleExerciseChange(ex.id, 'isCompleted', e.target.checked)}
                                     />
-                                    <h4 className={`font-bold text-base transition-colors leading-tight break-words ${exerciseEdits[ex.id]?.isCompleted ? 'text-neutral-500 line-through' : 'text-white'}`}>{ex.name}</h4>
+                                    <h4 className={`font-bold text-base transition-colors leading-tight break-words ${exerciseEdits[ex.id]?.isCompleted ? 'text-gray-400 dark:text-neutral-500 line-through' : 'text-red-500 dark:text-white'}`}>{ex.name}</h4>
                                   </div>
-                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-neutral-400 pl-6">
-                                    <span className="text-purple-400 break-words max-w-full">{ex.sets_reps}</span>
-                                    <span className="text-neutral-600">•</span>
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-gray-500 dark:text-neutral-400 pl-6">
+                                    <span className="text-purple-600 dark:text-purple-400 break-words max-w-full">{ex.sets_reps}</span>
+                                    <span className="text-gray-300 dark:text-neutral-600">•</span>
                                     <span className="break-words max-w-full">Descanso: {ex.rest}</span>
                                   </div>
                                 </div>
                                 {ex.videoUrl && (
                                   <button 
                                     onClick={() => setSelectedVideoUrl(ex.videoUrl)}
-                                    className="shrink-0 text-blue-400 hover:text-blue-300 flex items-center gap-1.5 bg-blue-500/10 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors mt-0.5">
+                                    className="shrink-0 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors mt-0.5">
                                     <PlaySquare className="w-3.5 h-3.5" /> Ver Video
                                   </button>
                                 )}
                               </div>
                               
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-neutral-800">
-                                <div>
-                                  <label className="block text-xs font-medium text-neutral-500 mb-1">Peso utilizado</label>
-                                  <input 
-                                    type="text" 
-                                    placeholder="Ej: 20kg por lado"
-                                    value={exerciseEdits[ex.id]?.weight || ""}
-                                    onChange={(e) => handleExerciseChange(ex.id, 'weight', e.target.value)}
-                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-neutral-600"
-                                  />
+                              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-neutral-800 transition-colors">
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-neutral-500 mb-2 uppercase tracking-wider">Registro de Series</label>
+                                <div className="space-y-2 mb-3">
+                                  {exerciseEdits[ex.id]?.loggedSets?.map((set: any, idx: number) => (
+                                    <div key={idx} className="flex items-center gap-2">
+                                      <div className="w-8 flex-shrink-0 text-center text-xs font-bold text-gray-400 dark:text-neutral-500">
+                                        #{idx + 1}
+                                      </div>
+                                      <div className="flex-1 flex gap-2">
+                                        <div className="flex-1">
+                                          <input 
+                                            type="number" 
+                                            placeholder="Reps"
+                                            value={set.reps}
+                                            onChange={(e) => updateSet(ex.id, idx, 'reps', e.target.value)}
+                                            className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                          />
+                                        </div>
+                                        <div className="flex-1">
+                                          <input 
+                                            type="number" 
+                                            step="0.5"
+                                            placeholder="Peso (kg)"
+                                            value={set.weight}
+                                            onChange={(e) => updateSet(ex.id, idx, 'weight', e.target.value)}
+                                            className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                          />
+                                        </div>
+                                      </div>
+                                      <button 
+                                        type="button" 
+                                        onClick={() => removeSet(ex.id, idx)}
+                                        className="p-2 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
+                                        title="Eliminar serie"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  ))}
                                 </div>
+                                <button 
+                                  type="button"
+                                  onClick={() => addSet(ex.id)}
+                                  className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 mb-4 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors"
+                                >
+                                  + Añadir Serie
+                                </button>
+                                
                                 <div>
-                                  <label className="block text-xs font-medium text-neutral-500 mb-1">Observaciones</label>
+                                  <label className="block text-xs font-medium text-gray-500 dark:text-neutral-500 mb-1">Observaciones</label>
                                   <input 
                                     type="text" 
                                     placeholder="Ej: Costó la última serie"
                                     value={exerciseEdits[ex.id]?.observations || ""}
                                     onChange={(e) => handleExerciseChange(ex.id, 'observations', e.target.value)}
-                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-neutral-600"
+                                    className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
                                   />
                                 </div>
                               </div>
                             </div>
                           ))}
 
-                          <button 
-                            onClick={() => setCompletingDayId(day.id)}
-                            className="w-full mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/20"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                            Marcar Día como Realizado
-                          </button>
+                          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                            <button 
+                              onClick={() => setCompletingDayId(day.id)}
+                              className="w-full sm:flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-900/20"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                              Marcar Día como Realizado
+                            </button>
+                            <button 
+                              onClick={() => setSkippingDayId(day.id)}
+                              className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300 font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
+                            >
+                              <Ban className="w-5 h-5 opacity-70" />
+                              <span className="hidden sm:inline">No realicé esta clase</span>
+                              <span className="sm:hidden">Omitir</span>
+                            </button>
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -328,103 +611,168 @@ export default function StudentDashboard() {
         </section>
 
         {/* Historial de Rutinas Realizadas */}
-        {completedDays.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar className="w-6 h-6 text-blue-400" />
-              <h2 className="text-xl font-bold">Rutinas Realizadas</h2>
-            </div>
-            
-            <div className="space-y-3">
-              {completedDays.map((day) => (
-                <div key={day.id} className="bg-neutral-900/60 border border-neutral-800 rounded-xl overflow-hidden transition-all">
-                  <button 
-                    onClick={() => setExpandedCompletedDayId(expandedCompletedDayId === day.id ? null : day.id)}
-                    className="w-full flex justify-between items-center p-4 text-left focus:outline-none"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                        <CheckCircle className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-base text-white">{day.dayName}</h3>
-                        <p className="text-xs text-neutral-400 mt-0.5">Realizado el: {new Date(day.completedAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    {expandedCompletedDayId === day.id ? <ChevronUp className="w-5 h-5 text-neutral-500" /> : <ChevronDown className="w-5 h-5 text-neutral-500" />}
-                  </button>
-
-                  <AnimatePresence>
-                    {expandedCompletedDayId === day.id && (
-                      <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
-                        <div className="p-4 pt-0 border-t border-neutral-800/50 space-y-3 mt-2">
-                          {day.exercises.map((ex: any) => (
-                            <div key={ex.id} className="bg-neutral-950/50 border border-neutral-800/50 rounded-lg p-3 text-sm">
-                              <div className="flex items-center gap-2 mb-1">
-                                {ex.isCompleted ? (
-                                  <CheckCircle className="w-4 h-4 text-emerald-500" />
-                                ) : (
-                                  <div className="w-4 h-4 rounded-full border-2 border-neutral-600 flex items-center justify-center">
-                                    <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full"></div>
-                                  </div>
-                                )}
-                                <h4 className={`font-bold ${ex.isCompleted ? 'text-neutral-300' : 'text-neutral-500'}`}>{ex.name}</h4>
-                              </div>
-                              <p className="text-xs text-neutral-500 mb-2 pl-6">{ex.sets_reps}</p>
-                              {(ex.weight || ex.observations) ? (
-                                <div className="flex flex-wrap gap-4 mt-2 pt-2 border-t border-neutral-800/50">
-                                  {ex.weight && <div className="text-neutral-400"><span className="text-neutral-500">Peso:</span> {ex.weight}</div>}
-                                  {ex.observations && <div className="text-neutral-400"><span className="text-neutral-500">Obs:</span> {ex.observations}</div>}
-                                </div>
-                              ) : (
-                                <span className="text-xs text-neutral-600 italic mt-2 block pt-2 border-t border-neutral-800/50">Sin notas de peso o observaciones</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+        {(completedDays.length > 0 || skippedDays.length > 0) && (
+          <section className="space-y-8">
+            {completedDays.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Rutinas Realizadas</h2>
                 </div>
-              ))}
-            </div>
+                
+                <div className="space-y-3">
+                  {completedDays.map((day) => (
+                    <div key={day.id} className="bg-white dark:bg-neutral-900/60 border border-gray-200 dark:border-neutral-800 rounded-xl overflow-hidden transition-all shadow-sm dark:shadow-none">
+                      <button 
+                        onClick={() => setExpandedCompletedDayId(expandedCompletedDayId === day.id ? null : day.id)}
+                        className="w-full flex justify-between items-center p-4 text-left focus:outline-none hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-500">
+                            <CheckCircle className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-base text-gray-900 dark:text-white">{day.dayName}</h3>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-gray-500 dark:text-neutral-400">Realizado el: {formatDateUTC(day.completedAt)}</p>
+                              <div 
+                                onClick={(e) => { e.stopPropagation(); setCompletionDate(day.completedAt.split('T')[0]); setEditingDateDayId(day.id); }}
+                                className="p-1 text-gray-400 hover:text-blue-500 dark:text-neutral-500 dark:hover:text-blue-400 bg-gray-100 hover:bg-blue-50 dark:bg-neutral-800 dark:hover:bg-blue-900/30 rounded transition-colors cursor-pointer"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        {expandedCompletedDayId === day.id ? <ChevronUp className="w-5 h-5 text-gray-400 dark:text-neutral-500" /> : <ChevronDown className="w-5 h-5 text-gray-400 dark:text-neutral-500" />}
+                      </button>
+
+                      <AnimatePresence>
+                        {expandedCompletedDayId === day.id && (
+                          <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
+                            <div className="p-4 pt-0 border-t border-gray-100 dark:border-neutral-800/50 space-y-3 mt-2 transition-colors">
+                              {day.exercises.map((ex: any) => (
+                                <div key={ex.id} className="bg-gray-50 dark:bg-neutral-950/50 border border-gray-100 dark:border-neutral-800/50 rounded-lg p-3 text-sm transition-colors">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    {ex.isCompleted ? (
+                                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                    ) : (
+                                      <div className="w-4 h-4 rounded-full border-2 border-gray-400 dark:border-neutral-600 flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-neutral-600 rounded-full"></div>
+                                      </div>
+                                    )}
+                                    <h4 className={`font-bold ${ex.isCompleted ? 'text-gray-800 dark:text-neutral-300' : 'text-gray-500 dark:text-neutral-500'}`}>{ex.name}</h4>
+                                  </div>
+                                  <p className="text-xs text-gray-500 dark:text-neutral-500 mb-2 pl-6">{ex.sets_reps}</p>
+                                  {(() => {
+                                    let parsedSets = [];
+                                    try { if (ex.loggedSets) parsedSets = JSON.parse(ex.loggedSets); } catch(e) {}
+                                    const hasOldWeight = !!ex.weight;
+                                    const hasObs = !!ex.observations;
+                                    const hasSets = parsedSets.length > 0;
+                                    
+                                    if (!hasOldWeight && !hasObs && !hasSets) {
+                                      return <span className="text-xs text-gray-400 dark:text-neutral-600 italic mt-2 block pt-2 border-t border-gray-200 dark:border-neutral-800/50 transition-colors">Sin registro de series ni observaciones</span>;
+                                    }
+
+                                    return (
+                                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-neutral-800/50 transition-colors">
+                                        {hasSets && (
+                                          <div className="mb-2 space-y-1">
+                                            {parsedSets.map((s: any, i: number) => (
+                                              <div key={i} className="text-xs text-gray-600 dark:text-neutral-400 flex gap-2">
+                                                <span className="font-bold text-gray-400">Serie {i+1}:</span>
+                                                <span>{s.reps || '-'} reps</span>
+                                                <span className="text-gray-300 dark:text-neutral-700">|</span>
+                                                <span>{s.weight || '-'} kg</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                        {!hasSets && hasOldWeight && <div className="text-xs text-gray-600 dark:text-neutral-400 mb-1"><span className="text-gray-400 dark:text-neutral-500 font-bold">Peso antiguo:</span> {ex.weight}</div>}
+                                        {hasObs && <div className="text-xs text-gray-600 dark:text-neutral-400"><span className="text-gray-400 dark:text-neutral-500 font-bold">Obs:</span> {ex.observations}</div>}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {skippedDays.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Ban className="w-6 h-6 text-gray-500 dark:text-neutral-500" />
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Clases Omitidas</h2>
+                </div>
+                
+                <div className="space-y-3">
+                  {skippedDays.map((day) => (
+                    <div key={day.id} className="bg-white dark:bg-neutral-900/40 border border-dashed border-gray-300 dark:border-neutral-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors shadow-sm dark:shadow-none">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center text-gray-500 dark:text-neutral-500">
+                          <Ban className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-base text-gray-700 dark:text-neutral-300">{day.dayName}</h3>
+                          <p className="text-xs text-gray-500 dark:text-neutral-500 mt-0.5">{day.routineDates} • Marcado como no realizado</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleRevertDay(day.id)}
+                        className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300 font-medium rounded-lg text-sm transition-colors"
+                      >
+                        Revertir a Pendiente
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
       </main>
 
-      {/* Overlay de Confirmación de Fecha */}
+      {/* Overlay de Confirmación de Fecha de Completado */}
       <AnimatePresence>
         {completingDayId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
               onClick={() => setCompletingDayId(null)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center"
+              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
             >
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
                 <CheckCircle className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">¡Día Completado!</h2>
-              <p className="text-sm text-neutral-400 mb-6">Selecciona qué día realizaste esta rutina.</p>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">¡Día Completado!</h2>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">Selecciona qué día realizaste esta rutina.</p>
               
               <div className="w-full text-left mb-6">
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Fecha de realización</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Fecha de realización</label>
                 <input 
                   type="date" 
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                  className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-colors"
                 />
               </div>
 
               <div className="w-full flex gap-3">
                 <button 
                   onClick={() => setCompletingDayId(null)}
-                  className="flex-1 py-3 text-neutral-400 font-medium hover:bg-neutral-800 rounded-xl transition-colors"
+                  className="flex-1 py-3 text-gray-500 dark:text-neutral-400 font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
                 >
                   Cancelar
                 </button>
@@ -441,18 +789,218 @@ export default function StudentDashboard() {
         )}
       </AnimatePresence>
 
+      {/* Overlay de Confirmación de Omisión */}
+      <AnimatePresence>
+        {skippingDayId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
+              onClick={() => setSkippingDayId(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
+            >
+              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 mb-4">
+                <Ban className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">¿Omitir clase?</h2>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">Esta clase no aparecerá más en tus pendientes. Podrás revertir esto más tarde si te equivocaste.</p>
+              
+              <div className="w-full flex gap-3">
+                <button 
+                  onClick={() => setSkippingDayId(null)}
+                  className="flex-1 py-3 text-gray-500 dark:text-neutral-400 font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleSkipDay}
+                  disabled={saving}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlay de Edición de Fecha */}
+      <AnimatePresence>
+        {editingDateDayId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
+              onClick={() => setEditingDateDayId(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
+            >
+              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
+                <Calendar className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Editar fecha</h2>
+              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">Modifica el día en el que realizaste esta clase.</p>
+              
+              <div className="w-full text-left mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Nueva fecha</label>
+                <input 
+                  type="date" 
+                  value={completionDate}
+                  onChange={(e) => setCompletionDate(e.target.value)}
+                  className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                />
+              </div>
+
+              <div className="w-full flex gap-3">
+                <button 
+                  onClick={() => setEditingDateDayId(null)}
+                  className="flex-1 py-3 text-gray-500 dark:text-neutral-400 font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleEditDate}
+                  disabled={saving}
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : "Guardar"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Configuración */}
+      <AnimatePresence>
+        {showSettings && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
+              onClick={() => !savingSettings && !uploadingImage && setShowSettings(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto flex flex-col transition-colors"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-blue-500" /> Configuración de Perfil
+                </h2>
+                <button 
+                  onClick={() => !savingSettings && !uploadingImage && setShowSettings(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                  disabled={uploadingImage}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Foto de Perfil */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="relative group cursor-pointer">
+                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-950 flex items-center justify-center relative">
+                      {settingsForm.profilePicture ? (
+                        <img 
+                          src={settingsForm.profilePicture} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover" 
+                          onLoad={() => setUploadingImage(false)}
+                          onError={() => setUploadingImage(false)}
+                        />
+                      ) : (
+                        <User className="w-10 h-10 text-gray-400 dark:text-neutral-600" />
+                      )}
+                      
+                      <label className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${uploadingImage ? 'opacity-100 cursor-not-allowed' : 'opacity-0 group-hover:opacity-100 cursor-pointer'}`}>
+                        {uploadingImage ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+                        <span className="text-[10px] font-bold mt-1 uppercase">{uploadingImage ? 'Subiendo...' : 'Cambiar'}</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                      </label>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-neutral-500 font-medium">Toca para actualizar tu foto</p>
+                </div>
+
+                {/* Peso */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">Tu peso actual (kg)</label>
+                  <input 
+                    type="number" 
+                    step="0.1"
+                    placeholder="Ej. 75.5"
+                    value={settingsForm.weight}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, weight: e.target.value })}
+                    className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Objetivos */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">Tus objetivos principales</label>
+                  <div className="flex flex-wrap gap-2">
+                    {GOAL_OPTIONS.map(goal => {
+                      const isSelected = settingsForm.goals.includes(goal);
+                      return (
+                        <button
+                          key={goal}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setSettingsForm({ ...settingsForm, goals: settingsForm.goals.filter(g => g !== goal) });
+                            } else {
+                              setSettingsForm({ ...settingsForm, goals: [...settingsForm.goals, goal] });
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                            isSelected 
+                              ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
+                              : 'bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-400 hover:border-gray-400 dark:hover:border-neutral-500'
+                          }`}
+                        >
+                          {goal}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Guardar */}
+                <div className="pt-4 border-t border-gray-100 dark:border-neutral-800">
+                  <button 
+                    onClick={handleSaveSettings}
+                    disabled={savingSettings || uploadingImage}
+                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingSettings ? <Loader2 className="w-5 h-5 animate-spin" /> : "Guardar Cambios"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Overlay de Video */}
       <AnimatePresence>
         {selectedVideoUrl && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
               onClick={() => setSelectedVideoUrl(null)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-4xl aspect-video bg-neutral-900 rounded-xl overflow-hidden shadow-2xl z-10"
+              className="relative w-full max-w-4xl aspect-video bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-2xl z-10 transition-colors"
             >
               <button 
                 onClick={() => setSelectedVideoUrl(null)}

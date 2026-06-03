@@ -28,6 +28,17 @@ type RoutineFormData = {
   days: RoutineDay[];
 };
 
+const formatDateUTC = (dateString: string | null) => {
+  if (!dateString) return "";
+  try {
+    const datePart = typeof dateString === 'string' ? dateString.split('T')[0] : new Date(dateString).toISOString().split('T')[0];
+    const [year, month, day] = datePart.split('-');
+    return `${parseInt(day, 10)}/${parseInt(month, 10)}/${year}`;
+  } catch (e) {
+    return new Date(dateString).toLocaleDateString();
+  }
+};
+
 export default function StudentRoutinesPage() {
   const params = useParams();
   const studentId = params.id as string;
@@ -472,7 +483,7 @@ export default function StudentRoutinesPage() {
                 <div className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   <span className="font-bold text-gray-800 dark:text-gray-100">
-                    {new Date(routine.startDate).toLocaleDateString()} al {new Date(routine.endDate).toLocaleDateString()}
+                    {formatDateUTC(routine.startDate)} al {formatDateUTC(routine.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -542,7 +553,22 @@ export default function StudentRoutinesPage() {
                                           <td className="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{ex.name}</td>
                                           <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{ex.sets_reps}</td>
                                           <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{ex.rest}</td>
-                                          <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-medium">{ex.weight || "-"}</td>
+                                          <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-medium">
+                                            {(() => {
+                                              let parsedSets = [];
+                                              try { if (ex.loggedSets) parsedSets = JSON.parse(ex.loggedSets); } catch(e) {}
+                                              if (parsedSets.length > 0) {
+                                                return (
+                                                  <div className="flex flex-col gap-1 text-xs">
+                                                    {parsedSets.map((s: any, i: number) => (
+                                                      <span key={i} className="whitespace-nowrap">S{i+1}: {s.reps || '-'}x{s.weight || '-'}kg</span>
+                                                    ))}
+                                                  </div>
+                                                );
+                                              }
+                                              return ex.weight || "-";
+                                            })()}
+                                          </td>
                                           <td className="px-3 py-2 text-gray-500 dark:text-gray-500 italic text-xs max-w-[150px] truncate" title={ex.observations}>{ex.observations || "-"}</td>
                                           <td className="px-3 py-2">
                                             {ex.videoUrl ? (

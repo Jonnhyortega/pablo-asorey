@@ -23,7 +23,7 @@ export function ThemeToggle({ isCollapsed }: { isCollapsed?: boolean }) {
       title={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
     >
       {theme === "dark" ? <Sun className="w-5 h-5 shrink-0" /> : <Moon className="w-5 h-5 shrink-0" />}
-      {!isCollapsed && <span className="truncate">{theme === "dark" ? "Modo Claro" : "Modo Oscuro"}</span>}
+      {!isCollapsed && <span className="truncate hidden sm:block">{theme === "dark" ? "Modo Claro" : "Modo Oscuro"}</span>}
     </button>
   );
 }

@@ -17,9 +17,30 @@ export default function StudentForm() {
     sportsExperience: "",
     injuries: "",
     lastTraining: "",
-    goals: "",
     gym: "",
   });
+
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [specificGoal, setSpecificGoal] = useState("");
+
+  const GOAL_OPTIONS = [
+    "Pérdida de grasa / Bajar de peso",
+    "Ganancia de masa muscular (Hipertrofia)",
+    "Ganancia de fuerza máxima",
+    "Tonificación / Recomposición corporal",
+    "Mantener estilo de vida saludable",
+    "Acondicionamiento físico / Mejorar estado general",
+    "Recuperación de lesiones / Rehabilitación",
+    "Rendimiento deportivo",
+    "Preparación para carreras / Resistencia",
+    "Objetivo Específico / Otro"
+  ];
+
+  const toggleGoal = (goal: string) => {
+    setSelectedGoals(prev => 
+      prev.includes(goal) ? prev.filter(g => g !== goal) : [...prev, goal]
+    );
+  };
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,10 +109,14 @@ export default function StudentForm() {
     setError("");
 
     try {
+      const finalGoals = selectedGoals.includes("Objetivo Específico / Otro") 
+        ? [...selectedGoals.filter(g => g !== "Objetivo Específico / Otro"), `Otro: ${specificGoal}`].filter(Boolean).join(" | ")
+        : selectedGoals.join(" | ");
+
       const response = await fetch("/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, photos }),
+        body: JSON.stringify({ ...formData, goals: finalGoals || "Sin especificar", photos }),
       });
 
       if (!response.ok) throw new Error("Error submitting form");
@@ -237,9 +262,51 @@ export default function StudentForm() {
                 <Target className="w-6 h-6 text-purple-400" />
                 Objetivos y Entorno
               </h2>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300">Objetivos</label>
-                <textarea required name="goals" value={formData.goals} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="¿Qué esperas lograr con este entrenamiento? (Ej: Perder peso, ganar masa muscular, mejorar rendimiento)" />
+              <div className="space-y-4">
+                <label className="text-sm font-medium text-neutral-300">Selecciona tus objetivos (puedes elegir varios)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {GOAL_OPTIONS.map((goal) => {
+                    const isSelected = selectedGoals.includes(goal);
+                    return (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() => toggleGoal(goal)}
+                        className={`text-left px-4 py-3 rounded-xl border text-sm transition-all flex items-center justify-between ${
+                          isSelected 
+                            ? 'bg-purple-500/10 border-purple-500/50 text-purple-300' 
+                            : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700'
+                        }`}
+                      >
+                        {goal}
+                        {isSelected && <CheckCircle className="w-4 h-4 text-purple-400" />}
+                      </button>
+                    )
+                  })}
+                </div>
+                
+                <AnimatePresence>
+                  {selectedGoals.includes("Objetivo Específico / Otro") && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pt-2">
+                        <label className="text-sm font-medium text-neutral-300 mb-2 block">Detalla tu objetivo específico</label>
+                        <textarea 
+                          required 
+                          value={specificGoal} 
+                          onChange={(e) => setSpecificGoal(e.target.value)} 
+                          rows={2} 
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" 
+                          placeholder="Ej: Llegar a levantar 250kg en sentadilla, o competir en Diciembre..." 
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
               
               <div className="space-y-2">

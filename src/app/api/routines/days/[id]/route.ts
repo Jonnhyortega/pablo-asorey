@@ -7,15 +7,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await request.json();
-    const { completedAt, exercises } = body;
+    const { completedAt, isSkipped, exercises } = body;
 
-    // Actualizar el día (fecha completado)
-    const day = await prisma.routineDay.update({
-      where: { id },
-      data: {
-        completedAt: completedAt ? new Date(completedAt) : null,
-      }
-    });
+    const dataToUpdate: any = {};
+    if (completedAt !== undefined) dataToUpdate.completedAt = completedAt ? new Date(completedAt) : null;
+    if (isSkipped !== undefined) dataToUpdate.isSkipped = isSkipped;
+
+    // Actualizar el día (fecha completado o omitido)
+    let day = null;
+    if (Object.keys(dataToUpdate).length > 0) {
+      day = await prisma.routineDay.update({
+        where: { id },
+        data: dataToUpdate
+      });
+    }
 
     // Actualizar los ejercicios si vienen (peso, observaciones)
     if (exercises && Array.isArray(exercises)) {
@@ -25,6 +30,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             where: { id: ex.id },
             data: {
               weight: ex.weight !== undefined ? ex.weight : undefined,
+              loggedSets: ex.loggedSets !== undefined ? ex.loggedSets : undefined,
               observations: ex.observations !== undefined ? ex.observations : undefined,
               isCompleted: ex.isCompleted !== undefined ? ex.isCompleted : undefined
             }

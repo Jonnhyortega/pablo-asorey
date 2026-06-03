@@ -79,7 +79,7 @@ export default function ClientAdminShell({
             )}
             <div className="space-y-1">
               <Link 
-                href="/admin/alumnos" 
+                href="/admin/students" 
                 onClick={closeMobileMenu} 
                 className={`flex items-center rounded-lg transition-colors ${isDesktopCollapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2.5'} ${
                   pathname.startsWith('/admin/alumnos') || pathname.startsWith('/admin/students')
