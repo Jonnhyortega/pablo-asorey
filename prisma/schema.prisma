@@ -46,7 +46,7 @@ model Student {
   whatsapp         String   @default("")
   trainingDays     String
   sessionDuration  String
-  age              Int
+  birthDate        DateTime?
   height           Float
   weight           Float
   sportsExperience String

@@ -11,7 +11,7 @@ type Student = {
   email: string | null;
   trainingDays: string;
   sessionDuration: string;
-  age: number;
+  birthDate: string | null;
   height: number;
   weight: number;
   sportsExperience: string;
@@ -306,7 +306,7 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                     Perfil Físico
                   </div>
                   <p className="text-sm text-gray-700 dark:text-gray-300 font-medium pt-1">
-                    {student.age} años • {student.height} cm • {student.weight} kg
+                    {student.birthDate ? Math.floor((new Date().getTime() - new Date(student.birthDate).getTime()) / 31557600000) : '-'} años • {student.height} cm • {student.weight} kg
                   </p>
                 </div>
                 
@@ -448,8 +448,8 @@ function EditStudentModal({ student, onClose, onSave }: { student: Student; onCl
                 <input value={formData.email || ""} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Edad</label>
-                <input required type="number" value={formData.age} onChange={e => setFormData({...formData, age: Number(e.target.value)})} className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Fecha de Nacimiento</label>
+                <input type="date" value={formData.birthDate ? formData.birthDate.split('T')[0] : ""} onChange={e => setFormData({...formData, birthDate: e.target.value})} className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent color-scheme-dark" />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Altura (cm)</label>

@@ -11,7 +11,7 @@ export default function StudentForm() {
     email: "",
     trainingDays: "",
     sessionDuration: "",
-    age: "",
+    birthDate: "",
     height: "",
     weight: "",
     sportsExperience: "",
@@ -192,8 +192,8 @@ export default function StudentForm() {
                   <input required type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="ejemplo@correo.com" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Edad</label>
-                  <input required type="number" name="age" value={formData.age} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Años" />
+                  <label className="text-sm font-medium text-neutral-300">Fecha de Nacimiento</label>
+                  <input required type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600 appearance-none color-scheme-dark" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-neutral-300">Altura (cm)</label>
