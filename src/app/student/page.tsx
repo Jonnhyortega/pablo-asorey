@@ -30,6 +30,13 @@ export default function StudentDashboard() {
     missedDaysOfWeek: { name: string, count: number }[] | null
   }>({ adherence: null, missedDaysOfWeek: null });
 
+  // Collapsible Sections State
+  const [isUpcomingExpanded, setIsUpcomingExpanded] = useState(true);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+  const [isSkippedExpanded, setIsSkippedExpanded] = useState(false);
+  const [isAdherenceExpanded, setIsAdherenceExpanded] = useState(true);
+  const [isProgressionExpanded, setIsProgressionExpanded] = useState(true);
+
   // Settings State
   const [showSettings, setShowSettings] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -486,12 +493,27 @@ export default function StudentDashboard() {
 
         {/* Próximas Rutinas */}
         <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Dumbbell className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Próximos Entrenamientos</h2>
+          <div 
+            className="flex items-center justify-between mb-4 cursor-pointer select-none"
+            onClick={() => setIsUpcomingExpanded(!isUpcomingExpanded)}
+          >
+            <div className="flex items-center gap-2">
+              <Dumbbell className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Próximos Entrenamientos</h2>
+            </div>
+            <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+              {isUpcomingExpanded ? <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" /> : <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />}
+            </div>
           </div>
           
-          <div className="space-y-4">
+          <AnimatePresence initial={false}>
+            {isUpcomingExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="space-y-4 overflow-hidden"
+              >
             {pendingDays.length === 0 ? (
               <div className="bg-white dark:bg-neutral-900/50 border border-gray-200 dark:border-neutral-800 rounded-2xl p-8 text-center text-gray-500 dark:text-neutral-500 transition-colors">
                 <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -632,7 +654,9 @@ export default function StudentDashboard() {
                 </div>
               ))
             )}
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
 
         {/* Historial de Rutinas Realizadas */}
@@ -640,12 +664,27 @@ export default function StudentDashboard() {
           <section className="space-y-8">
             {completedDays.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Rutinas Realizadas</h2>
+                <div 
+                  className="flex items-center justify-between mb-4 cursor-pointer select-none"
+                  onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Rutinas Realizadas</h2>
+                  </div>
+                  <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                    {isHistoryExpanded ? <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" /> : <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />}
+                  </div>
                 </div>
                 
-                <div className="space-y-3">
+                <AnimatePresence initial={false}>
+                  {isHistoryExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="space-y-3 overflow-hidden"
+                    >
                   {completedDays.map((day) => (
                     <div key={day.id} className="bg-white dark:bg-neutral-900/60 border border-gray-200 dark:border-neutral-800 rounded-xl overflow-hidden transition-all shadow-sm dark:shadow-none">
                       <button 
@@ -727,18 +766,35 @@ export default function StudentDashboard() {
                       </AnimatePresence>
                     </div>
                   ))}
-                </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 
             {skippedDays.length > 0 && (
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Ban className="w-6 h-6 text-gray-500 dark:text-neutral-500" />
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Clases Omitidas</h2>
+                <div 
+                  className="flex items-center justify-between mb-4 cursor-pointer select-none"
+                  onClick={() => setIsSkippedExpanded(!isSkippedExpanded)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Ban className="w-6 h-6 text-gray-500 dark:text-neutral-500" />
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Clases Omitidas</h2>
+                  </div>
+                  <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                    {isSkippedExpanded ? <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" /> : <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />}
+                  </div>
                 </div>
                 
-                <div className="space-y-3">
+                <AnimatePresence initial={false}>
+                  {isSkippedExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="space-y-3 overflow-hidden"
+                    >
                   {skippedDays.map((day) => (
                     <div key={day.id} className="bg-white dark:bg-neutral-900/40 border border-dashed border-gray-300 dark:border-neutral-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors shadow-sm dark:shadow-none">
                       <div className="flex items-center gap-3">
@@ -758,7 +814,9 @@ export default function StudentDashboard() {
                       </button>
                     </div>
                   ))}
-                </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </section>
@@ -767,12 +825,27 @@ export default function StudentDashboard() {
         {/* Adherencia y Días Fallados */}
         {adherenceStats.adherence && adherenceStats.adherence.total > 0 && (
           <section className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="w-6 h-6 text-purple-500 dark:text-purple-400" />
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Adherencia y Consistencia</h2>
+            <div 
+              className="flex items-center justify-between mb-2 cursor-pointer select-none"
+              onClick={() => setIsAdherenceExpanded(!isAdherenceExpanded)}
+            >
+              <div className="flex items-center gap-2">
+                <Activity className="w-6 h-6 text-purple-500 dark:text-purple-400" />
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Adherencia y Consistencia</h2>
+              </div>
+              <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                {isAdherenceExpanded ? <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" /> : <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />}
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AnimatePresence initial={false}>
+              {isAdherenceExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden"
+                >
               {/* Gráfico de Torta - Adherencia General */}
               <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col items-center">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-4 w-full text-left">Tasa de Adherencia</h3>
@@ -851,18 +924,36 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               )}
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </section>
         )}
 
         {/* Progreso de Fuerza */}
         {Object.keys(stats).length > 0 && (
           <section className="space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tu Progreso de Fuerza</h2>
+            <div 
+              className="flex items-center justify-between mb-2 cursor-pointer select-none"
+              onClick={() => setIsProgressionExpanded(!isProgressionExpanded)}
+            >
+              <div className="flex items-center gap-2">
+                <Activity className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tu Progreso de Fuerza</h2>
+              </div>
+              <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                {isProgressionExpanded ? <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" /> : <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />}
+              </div>
             </div>
-            <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
+
+            <AnimatePresence initial={false}>
+              {isProgressionExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors overflow-hidden"
+                >
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Seleccionar Ejercicio</label>
                 <div className="relative">
@@ -917,7 +1008,9 @@ export default function StudentDashboard() {
                   </ResponsiveContainer>
                 </div>
               )}
-            </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </section>
         )}
       </main>
