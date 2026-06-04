@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, Search, Calendar, Target, Activity, Dumbbell, ShieldAlert, Clock, Loader2, X, Edit2, Trash2, Key, Wallet, ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 
 type Student = {
   id: string;
@@ -226,6 +226,10 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
 
   const [stats, setStats] = useState<Record<string, {date: string, maxWeight: number}[]> | null>(null);
   const [activeStatExercise, setActiveStatExercise] = useState<string | null>(null);
+  const [adherenceStats, setAdherenceStats] = useState<{
+    adherence: { completed: number, skipped: number, total: number, percentage: number } | null,
+    missedDaysOfWeek: { name: string, count: number }[] | null
+  }>({ adherence: null, missedDaysOfWeek: null });
   const [loadingStats, setLoadingStats] = useState(false);
 
   useEffect(() => {
@@ -234,10 +238,14 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
       fetch(`/api/students/${student.id}/stats`)
         .then(res => res.json())
         .then(data => {
-          setStats(data);
-          if (Object.keys(data).length > 0) {
-            setActiveStatExercise(Object.keys(data)[0]);
+          setStats(data.weightProgression || {});
+          if (data.weightProgression && Object.keys(data.weightProgression).length > 0) {
+            setActiveStatExercise(Object.keys(data.weightProgression)[0]);
           }
+          setAdherenceStats({
+            adherence: data.adherence || null,
+            missedDaysOfWeek: data.missedDaysOfWeek || null
+          });
         })
         .finally(() => setLoadingStats(false));
     }
@@ -363,6 +371,94 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                           <img src={url} alt="gym" className="w-full h-full object-cover hover:scale-110 transition-transform duration-300" />
                         </button>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Adherence Charts */}
+                {adherenceStats.adherence && adherenceStats.adherence.total > 0 && (
+                  <div className="pt-4 mt-2 border-t border-gray-100 dark:border-slate-800">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
+                      <Activity className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+                      Adherencia y Consistencia
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* PieChart */}
+                      <div className="bg-white dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700/50 flex flex-col items-center">
+                        <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 w-full text-left mb-2">Tasa de Adherencia</h4>
+                        <div className="h-32 w-full relative flex items-center justify-center">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { name: 'Completados', value: adherenceStats.adherence.completed },
+                                  { name: 'Omitidos', value: adherenceStats.adherence.skipped }
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={35}
+                                outerRadius={50}
+                                paddingAngle={5}
+                                dataKey="value"
+                                stroke="none"
+                              >
+                                <Cell fill="#10B981" />
+                                <Cell fill="#EF4444" />
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: 'var(--tw-colors-slate-900)', fontSize: '12px' }}
+                                itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-xl font-black text-gray-900 dark:text-white">{adherenceStats.adherence.percentage}%</span>
+                          </div>
+                        </div>
+                        <div className="w-full flex justify-between px-2 mt-2 text-[10px] font-medium text-gray-500">
+                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Completados ({adherenceStats.adherence.completed})</div>
+                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500"></div>Omitidos ({adherenceStats.adherence.skipped})</div>
+                        </div>
+                      </div>
+
+                      {/* BarChart */}
+                      {adherenceStats.missedDaysOfWeek && adherenceStats.adherence.skipped > 0 && (
+                        <div className="bg-white dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700/50">
+                          <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Días de fallo frecuentes</h4>
+                          <div className="h-32 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={adherenceStats.missedDaysOfWeek} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+                                <XAxis 
+                                  dataKey="name" 
+                                  tickFormatter={(val) => val.substring(0, 3)}
+                                  tick={{fontSize: 9}} 
+                                  stroke="#9CA3AF"
+                                  axisLine={false}
+                                  tickLine={false}
+                                />
+                                <YAxis 
+                                  tick={{fontSize: 9}} 
+                                  stroke="#9CA3AF"
+                                  axisLine={false}
+                                  tickLine={false}
+                                  allowDecimals={false}
+                                />
+                                <Tooltip 
+                                  contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: 'var(--tw-colors-slate-900)', fontSize: '12px' }}
+                                  itemStyle={{ color: '#EF4444', fontWeight: 'bold' }}
+                                  cursor={{ fill: 'transparent' }}
+                                />
+                                <Bar 
+                                  dataKey="count" 
+                                  fill="#EF4444" 
+                                  radius={[2, 2, 0, 0]} 
+                                />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

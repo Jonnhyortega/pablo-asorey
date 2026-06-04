@@ -40,13 +40,16 @@ export async function GET(
           include: {
             days: {
               where: {
-                completedAt: { not: null }
+                OR: [
+                  { completedAt: { not: null } },
+                  { isSkipped: true }
+                ]
               },
               include: {
                 exercises: true
               },
               orderBy: {
-                completedAt: 'asc'
+                updatedAt: 'asc'
               }
             }
           }
@@ -62,9 +65,28 @@ export async function GET(
     // We want: grouped by exercise name
     // Result: { "Sentadilla": [ { date: "YYYY-MM-DD", weight: 100 }, ... ] }
     const stats: Record<string, { date: string; maxWeight: number }[]> = {};
+    
+    let completedCount = 0;
+    let skippedCount = 0;
+    
+    const weekdays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const missedCounts: Record<string, number> = {
+      "Lunes": 0, "Martes": 0, "Miércoles": 0, "Jueves": 0, "Viernes": 0, "Sábado": 0, "Domingo": 0
+    };
 
     student.routines.forEach(routine => {
       routine.days.forEach(day => {
+        if (day.isSkipped) {
+          skippedCount++;
+          const dayOfWeek = new Date(day.updatedAt).getDay();
+          missedCounts[weekdays[dayOfWeek]]++;
+          return;
+        }
+
+        if (day.completedAt) {
+          completedCount++;
+        }
+
         if (!day.completedAt) return;
         const dateStr = day.completedAt.toISOString().split('T')[0];
 
@@ -127,7 +149,29 @@ export async function GET(
       }
     }
 
-    return NextResponse.json(filteredStats);
+    const total = completedCount + skippedCount;
+    const adherencePercentage = total > 0 ? Math.round((completedCount / total) * 100) : 100;
+
+    const missedDaysOfWeek = [
+      { name: "Lunes", count: missedCounts["Lunes"] },
+      { name: "Martes", count: missedCounts["Martes"] },
+      { name: "Miércoles", count: missedCounts["Miércoles"] },
+      { name: "Jueves", count: missedCounts["Jueves"] },
+      { name: "Viernes", count: missedCounts["Viernes"] },
+      { name: "Sábado", count: missedCounts["Sábado"] },
+      { name: "Domingo", count: missedCounts["Domingo"] },
+    ];
+
+    return NextResponse.json({
+      weightProgression: filteredStats,
+      adherence: {
+        completed: completedCount,
+        skipped: skippedCount,
+        total,
+        percentage: adherencePercentage
+      },
+      missedDaysOfWeek
+    });
   } catch (error: any) {
     console.error("Error fetching student stats:", error);
     return NextResponse.json({ error: "Error interno", details: error.message }, { status: 500 });
