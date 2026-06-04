@@ -7,10 +7,11 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdminPath = pathname?.startsWith("/admin");
-  const isStudentPath = pathname?.startsWith("/student");
-  const isLoginPath = pathname?.startsWith("/login");
-  const isAplicarPath = pathname?.startsWith("/aplicar");
+  const path = pathname?.toLowerCase() || "";
+  const isAdminPath = path.startsWith("/admin");
+  const isStudentPath = path.startsWith("/student");
+  const isLoginPath = path.startsWith("/login");
+  const isAplicarPath = path.startsWith("/aplicar");
 
   if (isAdminPath) {
     return <>{children}</>;
