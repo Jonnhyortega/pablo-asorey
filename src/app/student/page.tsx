@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, Calendar, Activity, Dumbbell, Wallet, CheckCircle, ChevronDown, ChevronUp, PlaySquare, Loader2, Save, X, Ban, Edit2, Trash2, Settings, Upload, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function StudentDashboard() {
   const [student, setStudent] = useState<any>(null);
@@ -21,11 +22,15 @@ export default function StudentDashboard() {
   const [saving, setSaving] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
 
+  // Stats State
+  const [stats, setStats] = useState<Record<string, {date: string, maxWeight: number}[]>>({});
+  const [activeStatExercise, setActiveStatExercise] = useState<string | null>(null);
+
   // Settings State
   const [showSettings, setShowSettings] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [settingsForm, setSettingsForm] = useState<{weight: string, goals: string[], profilePicture: string}>({ weight: "", goals: [], profilePicture: "" });
+  const [settingsForm, setSettingsForm] = useState<{weight: string, goals: string[], profilePicture: string, birthDate: string}>({ weight: "", goals: [], profilePicture: "", birthDate: "" });
 
   const GOAL_OPTIONS = [
     "Pérdida de Grasa",
@@ -138,6 +143,16 @@ export default function StudentDashboard() {
         });
       });
       setExerciseEdits(initialEdits);
+
+      // Fetch stats
+      const statsRes = await fetch(`/api/students/${data.id}/stats`);
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData);
+        if (Object.keys(statsData).length > 0) {
+          setActiveStatExercise(Object.keys(statsData)[0]);
+        }
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -327,7 +342,8 @@ export default function StudentDashboard() {
       const payload = {
         weight: settingsForm.weight,
         goals: settingsForm.goals.join(', '),
-        profilePicture: settingsForm.profilePicture
+        profilePicture: settingsForm.profilePicture,
+        birthDate: settingsForm.birthDate ? new Date(settingsForm.birthDate) : null
       };
       const res = await fetch("/api/students/me", {
         method: "PUT",
@@ -402,7 +418,8 @@ export default function StudentDashboard() {
                 setSettingsForm({
                   weight: student.weight || "",
                   goals: student.goals ? student.goals.split(', ').filter(Boolean) : [],
-                  profilePicture: student.profilePicture || ""
+                  profilePicture: student.profilePicture || "",
+                  birthDate: student.birthDate ? student.birthDate.split('T')[0] : ""
                 });
                 setShowSettings(true);
               }}
@@ -738,6 +755,72 @@ export default function StudentDashboard() {
             )}
           </section>
         )}
+
+        {/* Progreso de Fuerza */}
+        {Object.keys(stats).length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Activity className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Tu Progreso de Fuerza</h2>
+            </div>
+            <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors">
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Seleccionar Ejercicio</label>
+                <div className="relative">
+                  <select
+                    value={activeStatExercise || ""}
+                    onChange={(e) => setActiveStatExercise(e.target.value)}
+                    className="w-full appearance-none bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 pr-10 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                  >
+                    {Object.keys(stats).map(exName => (
+                      <option key={exName} value={exName}>{exName}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+              
+              {activeStatExercise && stats[activeStatExercise] && (
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={stats[activeStatExercise]} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(val) => formatDateUTC(val).substring(0, 5)} 
+                        tick={{fontSize: 12}} 
+                        stroke="#9CA3AF"
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        tick={{fontSize: 12}} 
+                        stroke="#9CA3AF"
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)', backgroundColor: 'var(--tw-colors-neutral-900)' }}
+                        itemStyle={{ color: '#60A5FA', fontWeight: 'bold' }}
+                        labelFormatter={(val) => formatDateUTC(val)}
+                        formatter={(value: any) => [`${value} kg`, 'Peso Máximo']}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="maxWeight" 
+                        stroke="#3B82F6" 
+                        strokeWidth={3}
+                        dot={{ r: 4, strokeWidth: 2, fill: "#fff" }}
+                        activeDot={{ r: 6, stroke: "#3B82F6", strokeWidth: 2, fill: "#fff" }}
+                        animationDuration={1500}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Overlay de Confirmación de Fecha de Completado */}
@@ -930,17 +1013,28 @@ export default function StudentDashboard() {
                   <p className="text-xs text-gray-500 dark:text-neutral-500 font-medium">Toca para actualizar tu foto</p>
                 </div>
 
-                {/* Peso */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">Tu peso actual (kg)</label>
-                  <input 
-                    type="number" 
-                    step="0.1"
-                    placeholder="Ej. 75.5"
-                    value={settingsForm.weight}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, weight: e.target.value })}
-                    className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
-                  />
+                {/* Peso y Fecha Nacimiento */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">Peso actual (kg)</label>
+                    <input 
+                      type="number" 
+                      step="0.1"
+                      placeholder="Ej. 75.5"
+                      value={settingsForm.weight}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, weight: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">F. Nacimiento</label>
+                    <input 
+                      type="date" 
+                      value={settingsForm.birthDate}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, birthDate: e.target.value })}
+                      className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors color-scheme-dark"
+                    />
+                  </div>
                 </div>
 
                 {/* Objetivos */}

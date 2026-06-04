@@ -67,12 +67,13 @@ export async function PUT(request: Request) {
     const userId = payload.id as string;
 
     const body = await request.json();
-    const { weight, goals, profilePicture } = body;
+    const { weight, goals, profilePicture, birthDate } = body;
 
     const dataToUpdate: any = {};
-    if (weight !== undefined) dataToUpdate.weight = weight;
+    if (weight !== undefined) dataToUpdate.weight = Number(weight);
     if (goals !== undefined) dataToUpdate.goals = goals;
     if (profilePicture !== undefined) dataToUpdate.profilePicture = profilePicture;
+    if (birthDate !== undefined) dataToUpdate.birthDate = birthDate;
 
     const student = await prisma.student.update({
       where: { userId },

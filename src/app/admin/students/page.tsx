@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, Search, Calendar, Target, Activity, Dumbbell, ShieldAlert, Clock, Loader2, X, Edit2, Trash2, Key, Wallet, ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 type Student = {
   id: string;
@@ -223,6 +224,25 @@ export default function AdminStudentsPage() {
 function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Student; onEdit: () => void; onDelete: () => void; onViewImage: (url: string) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const [stats, setStats] = useState<Record<string, {date: string, maxWeight: number}[]> | null>(null);
+  const [activeStatExercise, setActiveStatExercise] = useState<string | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  useEffect(() => {
+    if (isExpanded && !stats && !loadingStats) {
+      setLoadingStats(true);
+      fetch(`/api/students/${student.id}/stats`)
+        .then(res => res.json())
+        .then(data => {
+          setStats(data);
+          if (Object.keys(data).length > 0) {
+            setActiveStatExercise(Object.keys(data)[0]);
+          }
+        })
+        .finally(() => setLoadingStats(false));
+    }
+  }, [isExpanded, stats, student.id, loadingStats]);
+
   const photos = (() => {
     try {
       return JSON.parse(student.photos);
@@ -344,6 +364,69 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Stats Chart */}
+                {stats && Object.keys(stats).length > 0 && (
+                  <div className="pt-4 mt-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <Activity className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                        Progreso de Fuerza
+                      </div>
+                      <select
+                        value={activeStatExercise || ""}
+                        onChange={(e) => setActiveStatExercise(e.target.value)}
+                        className="text-xs sm:text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-gray-900 dark:text-white outline-none w-full sm:w-auto"
+                      >
+                        {Object.keys(stats).map(ex => <option key={ex} value={ex}>{ex}</option>)}
+                      </select>
+                    </div>
+                    {activeStatExercise && stats[activeStatExercise] && (
+                      <div className="h-48 sm:h-56 w-full bg-white dark:bg-slate-800/50 p-2 sm:p-4 rounded-xl border border-gray-100 dark:border-slate-700/50">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={stats[activeStatExercise]} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+                            <XAxis 
+                              dataKey="date" 
+                              tickFormatter={(val) => {
+                                try {
+                                  const d = val.split('-');
+                                  return `${d[2]}/${d[1]}`;
+                                } catch (e) {
+                                  return val;
+                                }
+                              }}
+                              tick={{fontSize: 10}} 
+                              stroke="#9CA3AF"
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <YAxis 
+                              tick={{fontSize: 10}} 
+                              stroke="#9CA3AF"
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <Tooltip 
+                              contentStyle={{ borderRadius: '8px', border: 'none', fontSize: '12px', backgroundColor: 'var(--tw-colors-slate-900)' }}
+                              itemStyle={{ color: '#60A5FA', fontWeight: 'bold' }}
+                              labelFormatter={(val) => val}
+                              formatter={(value: any) => [`${value} kg`, 'Máx']}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="maxWeight" 
+                              stroke="#8B5CF6" 
+                              strokeWidth={2}
+                              dot={{ r: 3, strokeWidth: 1, fill: "#fff" }}
+                              activeDot={{ r: 5, stroke: "#8B5CF6" }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                   </div>
                 )}
 
