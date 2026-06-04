@@ -143,7 +143,7 @@ export async function GET(
     // Only return exercises that have at least 2 data points to actually draw a progression line
     const filteredStats: Record<string, { date: string; maxWeight: number }[]> = {};
     for (const [name, data] of Object.entries(stats)) {
-      if (data.length > 1) {
+      if (data.length > 0) {
         // Sort by date just in case
         filteredStats[name] = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       }

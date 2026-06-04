@@ -931,9 +931,8 @@ export default function StudentDashboard() {
         )}
 
         {/* Progreso de Fuerza */}
-        {Object.keys(stats).length > 0 && (
-          <section className="space-y-4">
-            <div 
+        <section className="space-y-4">
+          <div 
               className="flex items-center justify-between mb-2 cursor-pointer select-none"
               onClick={() => setIsProgressionExpanded(!isProgressionExpanded)}
             >
@@ -954,6 +953,14 @@ export default function StudentDashboard() {
                   exit={{ height: 0, opacity: 0 }}
                   className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors overflow-hidden"
                 >
+              {Object.keys(stats).length === 0 ? (
+                <div className="py-8 text-center text-gray-500 dark:text-neutral-500">
+                  <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Aún no tienes suficientes datos de pesos registrados.</p>
+                  <p className="text-xs mt-1">Registrá tus pesos al completar ejercicios para ver tu evolución aquí.</p>
+                </div>
+              ) : (
+                <>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">Seleccionar Ejercicio</label>
                 <div className="relative">
@@ -1008,11 +1015,12 @@ export default function StudentDashboard() {
                   </ResponsiveContainer>
                 </div>
               )}
+                </>
+              )}
                 </motion.div>
               )}
             </AnimatePresence>
           </section>
-        )}
       </main>
 
       {/* Overlay de Confirmación de Fecha de Completado */}
