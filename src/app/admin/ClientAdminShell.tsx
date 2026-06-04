@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, MessageSquare, Settings, GraduationCap, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, GraduationCap, Menu, X, BookOpen } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -90,6 +90,19 @@ export default function ClientAdminShell({
               >
                 <GraduationCap size={20} strokeWidth={pathname.startsWith('/admin/students') ? 2.5 : 2} className="shrink-0" />
                 {!isDesktopCollapsed && <span className="truncate">Alumnos</span>}
+              </Link>
+              <Link 
+                href="/admin/exercises" 
+                onClick={closeMobileMenu} 
+                className={`flex items-center rounded-lg transition-colors ${isDesktopCollapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2.5'} ${
+                  pathname.startsWith('/admin/exercises')
+                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-semibold' 
+                    : 'hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 font-medium'
+                }`}
+                title={isDesktopCollapsed ? "Bibl. Ejercicios" : undefined}
+              >
+                <BookOpen size={20} strokeWidth={pathname.startsWith('/admin/exercises') ? 2.5 : 2} className="shrink-0" />
+                {!isDesktopCollapsed && <span className="truncate">Bibl. Ejercicios</span>}
               </Link>
               <Link 
                 href="/admin/leads" 

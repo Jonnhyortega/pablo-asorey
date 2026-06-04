@@ -10,12 +10,13 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const isAdminPath = pathname?.startsWith("/admin");
   const isStudentPath = pathname?.startsWith("/student");
   const isLoginPath = pathname?.startsWith("/login");
+  const isAplicarPath = pathname?.startsWith("/aplicar");
 
   if (isAdminPath) {
     return <>{children}</>;
   }
 
-  const hideUiElements = isStudentPath || isLoginPath;
+  const hideUiElements = isStudentPath || isLoginPath || isAplicarPath;
 
   return (
     <>

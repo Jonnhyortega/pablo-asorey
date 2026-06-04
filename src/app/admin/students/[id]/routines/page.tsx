@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Calendar, Dumbbell, Plus, Trash2, Save, Loader2, PlaySquare, ChevronDown, ChevronUp, Copy, GripVertical } from "lucide-react";
+import { ArrowLeft, Calendar, Dumbbell, Plus, Trash2, Save, Loader2, PlaySquare, ChevronDown, ChevronUp, Copy, GripVertical, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -48,6 +48,8 @@ export default function StudentRoutinesPage() {
   const [savingNewItem, setSavingNewItem] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null);
+  const [routineToDelete, setRoutineToDelete] = useState<string | null>(null);
+  const [isDeletingRoutine, setIsDeletingRoutine] = useState(false);
   const [expandedRoutines, setExpandedRoutines] = useState<Record<string, boolean>>({});
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -225,11 +227,14 @@ export default function StudentRoutinesPage() {
   };
 
   const handleDeleteRoutine = async (routineId: string) => {
-    if (!confirm("¿Seguro que deseas eliminar esta rutina entera? Se perderá el progreso de los ejercicios que el alumno haya marcado como completados.")) return;
+    setIsDeletingRoutine(true);
     try {
       const res = await fetch(`/api/routines/${routineId}`, { method: "DELETE" });
-      if (res.ok) fetchRoutines();
-    } catch (err) { console.error(err); }
+      if (res.ok) {
+        fetchRoutines();
+        setRoutineToDelete(null);
+      }
+    } catch (err) { console.error(err); } finally { setIsDeletingRoutine(false); }
   };
 
   const handleSaveRoutine = async () => {
@@ -371,6 +376,16 @@ export default function StudentRoutinesPage() {
                 </div>
 
                 <div className="space-y-3">
+                  {day.exercises.length > 0 && (
+                    <div className="hidden md:flex gap-2 items-center px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <div className="w-8"></div>
+                      <div className="flex-1 min-w-[150px]">Ejercicio</div>
+                      <div className="w-32 text-center">Series x Reps</div>
+                      <div className="w-24 text-center">Descanso</div>
+                      <div className="flex-1 min-w-[150px]">Video URL</div>
+                      <div className="w-8"></div>
+                    </div>
+                  )}
                   {day.exercises.map((ex, exIndex) => {
                     const isDragging = draggingEx?.dayIndex === dayIndex && draggingEx?.exIndex === exIndex;
                     const isDragOver = dragOverEx?.dayIndex === dayIndex && dragOverEx?.exIndex === exIndex;
@@ -493,7 +508,7 @@ export default function StudentRoutinesPage() {
                   <button onClick={(e) => { e.stopPropagation(); handleEditRoutine(routine); }} className="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition-colors">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteRoutine(routine.id); }} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); setRoutineToDelete(routine.id); }} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <div className="text-gray-400 ml-2">
@@ -520,7 +535,11 @@ export default function StudentRoutinesPage() {
                               {day.dayName}
                             </h4>
                             <div className="flex items-center gap-3">
-                              {day.completedAt && <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md">Completado: {new Date(day.completedAt).toLocaleDateString()}</span>}
+                              {day.isSkipped ? (
+                                <span className="text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded-md">No se entrenó este día</span>
+                              ) : day.completedAt ? (
+                                <span className="text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-md">Completado: {new Date(day.completedAt).toLocaleDateString()}</span>
+                              ) : null}
                               <div className="text-gray-400">
                                 {expandedDays[day.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                               </div>
@@ -638,6 +657,47 @@ export default function StudentRoutinesPage() {
           </motion.div>
         </div>
       )}
+
+      <AnimatePresence>
+        {routineToDelete && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => !isDeletingRoutine && setRoutineToDelete(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-slate-800"
+            >
+              <div className="p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 dark:text-red-400">
+                  <ShieldAlert className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">¿Eliminar rutina?</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                  Estás a punto de eliminar esta rutina por completo. <strong className="text-gray-800 dark:text-gray-200">Se perderá el progreso</strong> de todos los ejercicios que el alumno haya marcado como completados. Esta acción no se puede deshacer.
+                </p>
+                <div className="flex gap-3 w-full">
+                  <button 
+                    onClick={() => setRoutineToDelete(null)}
+                    disabled={isDeletingRoutine}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 dark:border-slate-700 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteRoutine(routineToDelete)}
+                    disabled={isDeletingRoutine}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isDeletingRoutine ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    Sí, eliminar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
