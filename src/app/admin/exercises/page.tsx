@@ -24,6 +24,7 @@ export default function AdminExercisesPage() {
 
   const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
 
   useEffect(() => {
     fetchExercises();
@@ -102,6 +103,7 @@ export default function AdminExercisesPage() {
       if (res.ok) {
         setExercises((prev) => prev.filter((ex) => ex.id !== id));
         setExerciseToDelete(null);
+        setDeleteConfirmationText("");
       }
     } catch (err) {
       console.error(err);
@@ -303,12 +305,30 @@ export default function AdminExercisesPage() {
                   <ShieldAlert className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">¿Eliminar ejercicio?</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                   Estás a punto de eliminar <strong className="text-gray-800 dark:text-gray-200">{exerciseToDelete.name}</strong> del catálogo global. Esta acción no se puede deshacer.
                 </p>
+                <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300 p-3 rounded-lg text-xs text-left mb-6 border border-orange-200 dark:border-orange-800/50">
+                  <strong>Tranquilo:</strong> Borrar esto no afectará a los alumnos que ya tienen este ejercicio en su rutina. Solo lo quitará del catálogo para futuras asignaciones.
+                </div>
+                <div className="mb-6 text-left">
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Por seguridad, escribí <strong>Quiero borrar este ejercicio</strong> para confirmar:
+                  </label>
+                  <input 
+                    type="text"
+                    value={deleteConfirmationText}
+                    onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Quiero borrar este ejercicio"
+                  />
+                </div>
                 <div className="flex gap-3 w-full">
                   <button 
-                    onClick={() => setExerciseToDelete(null)}
+                    onClick={() => {
+                      setExerciseToDelete(null);
+                      setDeleteConfirmationText("");
+                    }}
                     disabled={isDeleting}
                     className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 dark:border-slate-700 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
                   >
@@ -316,8 +336,8 @@ export default function AdminExercisesPage() {
                   </button>
                   <button 
                     onClick={() => handleDelete(exerciseToDelete.id)}
-                    disabled={isDeleting}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    disabled={isDeleting || deleteConfirmationText !== "Quiero borrar este ejercicio"}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     Sí, eliminar
