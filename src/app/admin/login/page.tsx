@@ -23,10 +23,15 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        window.location.href = "/admin"; // Forzamos una recarga completa para que el middleware reciba la cookie
+        if (data.user?.role === 'STUDENT') {
+          window.location.href = "/student";
+        } else {
+          window.location.href = "/admin"; // Forzamos una recarga completa para que el middleware reciba la cookie
+        }
       } else {
-        const data = await res.json();
         setError(data.message || "Credenciales inválidas");
       }
     } catch (err) {

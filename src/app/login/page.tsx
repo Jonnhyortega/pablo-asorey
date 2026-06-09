@@ -43,7 +43,12 @@ export default function StudentLoginPage() {
         } else {
           localStorage.removeItem("saved_student_email");
         }
-        router.push("/student");
+        
+        if (data.user?.role === 'ADMIN') {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/student";
+        }
       } else {
         setError(data.message || "Error al iniciar sesión");
       }

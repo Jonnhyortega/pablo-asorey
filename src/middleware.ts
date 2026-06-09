@@ -30,6 +30,15 @@ export async function middleware(request: NextRequest) {
         const redirectPath = payload.role === 'ADMIN' ? '/admin' : '/student';
         return NextResponse.redirect(new URL(redirectPath, request.url));
       }
+
+      if (isAdminRoute && payload.role !== 'ADMIN') {
+        return NextResponse.redirect(new URL('/student', request.url));
+      }
+
+      if (isStudentRoute && payload.role === 'ADMIN') {
+        return NextResponse.redirect(new URL('/admin', request.url));
+      }
+
       return NextResponse.next();
     } catch (error) {
       console.error('Invalid token in middleware', error);
