@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // 1. Generar contraseña aleatoria (6 dígitos numéricos)
+    // 1. Generar contraseÃ±a aleatoria (6 dÃ­gitos numÃ©ricos)
     const generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         }
       });
     } else {
-      // Si el usuario ya existía (ej. falló un registro a la mitad), le actualizamos la contraseña para que coincida
+      // Si el usuario ya existÃ­a (ej. fallÃ³ un registro a la mitad), le actualizamos la contraseÃ±a para que coincida
       user = await prisma.user.update({
         where: { email },
         data: { password: hashedPassword }

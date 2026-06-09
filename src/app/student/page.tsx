@@ -388,7 +388,16 @@ export default function StudentDashboard() {
   let skippedDays: any[] = [];
   
   student.routines.forEach((routine: any) => {
-    routine.days.forEach((day: any) => {
+    const sortedDays = [...routine.days].sort((a: any, b: any) => {
+      const matchA = a.dayName.match(/D[ií]a\s+(\d+)/i);
+      const matchB = b.dayName.match(/D[ií]a\s+(\d+)/i);
+      if (matchA && matchB) {
+        return parseInt(matchA[1]) - parseInt(matchB[1]);
+      }
+      return a.order - b.order;
+    });
+
+    sortedDays.forEach((day: any) => {
       const dayWithRoutineInfo = { ...day, routineDates: `${formatDateUTC(routine.startDate)} al ${formatDateUTC(routine.endDate)}` };
       if (day.isSkipped) {
         skippedDays.push(dayWithRoutineInfo);
@@ -554,9 +563,25 @@ export default function StudentDashboard() {
                                     <h4 className={`font-bold text-base transition-colors leading-tight break-words ${exerciseEdits[ex.id]?.isCompleted ? 'text-gray-400 dark:text-neutral-500 line-through' : 'text-red-500 dark:text-white'}`}>{ex.name}</h4>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-gray-500 dark:text-neutral-400 pl-6">
-                                    <span className="text-purple-600 dark:text-purple-400 break-words max-w-full">{ex.sets_reps}</span>
+                                    <span className="text-purple-600 dark:text-purple-400 break-words max-w-full">
+                                      {ex.trackingType === 'TIME' ? 'Tiempo: ' : ex.trackingType === 'CIRCUIT' ? 'Circuito: ' : ''}{ex.sets_reps}
+                                    </span>
+                                    {ex.weight && (
+                                      <>
+                                        <span className="text-gray-300 dark:text-neutral-600">•</span>
+                                        <span className="text-emerald-600 dark:text-emerald-400 break-words max-w-full font-bold">
+                                          {ex.trackingType === 'TIME' ? 'Intensidad: ' : ex.trackingType === 'CIRCUIT' ? 'Detalle de Carga: ' : 'Peso: '}{ex.weight}
+                                        </span>
+                                      </>
+                                    )}
                                     <span className="text-gray-300 dark:text-neutral-600">•</span>
                                     <span className="break-words max-w-full">Descanso: {ex.rest}</span>
+                                    {ex.observations && (
+                                      <>
+                                        <span className="text-gray-300 dark:text-neutral-600">•</span>
+                                        <span className="break-words max-w-full text-xs italic text-gray-400">Obs: {ex.observations}</span>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                                 {ex.videoUrl && (
@@ -579,8 +604,8 @@ export default function StudentDashboard() {
                                       <div className="flex-1 flex gap-2">
                                         <div className="flex-1">
                                           <input 
-                                            type="number" 
-                                            placeholder="Reps"
+                                            type={ex.trackingType === 'TIME' ? 'text' : 'number'} 
+                                            placeholder={ex.trackingType === 'TIME' ? 'Duración (ej: 15m)' : 'Reps'}
                                             value={set.reps}
                                             onChange={(e) => updateSet(ex.id, idx, 'reps', e.target.value)}
                                             className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
@@ -588,9 +613,8 @@ export default function StudentDashboard() {
                                         </div>
                                         <div className="flex-1">
                                           <input 
-                                            type="number" 
-                                            step="0.5"
-                                            placeholder="Peso (kg)"
+                                            type="text" 
+                                            placeholder={ex.trackingType === 'TIME' ? 'Intensidad / Distancia' : 'Peso Usado (kg)'}
                                             value={set.weight}
                                             onChange={(e) => updateSet(ex.id, idx, 'weight', e.target.value)}
                                             className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
@@ -617,7 +641,7 @@ export default function StudentDashboard() {
                                 </button>
                                 
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-500 dark:text-neutral-500 mb-1">Observaciones</label>
+                                  <label className="block text-xs font-medium text-gray-500 dark:text-neutral-500 mb-1">Feedback Privado (opcional)</label>
                                   <input 
                                     type="text" 
                                     placeholder="Ej: Costó la última serie"

@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -28,90 +26,68 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const existingDayIds = existingRoutine.days.map((d: any) => d.id);
     const daysToDelete = existingDayIds.filter(id => !incomingDayIds.includes(id));
 
-    await prisma.$transaction(async (tx) => {
-      // 1. Borrar days huérfanos (sus ejercicios se borran en cascada por esquema)
-      if (daysToDelete.length > 0) {
-        await tx.routineDay.deleteMany({
-          where: { id: { in: daysToDelete } }
-        });
-      }
+    await prisma.routine.update({
+      where: { id: routineId },
+      data: {
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        days: {
+          deleteMany: daysToDelete.length > 0 ? { id: { in: daysToDelete } } : undefined,
+          update: days.filter((d: any) => d.id).map((day: any, index: number) => {
+            const incomingExIds = day.exercises.filter((ex: any) => ex.id).map((ex: any) => ex.id);
+            const existingDayData = existingRoutine.days.find(d => d.id === day.id);
+            const existingExIds = existingDayData ? existingDayData.exercises.map(ex => ex.id) : [];
+            const exercisesToDelete = existingExIds.filter(id => !incomingExIds.includes(id));
 
-      // 2. Actualizar fechas de la rutina base
-      await tx.routine.update({
-        where: { id: routineId },
-        data: {
-          startDate: new Date(startDate),
-          endDate: new Date(endDate)
-        }
-      });
-
-      // 3. Upsert de Días y Ejercicios
-      for (const [dayIndex, day] of days.entries()) {
-        let currentDayId = day.id;
-
-        if (currentDayId) {
-          // Update existente
-          await tx.routineDay.update({
-            where: { id: currentDayId },
-            data: { dayName: day.dayName, order: dayIndex }
-          });
-        } else {
-          // Crear nuevo día
-          const newDay = await tx.routineDay.create({
-            data: {
-              routineId: routineId,
-              dayName: day.dayName,
-              order: dayIndex
-            }
-          });
-          currentDayId = newDay.id;
-        }
-
-        // Obtener el día actual de existingRoutine para procesar los ejercicios huérfanos
-        const existingDayData = existingRoutine.days.find(d => d.id === currentDayId);
-        
-        if (existingDayData) {
-          const incomingExIds = day.exercises.filter((ex: any) => ex.id).map((ex: any) => ex.id);
-          const existingExIds = existingDayData.exercises.map(ex => ex.id);
-          const exercisesToDelete = existingExIds.filter(id => !incomingExIds.includes(id));
-          
-          if (exercisesToDelete.length > 0) {
-            await tx.exercise.deleteMany({
-              where: { id: { in: exercisesToDelete } }
-            });
-          }
-        }
-
-        // Upsert de ejercicios
-        if (day.exercises && day.exercises.length > 0) {
-          for (const ex of day.exercises) {
-            if (ex.id) {
-              await tx.exercise.update({
-                where: { id: ex.id },
-                data: {
-                  name: ex.name,
-                  sets_reps: ex.sets_reps,
-                  rest: ex.rest,
-                  videoUrl: ex.videoUrl
+            return {
+              where: { id: day.id },
+              data: {
+                dayName: day.dayName,
+                order: index,
+                exercises: {
+                  deleteMany: exercisesToDelete.length > 0 ? { id: { in: exercisesToDelete } } : undefined,
+                  update: day.exercises.filter((ex: any) => ex.id).map((ex: any) => ({
+                    where: { id: ex.id },
+                    data: {
+                      name: ex.name,
+                      sets_reps: ex.sets_reps,
+                      rest: ex.rest,
+                      videoUrl: ex.videoUrl || "",
+                      trackingType: ex.trackingType || "REPS",
+                      weight: ex.weight || "",
+                      observations: ex.observations || ""
+                    }
+                  })),
+                  create: day.exercises.filter((ex: any) => !ex.id).map((ex: any) => ({
+                    name: ex.name,
+                    sets_reps: ex.sets_reps,
+                    rest: ex.rest,
+                    videoUrl: ex.videoUrl || "",
+                    trackingType: ex.trackingType || "REPS",
+                    weight: ex.weight || "",
+                    observations: ex.observations || ""
+                  }))
                 }
-              });
-            } else {
-              await tx.exercise.create({
-                data: {
-                  routineDayId: currentDayId,
-                  name: ex.name,
-                  sets_reps: ex.sets_reps,
-                  rest: ex.rest,
-                  videoUrl: ex.videoUrl || ""
-                }
-              });
+              }
+            };
+          }),
+          create: days.filter((d: any) => !d.id).map((day: any, index: number) => ({
+            dayName: day.dayName,
+            order: index,
+            exercises: {
+              create: day.exercises.map((ex: any) => ({
+                name: ex.name,
+                sets_reps: ex.sets_reps,
+                rest: ex.rest,
+                videoUrl: ex.videoUrl || "",
+                trackingType: ex.trackingType || "REPS",
+                weight: ex.weight || "",
+                observations: ex.observations || ""
+              }))
             }
-          }
+          }))
         }
       }
-    }, {
-      maxWait: 10000,
-      timeout: 30000
     });
 
     return NextResponse.json({ success: true });

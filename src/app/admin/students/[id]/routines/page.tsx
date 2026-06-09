@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Calendar, Dumbbell, Plus, Trash2, Save, Loader2, PlaySquare, ChevronDown, ChevronUp, Copy, GripVertical, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Calendar, Dumbbell, Plus, Trash2, Save, Loader2, PlaySquare, ChevronDown, ChevronUp, Copy, GripVertical, ShieldAlert, Edit, Edit2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
@@ -12,6 +12,9 @@ type Exercise = {
   sets_reps: string;
   rest: string;
   videoUrl: string;
+  trackingType: string;
+  weight: string;
+  observations: string;
   _uid?: string;
 };
 
@@ -48,6 +51,13 @@ export default function StudentRoutinesPage() {
   const [savingNewItem, setSavingNewItem] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null);
+  const [editingSingleDayId, setEditingSingleDayId] = useState<string | null>(null);
+  const [addingSingleDayToRoutineId, setAddingSingleDayToRoutineId] = useState<string | null>(null);
+  
+  const [newDayConfigModal, setNewDayConfigModal] = useState<{isOpen: boolean, routine: any} | null>(null);
+  const [newDayConfigName, setNewDayConfigName] = useState("");
+  const [newDayConfigCopyFrom, setNewDayConfigCopyFrom] = useState<string>("none");
+
   const [routineToDelete, setRoutineToDelete] = useState<string | null>(null);
   const [isDeletingRoutine, setIsDeletingRoutine] = useState(false);
   const [expandedRoutines, setExpandedRoutines] = useState<Record<string, boolean>>({});
@@ -70,7 +80,11 @@ export default function StudentRoutinesPage() {
   const [newExerciseModal, setNewExerciseModal] = useState<{isOpen: boolean, dayIndex: number, exIndex: number} | null>(null);
   const [newExerciseName, setNewExerciseName] = useState("");
   const [newExerciseVideoUrl, setNewExerciseVideoUrl] = useState("");
-  
+
+  const [searchQueries, setSearchQueries] = useState<Record<string, string>>({});
+  const [dropdownOpen, setDropdownOpen] = useState<Record<string, boolean>>({});
+  const [focusedIndex, setFocusedIndex] = useState<Record<string, number>>({});
+
   const [formData, setFormData] = useState<RoutineFormData>({
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -80,7 +94,30 @@ export default function StudentRoutinesPage() {
   useEffect(() => {
     fetchRoutines();
     fetchLibrary();
+    
+    // Recuperar borrador si existe
+    const savedDraft = localStorage.getItem(`routine_draft_${studentId}`);
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        setFormData(parsed);
+        setIsCreating(true);
+      } catch (e) {
+        console.error("Error al cargar borrador", e);
+      }
+    }
   }, [studentId]);
+
+  // Guardar borrador automáticamente cuando cambia formData (si estamos en modo creación y no editando una antigua)
+  useEffect(() => {
+    if (isCreating && !editingRoutineId) {
+      if (formData.days.length > 0) {
+        localStorage.setItem(`routine_draft_${studentId}`, JSON.stringify(formData));
+      } else {
+        localStorage.removeItem(`routine_draft_${studentId}`);
+      }
+    }
+  }, [formData, isCreating, editingRoutineId, studentId]);
 
   const fetchLibrary = async () => {
     try {
@@ -140,12 +177,25 @@ export default function StudentRoutinesPage() {
     });
   };
 
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+    setEditingRoutineId(null);
+    setEditingSingleDayId(null);
+    setAddingSingleDayToRoutineId(null);
+    setFormData({
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      days: []
+    });
+    localStorage.removeItem(`routine_draft_${studentId}`);
+  };
+
   const handleAddExercise = (dayIndex: number) => {
     setFormData(prev => {
       const newDays = [...prev.days];
       newDays[dayIndex] = {
         ...newDays[dayIndex],
-        exercises: [...newDays[dayIndex].exercises, { name: "", sets_reps: "", rest: "", videoUrl: "", _uid: Math.random().toString(36).substr(2, 9) }]
+        exercises: [...newDays[dayIndex].exercises, { name: "", sets_reps: "", rest: "", videoUrl: "", trackingType: "REPS", weight: "", observations: "", _uid: Math.random().toString(36).substr(2, 9) }]
       };
       return { ...prev, days: newDays };
     });
@@ -203,29 +253,58 @@ export default function StudentRoutinesPage() {
     } catch (e) { console.error(e); } finally { setSavingNewItem(false); }
   };
 
-  const handleEditRoutine = (routine: any) => {
+  const handleEditSingleDay = (routineId: string, day: any) => {
     setFormData({
-      startDate: new Date(routine.startDate).toISOString().split('T')[0],
-      endDate: new Date(routine.endDate).toISOString().split('T')[0],
-      days: routine.days.map((d: any) => ({
-        id: d.id,
-        dayName: d.dayName,
-        order: d.order,
-        exercises: d.exercises.map((ex: any) => ({
-          id: ex.id,
-          name: ex.name,
-          sets_reps: ex.sets_reps,
-          rest: ex.rest,
-          videoUrl: ex.videoUrl,
-          _uid: Math.random().toString(36).substr(2, 9)
-        }))
-      }))
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+      days: [JSON.parse(JSON.stringify(day))]
+    });
+    setEditingRoutineId(routineId);
+    setEditingSingleDayId(day.id);
+    setIsCreating(true);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
+
+  const handleConfirmNewDayConfig = () => {
+    if (!newDayConfigModal) return;
+    const routine = newDayConfigModal.routine;
+    let exercisesToCopy: any[] = [];
+    
+    if (newDayConfigCopyFrom !== "none") {
+      const sourceDay = routine.days.find((d: any) => d.id === newDayConfigCopyFrom);
+      if (sourceDay) {
+        exercisesToCopy = JSON.parse(JSON.stringify(sourceDay.exercises)).map((ex: any) => ({ ...ex, id: undefined }));
+      }
+    }
+
+    setFormData({
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+      days: [{ 
+        dayName: newDayConfigName || `Día ${routine.days.length + 1}`, 
+        order: routine.days.length, 
+        exercises: exercisesToCopy 
+      }]
+    });
+    setAddingSingleDayToRoutineId(routine.id);
+    setNewDayConfigModal(null);
+    setNewDayConfigName("");
+    setNewDayConfigCopyFrom("none");
+    setIsCreating(true);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
+
+  const handleEditRoutine = (routine: any) => {
+    setEditingSingleDayId(null);
+    setFormData({
+      startDate: routine.startDate.split('T')[0],
+      endDate: routine.endDate.split('T')[0],
+      days: JSON.parse(JSON.stringify(routine.days))
     });
     setEditingRoutineId(routine.id);
     setIsCreating(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
   };
-
   const handleDeleteRoutine = async (routineId: string) => {
     setIsDeletingRoutine(true);
     try {
@@ -238,9 +317,47 @@ export default function StudentRoutinesPage() {
   };
 
   const handleSaveRoutine = async () => {
-    if (formData.days.length === 0) return alert("Añade al menos un día a la rutina");
+    if (formData.days.length === 0) return alert("Añade al menos un día");
     setSaving(true);
     try {
+      if (addingSingleDayToRoutineId) {
+        const res = await fetch(`/api/routines/admin-days`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            routineId: addingSingleDayToRoutineId,
+            dayName: formData.days[0].dayName,
+            order: formData.days[0].order,
+            exercises: formData.days[0].exercises
+          })
+        });
+        if (res.ok) {
+          setIsCreating(false);
+          setAddingSingleDayToRoutineId(null);
+          fetchRoutines();
+        } else {
+          alert("Error al crear el día");
+        }
+        return;
+      }
+
+      if (editingSingleDayId) {
+        const res = await fetch(`/api/routines/admin-days/${editingSingleDayId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData.days[0])
+        });
+        if (res.ok) {
+          setIsCreating(false);
+          setEditingRoutineId(null);
+          setEditingSingleDayId(null);
+          fetchRoutines();
+        } else {
+          alert("Error al actualizar el día");
+        }
+        return;
+      }
+
       const url = editingRoutineId ? `/api/routines/${editingRoutineId}` : "/api/routines";
       const method = editingRoutineId ? "PUT" : "POST";
       
@@ -257,6 +374,7 @@ export default function StudentRoutinesPage() {
           endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           days: []
         });
+        localStorage.removeItem(`routine_draft_${studentId}`);
         fetchRoutines();
       }
     } catch (err) {
@@ -336,20 +454,36 @@ export default function StudentRoutinesPage() {
       {isCreating && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 space-y-6 transition-colors">
           <div className="flex justify-between items-center border-b border-gray-100 dark:border-slate-800 pb-4">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{editingRoutineId ? "Editar Rutina" : "Crear Nueva Rutina"}</h2>
-            <button onClick={() => { setIsCreating(false); setEditingRoutineId(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Cancelar</button>
+            <h2 className="text-xl md:text-2xl font-black text-gray-800 dark:text-gray-100 flex items-center gap-3">
+              {addingSingleDayToRoutineId ? (
+                <><Plus className="w-6 h-6 text-purple-600" /> Agregando Día a Rutina</>
+              ) : editingSingleDayId ? (
+                <><Edit className="w-6 h-6 text-purple-600" /> Editando Día</>
+              ) : editingRoutineId ? (
+                <><Dumbbell className="w-6 h-6 text-purple-600" /> Editando Rutina</>
+              ) : (
+                <><Plus className="w-6 h-6 text-purple-600" /> Creador de Rutinas</>
+              )}
+            </h2>
+            <button onClick={handleCancelCreate} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Cancelar</button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Inicio</label>
-              <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100 color-scheme-dark" />
+          {(!editingSingleDayId && !addingSingleDayToRoutineId) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-purple-50 dark:bg-purple-900/10 p-6 rounded-2xl border border-purple-100 dark:border-purple-900/30">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-purple-600" /> Inicio
+                </label>
+                <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 shadow-sm font-medium dark:text-gray-100" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-purple-600" /> Fin
+                </label>
+                <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 shadow-sm font-medium dark:text-gray-100" />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Fin</label>
-              <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100 color-scheme-dark" />
-            </div>
-          </div>
+          )}
 
           <div className="space-y-6">
             {formData.days.map((day, dayIndex) => (
@@ -365,14 +499,12 @@ export default function StudentRoutinesPage() {
                     }}
                     className="px-3 py-1.5 font-bold text-gray-800 dark:text-gray-100 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500"
                   />
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => handleDuplicateDay(dayIndex)} title="Duplicar día" className="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition-colors">
-                      <Copy className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleRemoveDay(dayIndex)} title="Eliminar día" className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {(!editingSingleDayId && !addingSingleDayToRoutineId) && (
+                    <div className="flex items-center gap-1 bg-white/50 dark:bg-slate-800/50 p-1 rounded-lg">
+                      <button onClick={() => handleDuplicateDay(dayIndex)} className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-slate-700 rounded-md transition-colors" title="Duplicar día"><Copy className="w-4 h-4" /></button>
+                      <button onClick={() => handleRemoveDay(dayIndex)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-slate-700 rounded-md transition-colors" title="Eliminar día"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
@@ -406,53 +538,136 @@ export default function StudentRoutinesPage() {
                         <div className="cursor-grab hover:text-purple-600 dark:hover:text-purple-400 active:cursor-grabbing p-1 text-gray-400 dark:text-gray-500">
                           <GripVertical className="w-5 h-5" />
                         </div>
-                        <select 
-                          value={ex.name}  
-                        onChange={e => {
-                          const val = e.target.value;
-                          if (val === 'ADD_NEW') {
-                            setNewExerciseModal({isOpen: true, dayIndex, exIndex});
-                          } else {
-                            // Find the selected exercise to auto-populate videoUrl
-                            const selected = exerciseLibrary.find(x => x.name === val);
-                            setFormData(prev => {
-                              const newDays = [...prev.days];
-                              const newExercises = [...newDays[dayIndex].exercises];
-                              newExercises[exIndex] = { 
-                                ...newExercises[exIndex], 
-                                name: val,
-                                videoUrl: selected?.videoUrl || newExercises[exIndex].videoUrl // Keep existing if not found, or overwrite if found
-                              };
-                              // If selected has a videoUrl, always overwrite. If it doesn't, we can clear it or leave it. 
-                              // It's better to clear it if it's tied to the exercise, but for now we'll just set it to selected?.videoUrl || ""
-                              newExercises[exIndex].videoUrl = selected?.videoUrl || "";
-                              
-                              newDays[dayIndex] = { ...newDays[dayIndex], exercises: newExercises };
-                              return { ...prev, days: newDays };
-                            });
-                          }
-                        }} 
-                        className="flex-1 min-w-[150px] text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
-                      >
-                        <option value="">Seleccionar Ejercicio</option>
-                        {exerciseLibrary.map(n => <option key={n.id} value={n.name}>{n.name}</option>)}
-                        <option value="ADD_NEW" className="font-bold text-purple-600 dark:text-purple-400">+ Agregar nuevo...</option>
-                      </select>
-                      
-                      <input placeholder="Series x Reps" value={ex.sets_reps} onChange={e => handleExerciseChange(dayIndex, exIndex, 'sets_reps', e.target.value)} className="w-32 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" />
-                      <input placeholder="Descanso" value={ex.rest} onChange={e => handleExerciseChange(dayIndex, exIndex, 'rest', e.target.value)} className="w-24 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" />
-                      
-                      <div className="flex-1 min-w-[150px] relative">
-                        <PlaySquare className="w-4 h-4 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 pointer-events-none" />
-                        <input 
-                          placeholder="Video URL" 
-                          value={ex.videoUrl} 
-                          onChange={e => handleExerciseChange(dayIndex, exIndex, 'videoUrl', e.target.value)} 
-                          className="w-full text-sm pl-9 pr-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
-                        />
+                      <div className="flex-1 w-full md:w-auto space-y-3">
+                        <div className="flex flex-wrap md:flex-nowrap gap-2 items-start">
+                          <div className="flex-1 min-w-[200px] relative">
+                            <input
+                              type="text"
+                              placeholder="Buscar ejercicio..."
+                              value={searchQueries[`${dayIndex}-${exIndex}`] !== undefined ? searchQueries[`${dayIndex}-${exIndex}`] : ex.name}
+                              onFocus={() => {
+                                setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: true}));
+                                setFocusedIndex(prev => ({...prev, [`${dayIndex}-${exIndex}`]: 0}));
+                              }}
+                              onChange={e => {
+                                setSearchQueries(prev => ({...prev, [`${dayIndex}-${exIndex}`]: e.target.value}));
+                                handleExerciseChange(dayIndex, exIndex, 'name', e.target.value);
+                                setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: true}));
+                                setFocusedIndex(prev => ({...prev, [`${dayIndex}-${exIndex}`]: 0}));
+                              }}
+                              onKeyDown={e => {
+                                const currentKey = `${dayIndex}-${exIndex}`;
+                                const options = exerciseLibrary.filter(n => n.name.toLowerCase().includes((searchQueries[currentKey] || "").toLowerCase()));
+                                const totalOptions = options.length + 1;
+
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  setFocusedIndex(prev => ({...prev, [currentKey]: Math.min((prev[currentKey] || 0) + 1, totalOptions - 1)}));
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setFocusedIndex(prev => ({...prev, [currentKey]: Math.max((prev[currentKey] || 0) - 1, 0)}));
+                                } else if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  if (dropdownOpen[currentKey]) {
+                                    const fIndex = focusedIndex[currentKey] || 0;
+                                    if (fIndex < options.length) {
+                                      const selected = options[fIndex];
+                                      setSearchQueries(prev => ({...prev, [currentKey]: selected.name}));
+                                      handleExerciseChange(dayIndex, exIndex, 'name', selected.name);
+                                      handleExerciseChange(dayIndex, exIndex, 'videoUrl', selected.videoUrl || "");
+                                      setDropdownOpen(prev => ({...prev, [currentKey]: false}));
+                                    } else {
+                                      setNewExerciseModal({isOpen: true, dayIndex, exIndex});
+                                      setDropdownOpen(prev => ({...prev, [currentKey]: false}));
+                                    }
+                                  }
+                                } else if (e.key === 'Escape') {
+                                  setDropdownOpen(prev => ({...prev, [currentKey]: false}));
+                                }
+                              }}
+                              onBlur={() => setTimeout(() => setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: false})), 200)}
+                              className="w-full text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
+                            />
+                            {dropdownOpen[`${dayIndex}-${exIndex}`] && (
+                              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                {exerciseLibrary
+                                  .filter(n => n.name.toLowerCase().includes((searchQueries[`${dayIndex}-${exIndex}`] || "").toLowerCase()))
+                                  .map((n, idx) => (
+                                    <div
+                                      key={n.id}
+                                      className={`px-3 py-2 text-sm cursor-pointer ${focusedIndex[`${dayIndex}-${exIndex}`] === idx ? 'bg-purple-100 dark:bg-slate-600' : 'hover:bg-purple-50 dark:hover:bg-slate-700'}`}
+                                      onClick={() => {
+                                        setSearchQueries(prev => ({...prev, [`${dayIndex}-${exIndex}`]: n.name}));
+                                        handleExerciseChange(dayIndex, exIndex, 'name', n.name);
+                                        handleExerciseChange(dayIndex, exIndex, 'videoUrl', n.videoUrl || "");
+                                        setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: false}));
+                                      }}
+                                    >
+                                      {n.name}
+                                    </div>
+                                  ))}
+                                <div 
+                                  className={`px-3 py-2 text-sm font-bold text-purple-600 dark:text-purple-400 cursor-pointer border-t border-gray-100 dark:border-slate-700 ${focusedIndex[`${dayIndex}-${exIndex}`] === exerciseLibrary.filter(n => n.name.toLowerCase().includes((searchQueries[`${dayIndex}-${exIndex}`] || "").toLowerCase())).length ? 'bg-purple-100 dark:bg-slate-600' : 'hover:bg-purple-50 dark:hover:bg-slate-700'}`}
+                                  onClick={() => {
+                                    setNewExerciseModal({isOpen: true, dayIndex, exIndex});
+                                    setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: false}));
+                                  }}
+                                >
+                                  + Agregar nuevo...
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <select
+                            value={ex.trackingType || "REPS"}
+                            onChange={e => handleExerciseChange(dayIndex, exIndex, 'trackingType', e.target.value)}
+                            className="w-32 md:w-36 text-sm px-2 py-2 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 font-semibold border border-purple-200 dark:border-purple-800 rounded-lg focus:ring-2 focus:ring-purple-500"
+                          >
+                            <option value="REPS">Repeticiones</option>
+                            <option value="TIME">Por Tiempo</option>
+                            <option value="CIRCUIT">Combinado</option>
+                          </select>
+
+                          <input 
+                            placeholder={ex.trackingType === "TIME" ? "Tiempo (ej: 15 min, 20s)" : ex.trackingType === "CIRCUIT" ? "Rondas y Reps (ej: 4 vueltas x 15 reps)" : "Series x Reps (ej: 4x12 o 30-20-10)"} 
+                            value={ex.sets_reps} 
+                            onChange={e => handleExerciseChange(dayIndex, exIndex, 'sets_reps', e.target.value)} 
+                            className="w-full md:w-48 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                          />
+                          <input 
+                            placeholder={ex.trackingType === "TIME" ? "Intensidad (ej: Alta, Nivel 8)" : "Peso (kg) (ej: 85kg)"} 
+                            value={ex.weight || ""} 
+                            onChange={e => handleExerciseChange(dayIndex, exIndex, 'weight', e.target.value)} 
+                            className="w-full md:w-32 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                          />
+                          <input 
+                            placeholder="Descanso" 
+                            value={ex.rest} 
+                            onChange={e => handleExerciseChange(dayIndex, exIndex, 'rest', e.target.value)} 
+                            className="w-full md:w-24 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                          />
+                        </div>
+                        <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
+                          <input 
+                            placeholder='Observaciones (ej: 20"x10", súper serie, etc.)' 
+                            value={ex.observations || ""} 
+                            onChange={e => handleExerciseChange(dayIndex, exIndex, 'observations', e.target.value)} 
+                            className="flex-1 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                          />
+                          <div className="w-full md:w-64 relative shrink-0">
+                            <PlaySquare className="w-4 h-4 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                            <input 
+                              placeholder="Video URL" 
+                              value={ex.videoUrl} 
+                              onChange={e => handleExerciseChange(dayIndex, exIndex, 'videoUrl', e.target.value)} 
+                              className="w-full text-sm pl-9 pr-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                            />
+                          </div>
+                        </div>
                       </div>
                       
-                      <button onClick={() => handleRemoveExercise(dayIndex, exIndex)} className="text-gray-400 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleRemoveExercise(dayIndex, exIndex)} className="text-gray-400 hover:text-red-500 p-2 shrink-0 self-start md:self-auto"><Trash2 className="w-5 h-5" /></button>
                     </div>
                     );
                   })}
@@ -464,15 +679,17 @@ export default function StudentRoutinesPage() {
             ))}
           </div>
 
-          <button onClick={handleAddDay} className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-300 transition-colors flex items-center justify-center gap-2 font-medium">
-            <Plus className="w-5 h-5" />
-            Añadir Día de Entrenamiento
-          </button>
+          {(!editingSingleDayId && !addingSingleDayToRoutineId) && (
+            <button onClick={handleAddDay} className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-300 transition-colors flex items-center justify-center gap-2 font-medium">
+              <Plus className="w-5 h-5" />
+              Añadir Día de Entrenamiento
+            </button>
+          )}
 
           <div className="flex justify-end pt-4 border-t border-gray-100">
             <button onClick={handleSaveRoutine} disabled={saving} className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Guardar Rutina
+              {editingSingleDayId ? "Guardar Día" : addingSingleDayToRoutineId ? "Crear Día" : "Guardar Rutina"}
             </button>
           </div>
           <div ref={bottomRef} />
@@ -489,7 +706,9 @@ export default function StudentRoutinesPage() {
             <p className="text-gray-500 dark:text-gray-400">No hay rutinas asignadas a este alumno.</p>
           </div>
         ) : (
-          routines.filter((r: any) => r.id !== editingRoutineId).map((routine: any) => (
+          routines.filter((r: any) => r.id !== editingRoutineId).map((routine: any) => {
+            const diffDays = Math.ceil((new Date(routine.endDate).getTime() - new Date(routine.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            return (
             <div key={routine.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden transition-colors">
               <div 
                 className="bg-gray-50 dark:bg-slate-800/50 p-4 border-b border-gray-100 dark:border-slate-800 flex flex-wrap gap-2 justify-between items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
@@ -502,13 +721,16 @@ export default function StudentRoutinesPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full">
-                    {routine.days.length} días
-                  </span>
-                  <button onClick={(e) => { e.stopPropagation(); handleEditRoutine(routine); }} className="text-blue-500 hover:bg-blue-50 p-1.5 rounded-lg transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  <div className="text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-3 py-1.5 rounded-full">{diffDays} días</div>
+                  <button onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setNewDayConfigName(`Día ${routine.days.length + 1}`);
+                    setNewDayConfigCopyFrom("none");
+                    setNewDayConfigModal({ isOpen: true, routine }); 
+                  }} className="text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/40 p-1.5 rounded-lg transition-colors" title="Agregar Nuevo Día">
+                    <Plus className="w-4 h-4" />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); setRoutineToDelete(routine.id); }} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); setRoutineToDelete(routine.id); }} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded-lg transition-colors" title="Eliminar Rutina">
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <div className="text-gray-400 ml-2">
@@ -525,7 +747,14 @@ export default function StudentRoutinesPage() {
                     className="overflow-hidden"
                   >
                     <div className="p-4 space-y-4">
-                      {routine.days.map((day: any) => (
+                      {[...routine.days].sort((a: any, b: any) => {
+                        const matchA = a.dayName.match(/D[ií]a\s+(\d+)/i);
+                        const matchB = b.dayName.match(/D[ií]a\s+(\d+)/i);
+                        if (matchA && matchB) {
+                          return parseInt(matchA[1]) - parseInt(matchB[1]);
+                        }
+                        return a.order - b.order;
+                      }).map((day: any) => (
                         <div key={day.id} className="border border-gray-100 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 transition-colors">
                           <div 
                             className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors"
@@ -533,6 +762,16 @@ export default function StudentRoutinesPage() {
                           >
                             <h4 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                               {day.dayName}
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSingleDay(routine.id, day);
+                                }}
+                                className="ml-2 p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-gray-500 hover:text-purple-600 transition-colors"
+                                title="Editar Día"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
                             </h4>
                             <div className="flex items-center gap-3">
                               {day.isSkipped ? (
@@ -613,7 +852,8 @@ export default function StudentRoutinesPage() {
                 )}
               </AnimatePresence>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -652,6 +892,61 @@ export default function StudentRoutinesPage() {
               <button onClick={() => setNewExerciseModal(null)} className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors font-medium">Cancelar</button>
               <button onClick={saveNewExerciseName} disabled={savingNewItem || !newExerciseName.trim()} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50">
                 {savingNewItem ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar y Usar"}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {newDayConfigModal?.isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }} 
+            animate={{ scale: 1, opacity: 1 }} 
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-6"
+          >
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-purple-600" />
+              Configurar Nuevo Día
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del Día</label>
+                <input 
+                  type="text"
+                  value={newDayConfigName}
+                  onChange={(e) => setNewDayConfigName(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
+                  placeholder="Ej: Piernas"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">¿Copiar ejercicios de otro día?</label>
+                <select
+                  value={newDayConfigCopyFrom}
+                  onChange={(e) => setNewDayConfigCopyFrom(e.target.value)}
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
+                >
+                  <option value="none">No, crear día vacío</option>
+                  {newDayConfigModal.routine.days.map((day: any) => (
+                    <option key={day.id} value={day.id}>Copiar desde: {day.dayName}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-2">
+                  Si copias un día, se mantendrán todos los ejercicios, series y repeticiones como base para editar.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-8">
+              <button onClick={() => setNewDayConfigModal(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">
+                Cancelar
+              </button>
+              <button onClick={handleConfirmNewDayConfig} className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium">
+                Continuar
               </button>
             </div>
           </motion.div>

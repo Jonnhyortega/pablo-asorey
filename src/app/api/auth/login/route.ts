@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { message: 'El email y la contraseña son requeridos' },
+        { message: 'El email y la contraseÃ±a son requeridos' },
         { status: 400 }
       );
     }
@@ -27,17 +27,17 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { message: 'Credenciales inválidas' },
+        { message: 'Credenciales invÃ¡lidas' },
         { status: 401 }
       );
     }
 
-    // Verificamos la contraseña
+    // Verificamos la contraseÃ±a
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
       return NextResponse.json(
-        { message: 'Credenciales inválidas' },
+        { message: 'Credenciales invÃ¡lidas' },
         { status: 401 }
       );
     }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
 
-    const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24; // 30 días o 1 día
+    const maxAge = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24; // 30 dÃ­as o 1 dÃ­a
 
     response.cookies.set('auth-token', token, {
       httpOnly: true,

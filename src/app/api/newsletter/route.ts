@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email } = body;
 
-    // Validación básica
+    // ValidaciÃ³n bÃ¡sica
     if (!email) {
       return NextResponse.json(
         { message: 'El email es requerido' },
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     console.log('Nuevo suscriptor a newsletter guardado:', subscriber.email);
     
-    // Simulación de respuesta exitosa
+    // SimulaciÃ³n de respuesta exitosa
     return NextResponse.json({
       message: 'Te has suscrito correctamente al newsletter',
       success: true
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   } catch (error) {
     return NextResponse.json(
-      { message: 'Error interno del servidor al procesar la suscripción' },
+      { message: 'Error interno del servidor al procesar la suscripciÃ³n' },
       { status: 500 }
     );
   }

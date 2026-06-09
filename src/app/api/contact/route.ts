@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, message } = body;
 
-    // Validación básica
+    // ValidaciÃ³n bÃ¡sica
     if (!name || !email || !message) {
       return NextResponse.json(
         { message: 'Nombre, email y mensaje son campos requeridos' },
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     console.log('Nuevo mensaje de contacto guardado:', messageRecord.id);
     
-    // Simulación de respuesta exitosa
+    // SimulaciÃ³n de respuesta exitosa
     return NextResponse.json({
       message: 'Tu mensaje ha sido enviado correctamente. Te contactaremos a la brevedad.',
       success: true

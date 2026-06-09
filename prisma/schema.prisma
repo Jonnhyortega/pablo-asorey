@@ -99,6 +99,7 @@ model Exercise {
   loggedSets   String?    @default("[]")
   observations String     @default("")
   videoUrl     String     @default("")
+  trackingType String     @default("REPS") // REPS, TIME
   isCompleted  Boolean    @default(false)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt

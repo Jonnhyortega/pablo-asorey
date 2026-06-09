@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+
 
 // GET /api/routines?studentId=123
 export async function GET(request: Request) {
@@ -58,7 +58,10 @@ export async function POST(request: Request) {
                 name: ex.name,
                 sets_reps: ex.sets_reps,
                 rest: ex.rest,
-                videoUrl: ex.videoUrl || ""
+                videoUrl: ex.videoUrl || "",
+                trackingType: ex.trackingType || "REPS",
+                weight: ex.weight || "",
+                observations: ex.observations || ""
               }))
             }
           }))
