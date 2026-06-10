@@ -581,13 +581,13 @@ export default function StudentDashboard() {
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-gray-500 dark:text-neutral-400 pl-6">
                                     <span className="text-purple-600 dark:text-purple-400 break-words max-w-full">
-                                      {ex.trackingType === 'TIME' ? 'Tiempo: ' : ex.trackingType === 'CIRCUIT' ? 'Circuito: ' : ''}{ex.sets_reps}
+                                      {ex.trackingType === 'TIME' ? 'Tiempo: ' : ex.trackingType === 'CIRCUIT' ? 'Circuito: ' : ex.trackingType === 'HIIT' ? 'Intervalos: ' : ''}{ex.sets_reps}
                                     </span>
                                     {ex.weight && (
                                       <>
                                         <span className="text-gray-300 dark:text-neutral-600">•</span>
                                         <span className="text-emerald-600 dark:text-emerald-400 break-words max-w-full font-bold">
-                                          {ex.trackingType === 'TIME' ? 'Intensidad: ' : ex.trackingType === 'CIRCUIT' ? 'Detalle de Carga: ' : 'Peso: '}{ex.weight}
+                                          {ex.trackingType === 'TIME' ? 'Intensidad: ' : ex.trackingType === 'CIRCUIT' ? 'Detalle de Carga: ' : ex.trackingType === 'HIIT' ? 'Carga/Intensidad: ' : 'Peso: '}{ex.weight}
                                         </span>
                                       </>
                                     )}

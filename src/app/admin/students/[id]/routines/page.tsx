@@ -638,16 +638,17 @@ export default function StudentRoutinesPage() {
                             <option value="REPS">Repeticiones</option>
                             <option value="TIME">Por Tiempo</option>
                             <option value="CIRCUIT">Combinado</option>
+                            <option value="HIIT">HIIT / Tabata</option>
                           </select>
 
                           <input 
-                            placeholder={ex.trackingType === "TIME" ? "Tiempo (ej: 15 min, 20s)" : ex.trackingType === "CIRCUIT" ? "Rondas y Reps (ej: 4 vueltas x 15 reps)" : "Series x Reps (ej: 4x12 o 30-20-10)"} 
+                            placeholder={ex.trackingType === "TIME" ? "Tiempo (ej: 15 min, 20s)" : ex.trackingType === "CIRCUIT" ? "Rondas y Reps (ej: 4 vueltas x 15 reps)" : ex.trackingType === "HIIT" ? "Intervalos (ej: 20\"x10\" 16 vueltas)" : "Series x Reps (ej: 4x12 o 30-20-10)"} 
                             value={ex.sets_reps} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'sets_reps', e.target.value)} 
                             className="w-full md:w-48 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
                           />
                           <input 
-                            placeholder={ex.trackingType === "TIME" ? "Intensidad (ej: Alta, Nivel 8)" : "Peso (kg) (ej: 85kg)"} 
+                            placeholder={ex.trackingType === "TIME" ? "Intensidad (ej: Alta, Nivel 8)" : ex.trackingType === "HIIT" ? "Carga/Intensidad (ej: Peso corporal)" : "Peso (kg) (ej: 85kg)"} 
                             value={ex.weight || ""} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'weight', e.target.value)} 
                             className="w-full md:w-32 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
