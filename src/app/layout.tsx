@@ -40,6 +40,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -50,6 +51,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning className={`${inter.variable} ${funnel.variable}`}>
       <body className="flex flex-col min-h-screen bg-white dark:bg-[#0f0f13] text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Toaster position="top-center" />
           <LayoutWrapper>
             {children}
           </LayoutWrapper>

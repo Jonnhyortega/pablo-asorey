@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Calendar, Dumbbell, Plus, Trash2, Save, Loader2, PlaySquare, ChevronDown, ChevronUp, Copy, GripVertical, ShieldAlert, Edit, Edit2 } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { useParams } from "next/navigation";
 
 type Exercise = {
@@ -247,8 +248,9 @@ export default function StudentRoutinesPage() {
         setNewExerciseModal(null);
         setNewExerciseName("");
         setNewExerciseVideoUrl("");
+        toast.success("Ejercicio añadido a la biblioteca");
       } else {
-        alert("Error al guardar, tal vez el nombre ya existe.");
+        toast.error("Error al guardar, tal vez el nombre ya existe.");
       }
     } catch (e) { console.error(e); } finally { setSavingNewItem(false); }
   };
@@ -312,12 +314,15 @@ export default function StudentRoutinesPage() {
       if (res.ok) {
         fetchRoutines();
         setRoutineToDelete(null);
+        toast.success("Rutina eliminada correctamente");
+      } else {
+        toast.error("Error al eliminar la rutina");
       }
-    } catch (err) { console.error(err); } finally { setIsDeletingRoutine(false); }
+    } catch (err) { console.error(err); toast.error("Ocurrió un error inesperado"); } finally { setIsDeletingRoutine(false); }
   };
 
   const handleSaveRoutine = async () => {
-    if (formData.days.length === 0) return alert("Añade al menos un día");
+    if (formData.days.length === 0) return toast.error("Añade al menos un día");
     setSaving(true);
     try {
       if (addingSingleDayToRoutineId) {
@@ -335,8 +340,9 @@ export default function StudentRoutinesPage() {
           setIsCreating(false);
           setAddingSingleDayToRoutineId(null);
           fetchRoutines();
+          toast.success("Día creado correctamente");
         } else {
-          alert("Error al crear el día");
+          toast.error("Error al crear el día");
         }
         return;
       }
@@ -352,8 +358,9 @@ export default function StudentRoutinesPage() {
           setEditingRoutineId(null);
           setEditingSingleDayId(null);
           fetchRoutines();
+          toast.success("Día actualizado correctamente");
         } else {
-          alert("Error al actualizar el día");
+          toast.error("Error al actualizar el día");
         }
         return;
       }
@@ -376,9 +383,13 @@ export default function StudentRoutinesPage() {
         });
         localStorage.removeItem(`routine_draft_${studentId}`);
         fetchRoutines();
+        toast.success(editingRoutineId ? "Rutina actualizada" : "Rutina creada con éxito");
+      } else {
+        toast.error("Error al guardar la rutina");
       }
     } catch (err) {
       console.error(err);
+      toast.error("Ocurrió un error inesperado");
     } finally {
       setSaving(false);
     }

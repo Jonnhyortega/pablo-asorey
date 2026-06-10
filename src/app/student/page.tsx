@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, Calendar, Activity, Dumbbell, Wallet, CheckCircle, ChevronDown, ChevronUp, PlaySquare, Loader2, Save, X, Ban, Edit2, Trash2, Settings, Upload, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 
@@ -265,9 +266,13 @@ export default function StudentDashboard() {
       if (res.ok) {
         setCompletingDayId(null);
         fetchMe(); // Recargar datos
+        toast.success("¡Entrenamiento completado!");
+      } else {
+        toast.error("Error al completar el entrenamiento");
       }
     } catch (err) {
       console.error(err);
+      toast.error("Ocurrió un error");
     } finally {
       setSaving(false);
     }
@@ -285,8 +290,11 @@ export default function StudentDashboard() {
       if (res.ok) {
         setSkippingDayId(null);
         fetchMe();
+        toast.success("Día omitido");
+      } else {
+        toast.error("Error al omitir el día");
       }
-    } catch (err) { console.error(err); } finally { setSaving(false); }
+    } catch (err) { console.error(err); toast.error("Ocurrió un error"); } finally { setSaving(false); }
   };
 
   const handleRevertDay = async (dayId: string) => {
@@ -296,8 +304,9 @@ export default function StudentDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isSkipped: false, completedAt: null })
       });
-      if (res.ok) fetchMe();
-    } catch (err) { console.error(err); }
+      if (res.ok) { fetchMe(); toast.success("Día restaurado"); }
+      else { toast.error("Error al restaurar"); }
+    } catch (err) { console.error(err); toast.error("Ocurrió un error"); }
   };
 
   const handleEditDate = async () => {
@@ -312,8 +321,11 @@ export default function StudentDashboard() {
       if (res.ok) {
         setEditingDateDayId(null);
         fetchMe();
+        toast.success("Fecha de completado actualizada");
+      } else {
+        toast.error("Error al actualizar la fecha");
       }
-    } catch (err) { console.error(err); } finally { setSaving(false); }
+    } catch (err) { console.error(err); toast.error("Ocurrió un error"); } finally { setSaving(false); }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -324,7 +336,7 @@ export default function StudentDashboard() {
     const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default";
 
     if (!CLOUD_NAME) {
-      alert("Faltan configurar las variables de entorno de Cloudinary.");
+      toast.error("Faltan configurar las variables de entorno de Cloudinary.");
       return;
     }
 
@@ -347,6 +359,7 @@ export default function StudentDashboard() {
       }
     } catch (error) {
       console.error("Error uploading image:", error);
+      toast.error("Error al subir imagen");
       setUploadingImage(false);
     }
   };
@@ -368,9 +381,13 @@ export default function StudentDashboard() {
       if (res.ok) {
         setShowSettings(false);
         fetchMe();
+        toast.success("Perfil actualizado correctamente");
+      } else {
+        toast.error("Error al actualizar perfil");
       }
     } catch (err) {
       console.error(err);
+      toast.error("Ocurrió un error");
     } finally {
       setSavingSettings(false);
     }
