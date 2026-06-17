@@ -220,6 +220,16 @@ export default function StudentDashboard() {
     });
   };
 
+  const getHistoricalStatsForExercise = (exerciseName: string) => {
+    const trimmedName = exerciseName.trim();
+    if (!stats || !stats[trimmedName] || stats[trimmedName].length === 0) return null;
+    const history = stats[trimmedName];
+    // Como history ya viene ordenado por fecha de más antiguo a más reciente desde el backend
+    const maxWeight = Math.max(...history.map(entry => entry.maxWeight));
+    const lastWeight = history[history.length - 1].maxWeight;
+    return { maxWeight, lastWeight };
+  };
+
   const handleCompleteDay = async () => {
     if (!completingDayId) return;
     setSaving(true);
@@ -614,7 +624,21 @@ export default function StudentDashboard() {
                                       checked={exerciseEdits[ex.id]?.isCompleted || false}
                                       onChange={(e) => handleExerciseChange(ex.id, 'isCompleted', e.target.checked)}
                                     />
-                                    <h4 className={`font-bold text-base transition-colors leading-tight break-words ${exerciseEdits[ex.id]?.isCompleted ? 'text-gray-400 dark:text-neutral-500 line-through' : 'text-red-500 dark:text-white'}`}>{ex.name}</h4>
+                                    <div className="flex flex-col">
+                                      <h4 className={`font-bold text-base transition-colors leading-tight break-words ${exerciseEdits[ex.id]?.isCompleted ? 'text-gray-400 dark:text-neutral-500 line-through' : 'text-red-500 dark:text-white'}`}>{ex.name}</h4>
+                                      {(() => {
+                                        const hist = getHistoricalStatsForExercise(ex.name);
+                                        if (hist) {
+                                          return (
+                                            <div className="text-[10px] font-semibold mt-1 mb-0.5 flex flex-wrap items-center gap-2">
+                                              <span className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-1.5 py-0.5 rounded">Último: {hist.lastWeight}kg</span>
+                                              <span className="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 px-1.5 py-0.5 rounded">Récord: {hist.maxWeight}kg</span>
+                                            </div>
+                                          );
+                                        }
+                                        return null;
+                                      })()}
+                                    </div>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-gray-500 dark:text-neutral-400 pl-6">
                                     <span className="text-purple-600 dark:text-purple-400 break-words max-w-full">
