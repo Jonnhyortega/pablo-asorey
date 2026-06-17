@@ -220,6 +220,47 @@ export default function StudentDashboard() {
     });
   };
 
+  const addDropToSet = (exId: string, setIndex: number) => {
+    setExerciseEdits(prev => {
+      const currentSets = [...(prev[exId]?.loggedSets || [])];
+      if (currentSets[setIndex] && currentSets[setIndex].drops) {
+        currentSets[setIndex] = {
+          ...currentSets[setIndex],
+          drops: [...currentSets[setIndex].drops, { reps: "", weight: "" }]
+        };
+      }
+      return { ...prev, [exId]: { ...prev[exId], loggedSets: currentSets } };
+    });
+  };
+
+  const removeDropFromSet = (exId: string, setIndex: number, dropIndex: number) => {
+    setExerciseEdits(prev => {
+      const currentSets = [...(prev[exId]?.loggedSets || [])];
+      if (currentSets[setIndex] && currentSets[setIndex].drops) {
+        currentSets[setIndex] = {
+          ...currentSets[setIndex],
+          drops: currentSets[setIndex].drops.filter((_: any, i: number) => i !== dropIndex)
+        };
+      }
+      return { ...prev, [exId]: { ...prev[exId], loggedSets: currentSets } };
+    });
+  };
+
+  const updateDropInSet = (exId: string, setIndex: number, dropIndex: number, field: 'reps' | 'weight', value: string) => {
+    setExerciseEdits(prev => {
+      const currentSets = [...(prev[exId]?.loggedSets || [])];
+      if (currentSets[setIndex] && currentSets[setIndex].drops) {
+        const newDrops = [...currentSets[setIndex].drops];
+        newDrops[dropIndex] = { ...newDrops[dropIndex], [field]: value };
+        currentSets[setIndex] = {
+          ...currentSets[setIndex],
+          drops: newDrops
+        };
+      }
+      return { ...prev, [exId]: { ...prev[exId], loggedSets: currentSets } };
+    });
+  };
+
   const getHistoricalStatsForExercise = (exerciseName: string) => {
     const trimmedName = exerciseName.trim();
     if (!stats || !stats[trimmedName] || stats[trimmedName].length === 0) return null;
@@ -642,13 +683,13 @@ export default function StudentDashboard() {
                                   </div>
                                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-gray-500 dark:text-neutral-400 pl-6">
                                     <span className="text-purple-600 dark:text-purple-400 break-words max-w-full">
-                                      {ex.trackingType === 'TIME' ? 'Tiempo: ' : ex.trackingType === 'CIRCUIT' ? 'Circuito: ' : ex.trackingType === 'HIIT' ? 'Intervalos: ' : ''}{ex.sets_reps}
+                                      {ex.trackingType === 'TIME' ? 'Tiempo: ' : ex.trackingType === 'CIRCUIT' ? 'Circuito: ' : ex.trackingType === 'HIIT' ? 'Intervalos: ' : ex.trackingType === 'DROP_SET' ? 'Súper Serie/Drop: ' : ''}{ex.sets_reps}
                                     </span>
                                     {ex.weight && (
                                       <>
                                         <span className="text-gray-300 dark:text-neutral-600">•</span>
                                         <span className="text-emerald-600 dark:text-emerald-400 break-words max-w-full font-bold">
-                                          {ex.trackingType === 'TIME' ? 'Intensidad: ' : ex.trackingType === 'CIRCUIT' ? 'Detalle de Carga: ' : ex.trackingType === 'HIIT' ? 'Carga/Intensidad: ' : 'Peso: '}{ex.weight}
+                                          {ex.trackingType === 'TIME' ? 'Intensidad: ' : ex.trackingType === 'CIRCUIT' ? 'Detalle de Carga: ' : ex.trackingType === 'HIIT' ? 'Carga/Intensidad: ' : ex.trackingType === 'DROP_SET' ? 'Cargas: ' : 'Peso: '}{ex.weight}
                                         </span>
                                       </>
                                     )}
@@ -673,46 +714,112 @@ export default function StudentDashboard() {
                               
                               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-neutral-800 transition-colors">
                                 <label className="block text-xs font-semibold text-gray-500 dark:text-neutral-500 mb-2 uppercase tracking-wider">Registro de Series</label>
-                                <div className="space-y-2 mb-3">
+                                <div className="space-y-3 mb-3">
                                   {exerciseEdits[ex.id]?.loggedSets?.map((set: any, idx: number) => (
-                                    <div key={idx} className="flex items-center gap-2">
-                                      <div className="w-8 flex-shrink-0 text-center text-xs font-bold text-gray-400 dark:text-neutral-500">
-                                        #{idx + 1}
+                                    <div key={idx} className={`flex flex-col gap-2 ${set.drops ? 'bg-gray-100/50 dark:bg-neutral-800/30 p-3 rounded-xl border border-gray-200/50 dark:border-neutral-700/50' : 'flex-row items-center'}`}>
+                                      <div className={`${set.drops ? 'w-full text-left mb-1 text-sm' : 'w-8 text-center text-xs'} flex-shrink-0 font-bold text-gray-400 dark:text-neutral-500`}>
+                                        {set.drops ? `Serie #${idx + 1}` : `#${idx + 1}`}
                                       </div>
-                                      <div className="flex-1 flex gap-2">
-                                        <div className="flex-1">
-                                          <input 
-                                            type={ex.trackingType === 'TIME' ? 'text' : 'number'} 
-                                            placeholder={ex.trackingType === 'TIME' ? 'Duración (ej: 15m)' : 'Reps'}
-                                            value={set.reps}
-                                            onChange={(e) => updateSet(ex.id, idx, 'reps', e.target.value)}
-                                            className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
-                                          />
+                                      
+                                      {set.drops ? (
+                                        <div className="flex flex-col gap-2 w-full">
+                                          {set.drops.map((drop: any, dIdx: number) => (
+                                            <div key={dIdx} className="flex items-center gap-2 w-full">
+                                              <div className="w-5 text-center text-[10px] font-bold text-purple-400 dark:text-purple-500 flex-shrink-0">D{dIdx+1}</div>
+                                              <div className="flex-1 flex gap-2">
+                                                <div className="flex-1">
+                                                  <input 
+                                                    type="number" 
+                                                    placeholder="Reps"
+                                                    value={drop.reps}
+                                                    onChange={(e) => updateDropInSet(ex.id, idx, dIdx, 'reps', e.target.value)}
+                                                    className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                                  />
+                                                </div>
+                                                <div className="flex-1">
+                                                  <input 
+                                                    type="text" 
+                                                    placeholder="Peso"
+                                                    value={drop.weight}
+                                                    onChange={(e) => updateDropInSet(ex.id, idx, dIdx, 'weight', e.target.value)}
+                                                    className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                                  />
+                                                </div>
+                                              </div>
+                                              <button 
+                                                type="button" 
+                                                onClick={() => removeDropFromSet(ex.id, idx, dIdx)}
+                                                className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
+                                                title="Eliminar Drop"
+                                              >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                              </button>
+                                            </div>
+                                          ))}
+                                          <div className="flex justify-between items-center mt-1">
+                                            <button 
+                                              type="button"
+                                              onClick={() => addDropToSet(ex.id, idx)}
+                                              className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 flex items-center gap-1 transition-colors"
+                                            >
+                                              + Añadir Drop
+                                            </button>
+                                            <button 
+                                              type="button" 
+                                              onClick={() => removeSet(ex.id, idx)}
+                                              className="text-xs text-red-400 hover:text-red-500 transition-colors"
+                                            >
+                                              Eliminar Serie Completa
+                                            </button>
+                                          </div>
                                         </div>
-                                        <div className="flex-1">
-                                          <input 
-                                            type="text" 
-                                            placeholder={ex.trackingType === 'TIME' ? 'Intensidad / Distancia' : 'Peso Usado (kg)'}
-                                            value={set.weight}
-                                            onChange={(e) => updateSet(ex.id, idx, 'weight', e.target.value)}
-                                            className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
-                                          />
-                                        </div>
-                                      </div>
-                                      <button 
-                                        type="button" 
-                                        onClick={() => removeSet(ex.id, idx)}
-                                        className="p-2 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
-                                        title="Eliminar serie"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </button>
+                                      ) : (
+                                        <>
+                                          <div className="flex-1 flex gap-2">
+                                            <div className="flex-1">
+                                              <input 
+                                                type={ex.trackingType === 'TIME' ? 'text' : 'number'} 
+                                                placeholder={ex.trackingType === 'TIME' ? 'Duración (ej: 15m)' : 'Reps'}
+                                                value={set.reps}
+                                                onChange={(e) => updateSet(ex.id, idx, 'reps', e.target.value)}
+                                                className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                              />
+                                            </div>
+                                            <div className="flex-1">
+                                              <input 
+                                                type="text" 
+                                                placeholder={ex.trackingType === 'TIME' ? 'Intensidad / Distancia' : 'Peso Usado (kg)'}
+                                                value={set.weight}
+                                                onChange={(e) => updateSet(ex.id, idx, 'weight', e.target.value)}
+                                                className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                              />
+                                            </div>
+                                          </div>
+                                          <button 
+                                            type="button" 
+                                            onClick={() => removeSet(ex.id, idx)}
+                                            className="p-2 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
+                                            title="Eliminar serie"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
                                 <button 
                                   type="button"
-                                  onClick={() => addSet(ex.id)}
+                                  onClick={() => {
+                                    if (ex.trackingType === 'DROP_SET') {
+                                      setExerciseEdits(prev => {
+                                        const currentSets = prev[ex.id]?.loggedSets || [];
+                                        return { ...prev, [ex.id]: { ...prev[ex.id], loggedSets: [...currentSets, { drops: [{ reps: "", weight: "" }, { reps: "", weight: "" }] }] } };
+                                      });
+                                    } else {
+                                      addSet(ex.id);
+                                    }
+                                  }}
                                   className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 mb-4 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors"
                                 >
                                   + Añadir Serie

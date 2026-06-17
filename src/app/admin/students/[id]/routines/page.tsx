@@ -639,16 +639,17 @@ export default function StudentRoutinesPage() {
                             <option value="TIME">Por Tiempo</option>
                             <option value="CIRCUIT">Combinado</option>
                             <option value="HIIT">HIIT / Tabata</option>
+                            <option value="DROP_SET">Súper Serie / Drop Set</option>
                           </select>
 
                           <input 
-                            placeholder={ex.trackingType === "TIME" ? "Tiempo (ej: 15 min, 20s)" : ex.trackingType === "CIRCUIT" ? "Rondas y Reps (ej: 4 vueltas x 15 reps)" : ex.trackingType === "HIIT" ? "Intervalos (ej: 20\"x10\" 16 vueltas)" : "Series x Reps (ej: 4x12 o 30-20-10)"} 
+                            placeholder={ex.trackingType === "TIME" ? "Tiempo (ej: 15 min, 20s)" : ex.trackingType === "CIRCUIT" ? "Rondas y Reps (ej: 4 vueltas x 15 reps)" : ex.trackingType === "HIIT" ? "Intervalos (ej: 20\"x10\" 16 vueltas)" : ex.trackingType === "DROP_SET" ? "Series x Drops (ej: 4 x 10+10 reps)" : "Series x Reps (ej: 4x12 o 30-20-10)"} 
                             value={ex.sets_reps} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'sets_reps', e.target.value)} 
                             className="w-full md:w-48 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
                           />
                           <input 
-                            placeholder={ex.trackingType === "TIME" ? "Intensidad (ej: Alta, Nivel 8)" : ex.trackingType === "HIIT" ? "Carga/Intensidad (ej: Peso corporal)" : "Peso (kg) (ej: 85kg)"} 
+                            placeholder={ex.trackingType === "TIME" ? "Intensidad (ej: Alta, Nivel 8)" : ex.trackingType === "HIIT" ? "Carga/Intensidad (ej: Peso corporal)" : ex.trackingType === "DROP_SET" ? "Cargas (ej: 50kg + 40kg)" : "Peso (kg) (ej: 85kg)"} 
                             value={ex.weight || ""} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'weight', e.target.value)} 
                             className="w-full md:w-32 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
@@ -830,9 +831,18 @@ export default function StudentRoutinesPage() {
                                               if (parsedSets.length > 0) {
                                                 return (
                                                   <div className="flex flex-col gap-1 text-xs">
-                                                    {parsedSets.map((s: any, i: number) => (
-                                                      <span key={i} className="whitespace-nowrap">S{i+1}: {s.reps || '-'}x{s.weight || '-'}kg</span>
-                                                    ))}
+                                                    {parsedSets.map((s: any, i: number) => {
+                                                      if (s.drops && Array.isArray(s.drops)) {
+                                                        return (
+                                                          <span key={i} className="whitespace-nowrap">
+                                                            S{i+1}: {s.drops.map((d: any) => `${d.reps||'-'}x${d.weight||'-'}kg`).join(' + ')}
+                                                          </span>
+                                                        );
+                                                      }
+                                                      return (
+                                                        <span key={i} className="whitespace-nowrap">S{i+1}: {s.reps || '-'}x{s.weight || '-'}kg</span>
+                                                      );
+                                                    })}
                                                   </div>
                                                 );
                                               }

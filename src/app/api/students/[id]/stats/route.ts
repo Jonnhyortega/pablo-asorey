@@ -101,6 +101,7 @@ export async function GET(
               const sets = JSON.parse(ex.loggedSets);
               if (Array.isArray(sets)) {
                 sets.forEach((set: any) => {
+                  // Manejar serie normal
                   if (set.weight) {
                     const weightNum = parseFloat(set.weight.toString().replace(/[^\d.]/g, ''));
                     if (!isNaN(weightNum)) {
@@ -109,6 +110,20 @@ export async function GET(
                       }
                       hasWeight = true;
                     }
+                  }
+                  // Manejar Drop Sets / Super Series
+                  if (set.drops && Array.isArray(set.drops)) {
+                    set.drops.forEach((drop: any) => {
+                      if (drop.weight) {
+                        const weightNum = parseFloat(drop.weight.toString().replace(/[^\d.]/g, ''));
+                        if (!isNaN(weightNum)) {
+                          if (weightNum > maxWeightForExThisDay) {
+                            maxWeightForExThisDay = weightNum;
+                          }
+                          hasWeight = true;
+                        }
+                      }
+                    });
                   }
                 });
               }
