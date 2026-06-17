@@ -112,4 +112,12 @@ model ExerciseLibrary {
   createdAt DateTime @default(now())
 }
 
-
+model AdminNotification {
+  id        String   @id @default(cuid())
+  type      String   // PAYMENT_REQUEST, SYSTEM, etc.
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  studentId String?  // Optional reference to the student
+  createdAt DateTime @default(now())
+}

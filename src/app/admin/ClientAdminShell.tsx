@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, MessageSquare, Settings, GraduationCap, Menu, X, BookOpen } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import AdminNotificationsBell from "./AdminNotificationsBell";
 
 export default function ClientAdminShell({
   children,
@@ -175,6 +176,9 @@ export default function ClientAdminShell({
               <Menu size={24} />
             </button>
             <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 truncate">Panel de Control</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <AdminNotificationsBell />
           </div>
         </header>
         <div className="flex-1 overflow-y-auto p-4 lg:p-8">

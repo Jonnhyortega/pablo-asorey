@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Calendar, Activity, Dumbbell, Wallet, CheckCircle, ChevronDown, ChevronUp, PlaySquare, Loader2, Save, X, Ban, Edit2, Trash2, Settings, Upload, User } from "lucide-react";
+import { LogOut, Calendar, Activity, Dumbbell, Wallet, CheckCircle, ChevronDown, ChevronUp, PlaySquare, Loader2, Save, X, Ban, Edit2, Trash2, Settings, Upload, User, DollarSign } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -393,6 +393,24 @@ export default function StudentDashboard() {
     }
   };
 
+  const handlePaymentReport = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/students/me/payment-request", { method: "POST" });
+      if (res.ok) {
+        toast.success("Pago reportado con éxito. En espera de confirmación.");
+        fetchMe();
+      } else {
+        toast.error("Error al reportar pago");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Ocurrió un error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-neutral-950 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-blue-500" /></div>;
   }
@@ -496,15 +514,34 @@ export default function StudentDashboard() {
             <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Meta: {student.goals.length > 30 ? student.goals.substring(0, 30) + '...' : student.goals}</p>
           </div>
           
-          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors">
-            <div className="flex items-center gap-3 mb-2">
-              <Wallet className={`w-5 h-5 ${!student.paymentDate ? 'text-orange-500 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400')}`} />
-              <h3 className="font-semibold text-gray-700 dark:text-neutral-300">Estado de Cuota</h3>
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <Wallet className={`w-5 h-5 ${student.paymentStatus === 'VERIFYING' ? 'text-blue-500' : !student.paymentDate ? 'text-orange-500 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400')}`} />
+                <h3 className="font-semibold text-gray-700 dark:text-neutral-300">Estado de Cuota</h3>
+              </div>
+              <p className={`text-xl font-bold ${student.paymentStatus === 'VERIFYING' ? 'text-blue-500' : !student.paymentDate ? 'text-orange-500 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400')}`}>
+                {student.paymentStatus === 'VERIFYING' ? 'En Verificación' : !student.paymentDate ? 'Pendiente' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'Deuda' : 'Al Día')}
+              </p>
+              {student.paymentDate && <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Vence: {formatDateUTC(student.paymentDate)}</p>}
             </div>
-            <p className={`text-xl font-bold ${!student.paymentDate ? 'text-orange-500 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500 dark:text-red-400' : 'text-emerald-500 dark:text-emerald-400')}`}>
-              {!student.paymentDate ? 'Pendiente' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'Deuda' : 'Al Día')}
-            </p>
-            {student.paymentDate && <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">Vence: {formatDateUTC(student.paymentDate)}</p>}
+            
+            {student.paymentStatus !== 'VERIFYING' && (!student.paymentDate || new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime()) && (
+              <button 
+                onClick={handlePaymentReport}
+                disabled={saving}
+                className="mt-3 w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
+                Ya pagué
+              </button>
+            )}
+            
+            {student.paymentStatus === 'VERIFYING' && (
+              <p className="mt-3 text-xs font-semibold text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 py-2 px-3 rounded-lg text-center">
+                El profe está revisando tu pago
+              </p>
+            )}
           </div>
 
           <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors">

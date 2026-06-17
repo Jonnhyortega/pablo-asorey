@@ -259,10 +259,11 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
     }
   })();
 
+  const isVerifying = student.paymentStatus === 'VERIFYING';
   const isPending = !student.paymentDate;
   const isDebt = student.paymentDate && new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime();
-  const paymentStatusText = isPending ? 'Pendiente' : (isDebt ? 'Deuda' : 'Al Día');
-  const paymentStatusClass = isPending ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : (isDebt ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400');
+  const paymentStatusText = isVerifying ? 'Verificando' : (isPending ? 'Pendiente' : (isDebt ? 'Deuda' : 'Al Día'));
+  const paymentStatusClass = isVerifying ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : (isPending ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : (isDebt ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'));
 
   return (
     <motion.div 
@@ -529,9 +530,9 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-slate-700">
                   <div className="bg-white dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700/50">
                     <div className="flex items-center gap-2 mb-2">
-                      <Wallet className={`w-4 h-4 ${!student.paymentDate ? 'text-orange-500' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500' : 'text-emerald-500')}`} />
-                      <span className={`text-xs font-semibold uppercase tracking-wider ${!student.paymentDate ? 'text-orange-600 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}`}>
-                        {!student.paymentDate ? 'Pendiente' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'Deuda' : 'Al Día')}
+                      <Wallet className={`w-4 h-4 ${student.paymentStatus === 'VERIFYING' ? 'text-blue-500' : !student.paymentDate ? 'text-orange-500' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-500' : 'text-emerald-500')}`} />
+                      <span className={`text-xs font-semibold uppercase tracking-wider ${student.paymentStatus === 'VERIFYING' ? 'text-blue-600 dark:text-blue-400' : !student.paymentDate ? 'text-orange-600 dark:text-orange-400' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}`}>
+                        {student.paymentStatus === 'VERIFYING' ? 'En Verificación' : !student.paymentDate ? 'Pendiente' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'Deuda' : 'Al Día')}
                       </span>
                     </div>
                     {student.paymentDate ? (
