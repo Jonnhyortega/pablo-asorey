@@ -28,9 +28,22 @@ export async function POST(request: Request) {
         }
       },
       include: {
-        exercises: true
+        exercises: true,
+        routine: true
       }
     });
+
+    if (newDay.routine) {
+      await prisma.studentNotification.create({
+        data: {
+          studentId: newDay.routine.studentId,
+          type: "NEW_ROUTINE",
+          title: "Nuevo Día de Entrenamiento",
+          message: `El profesor ha agregado el día "${dayName}" a tu rutina.`,
+          relatedDayId: newDay.id
+        }
+      });
+    }
 
     return NextResponse.json({ success: true, day: newDay });
   } catch (error) {

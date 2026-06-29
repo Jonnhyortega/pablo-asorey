@@ -76,6 +76,16 @@ export async function POST(request: Request) {
       }
     });
 
+    // Notificar al estudiante que tiene una nueva rutina
+    await prisma.studentNotification.create({
+      data: {
+        type: "NEW_ROUTINE",
+        title: "Nueva Rutina Asignada",
+        message: `Se te ha asignado una nueva rutina desde el ${new Date(startDate).toLocaleDateString()} al ${new Date(endDate).toLocaleDateString()}. ¡A entrenar!`,
+        studentId
+      }
+    });
+
     return NextResponse.json(routine, { status: 201 });
   } catch (error) {
     console.error("Error creating routine:", error);

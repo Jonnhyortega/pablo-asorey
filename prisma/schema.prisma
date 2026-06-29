@@ -60,6 +60,13 @@ model Student {
   generatedPassword String?
   profilePicture   String?
   routines         Routine[]
+  notifications    StudentNotification[]
+  xp               Int      @default(0)
+  level            Int      @default(1)
+  currentStreak    Int      @default(0)
+  longestStreak    Int      @default(0)
+  lastActivityDate DateTime?
+  badges           StudentBadge[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -119,5 +126,26 @@ model AdminNotification {
   message   String
   read      Boolean  @default(false)
   studentId String?  // Optional reference to the student
+  relatedDayId String? // Referencia al día que originó la notificación (para borrarla si se deshace)
   createdAt DateTime @default(now())
+}
+
+model StudentNotification {
+  id        String   @id @default(cuid())
+  type      String   // RECORD, PAYMENT_CONFIRMED, NEW_ROUTINE, DAY_COMPLETED
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  relatedDayId String? // Referencia al día que originó la notificación (para borrarla si se deshace)
+  createdAt DateTime @default(now())
+}
+
+model StudentBadge {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  badgeId   String
+  earnedAt  DateTime @default(now())
 }

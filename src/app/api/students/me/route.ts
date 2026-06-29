@@ -36,7 +36,8 @@ export async function GET(request: Request) {
           orderBy: {
             startDate: 'desc'
           }
-        }
+        },
+        badges: true
       }
     });
 

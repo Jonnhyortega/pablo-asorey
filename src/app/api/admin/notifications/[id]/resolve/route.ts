@@ -39,6 +39,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             paymentDate: newPaymentDate
           }
         });
+
+        // Notificar al estudiante que su pago fue confirmado
+        await prisma.studentNotification.create({
+          data: {
+            type: "PAYMENT_CONFIRMED",
+            title: "Pago Confirmado",
+            message: "Tu pago mensual ha sido verificado por el administrador. ¡Gracias!",
+            studentId: student.id
+          }
+        });
       }
     }
 

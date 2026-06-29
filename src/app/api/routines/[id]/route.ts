@@ -90,6 +90,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       }
     });
 
+    await prisma.studentNotification.create({
+      data: {
+        studentId: existingRoutine.studentId,
+        type: "NEW_ROUTINE",
+        title: "Rutina Actualizada",
+        message: "El profesor ha modificado tu rutina actual."
+      }
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating routine:", error);

@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, Dumbbell, Plus, Trash2, Save, Loader2, PlaySquare,
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useParams } from "next/navigation";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 type Exercise = {
   id?: string;
@@ -59,7 +60,19 @@ export default function StudentRoutinesPage() {
   const [newDayConfigName, setNewDayConfigName] = useState("");
   const [newDayConfigCopyFrom, setNewDayConfigCopyFrom] = useState<string>("none");
 
-  const [routineToDelete, setRoutineToDelete] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    isDanger?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {}
+  });
   const [isDeletingRoutine, setIsDeletingRoutine] = useState(false);
   const [expandedRoutines, setExpandedRoutines] = useState<Record<string, boolean>>({});
   const [expandedDays, setExpandedDays] = useState<Record<string, boolean>>({});
@@ -160,7 +173,7 @@ export default function StudentRoutinesPage() {
       const dayToCopy = prev.days[dayIndex];
       const newDay = {
         ...dayToCopy,
-        dayName: `Día ${prev.days.length + 1}`,
+        dayName: dayToCopy.dayName,
         id: undefined,
         exercises: dayToCopy.exercises.map(ex => ({ ...ex, id: undefined }))
       };
@@ -307,18 +320,52 @@ export default function StudentRoutinesPage() {
     setIsCreating(true);
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
   };
-  const handleDeleteRoutine = async (routineId: string) => {
-    setIsDeletingRoutine(true);
-    try {
-      const res = await fetch(`/api/routines/${routineId}`, { method: "DELETE" });
-      if (res.ok) {
-        fetchRoutines();
-        setRoutineToDelete(null);
-        toast.success("Rutina eliminada correctamente");
-      } else {
-        toast.error("Error al eliminar la rutina");
+  const handleDeleteRoutine = (routineId: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "¿Eliminar rutina?",
+      message: "Estás a punto de eliminar esta rutina por completo. Se perderá el progreso de todos los ejercicios. Esta acción no se puede deshacer.",
+      confirmText: "Sí, eliminar",
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setIsDeletingRoutine(true);
+        try {
+          const res = await fetch(`/api/routines/${routineId}`, { method: "DELETE" });
+          if (res.ok) {
+            fetchRoutines();
+            toast.success("Rutina eliminada correctamente");
+          } else {
+            toast.error("Error al eliminar la rutina");
+          }
+        } catch (err) { console.error(err); toast.error("Ocurrió un error inesperado"); } finally { setIsDeletingRoutine(false); }
       }
-    } catch (err) { console.error(err); toast.error("Ocurrió un error inesperado"); } finally { setIsDeletingRoutine(false); }
+    });
+  };
+
+  const handleDeleteDay = (dayId: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: "Eliminar Día",
+      message: "¿Seguro que quieres eliminar este día de entrenamiento? Esta acción no se puede deshacer.",
+      confirmText: "Sí, eliminar",
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(`/api/routines/admin-days/${dayId}`, { method: "DELETE" });
+          if (res.ok) {
+            fetchRoutines();
+            toast.success("Día eliminado correctamente");
+          } else {
+            toast.error("Error al eliminar el día");
+          }
+        } catch (err) {
+          console.error(err);
+          toast.error("Ocurrió un error inesperado");
+        }
+      }
+    });
   };
 
   const handleSaveRoutine = async () => {
@@ -743,7 +790,7 @@ export default function StudentRoutinesPage() {
                   }} className="text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/40 p-1.5 rounded-lg transition-colors" title="Agregar Nuevo Día">
                     <Plus className="w-4 h-4" />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); setRoutineToDelete(routine.id); }} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded-lg transition-colors" title="Eliminar Rutina">
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteRoutine(routine.id); }} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded-lg transition-colors" title="Eliminar Rutina">
                     <Trash2 className="w-4 h-4" />
                   </button>
                   <div className="text-gray-400 ml-2">
@@ -784,6 +831,16 @@ export default function StudentRoutinesPage() {
                                 title="Editar Día"
                               >
                                 <Edit className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteDay(day.id);
+                                }}
+                                className="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-500 hover:text-red-600 transition-colors"
+                                title="Eliminar Día"
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </h4>
                             <div className="flex items-center gap-3">
@@ -949,7 +1006,16 @@ export default function StudentRoutinesPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">¿Copiar ejercicios de otro día?</label>
                 <select
                   value={newDayConfigCopyFrom}
-                  onChange={(e) => setNewDayConfigCopyFrom(e.target.value)}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    setNewDayConfigCopyFrom(selectedId);
+                    if (selectedId !== "none") {
+                      const sourceDay = newDayConfigModal.routine.days.find((d: any) => d.id === selectedId);
+                      if (sourceDay) {
+                        setNewDayConfigName(sourceDay.dayName);
+                      }
+                    }
+                  }}
                   className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
                 >
                   <option value="none">No, crear día vacío</option>
@@ -975,46 +1041,10 @@ export default function StudentRoutinesPage() {
         </div>
       )}
 
-      <AnimatePresence>
-        {routineToDelete && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => !isDeletingRoutine && setRoutineToDelete(null)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-slate-800"
-            >
-              <div className="p-6 text-center">
-                <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 dark:text-red-400">
-                  <ShieldAlert className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">¿Eliminar rutina?</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  Estás a punto de eliminar esta rutina por completo. <strong className="text-gray-800 dark:text-gray-200">Se perderá el progreso</strong> de todos los ejercicios que el alumno haya marcado como completados. Esta acción no se puede deshacer.
-                </p>
-                <div className="flex gap-3 w-full">
-                  <button 
-                    onClick={() => setRoutineToDelete(null)}
-                    disabled={isDeletingRoutine}
-                    className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 dark:border-slate-700 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteRoutine(routineToDelete)}
-                    disabled={isDeletingRoutine}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {isDeletingRoutine ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                    Sí, eliminar
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <ConfirmDialog 
+        {...confirmDialog} 
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} 
+      />
 
     </div>
   );

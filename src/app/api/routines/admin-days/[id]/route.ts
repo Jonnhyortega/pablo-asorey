@@ -14,7 +14,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     // Identificar qué ejercicios borrar
     const existingDay = await prisma.routineDay.findUnique({
       where: { id: routineDayId },
-      include: { exercises: true }
+      include: { exercises: true, routine: true }
     });
 
     if (!existingDay) {
@@ -60,9 +60,56 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       }
     });
 
+    if (existingDay.routine) {
+      await prisma.studentNotification.create({
+        data: {
+          studentId: existingDay.routine.studentId,
+          type: "NEW_ROUTINE",
+          title: "Día de Rutina Actualizado",
+          message: `El profesor ha actualizado tu rutina en el día "${dayName}".`,
+          relatedDayId: updatedDay.id
+        }
+      });
+    }
+
     return NextResponse.json({ success: true, day: updatedDay });
   } catch (error) {
     console.error("Error updating routine day:", error);
     return NextResponse.json({ error: "Failed to update routine day" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id: routineDayId } = await params;
+
+    const existingDay = await prisma.routineDay.findUnique({
+      where: { id: routineDayId },
+      include: { routine: true }
+    });
+
+    if (!existingDay) {
+      return NextResponse.json({ error: "Routine day not found" }, { status: 404 });
+    }
+
+    await prisma.routineDay.delete({
+      where: { id: routineDayId }
+    });
+
+    if (existingDay.routine) {
+      await prisma.studentNotification.create({
+        data: {
+          studentId: existingDay.routine.studentId,
+          type: "NEW_ROUTINE",
+          title: "Día de Rutina Eliminado",
+          message: `El profesor ha eliminado el día "${existingDay.dayName}" de tu rutina.`,
+        }
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting routine day:", error);
+    return NextResponse.json({ error: "Failed to delete routine day" }, { status: 500 });
   }
 }

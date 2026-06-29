@@ -469,7 +469,7 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                   <div className="pt-4 mt-2">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        <Activity className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                        <Dumbbell className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                         Progreso de Fuerza
                       </div>
                       <select
