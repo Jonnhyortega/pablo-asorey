@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Flame,
   Medal,
+  Info,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -105,6 +106,8 @@ export default function StudentDashboard() {
 
   // Settings State
   const [showSettings, setShowSettings] = useState(false);
+  const [showXPModal, setShowXPModal] = useState(false);
+  const [showBadgesModal, setShowBadgesModal] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [settingsForm, setSettingsForm] = useState<{
@@ -112,7 +115,8 @@ export default function StudentDashboard() {
     goals: string[];
     profilePicture: string;
     birthDate: string;
-  }>({ weight: "", goals: [], profilePicture: "", birthDate: "" });
+    selectedBadge: string;
+  }>({ weight: "", goals: [], profilePicture: "", birthDate: "", selectedBadge: "" });
 
   const GOAL_OPTIONS = [
     "Pérdida de Grasa",
@@ -578,6 +582,7 @@ export default function StudentDashboard() {
         weight: settingsForm.weight,
         goals: settingsForm.goals.join(", "),
         profilePicture: settingsForm.profilePicture,
+        selectedBadge: settingsForm.selectedBadge,
         birthDate: settingsForm.birthDate
           ? new Date(settingsForm.birthDate)
           : null,
@@ -707,17 +712,40 @@ export default function StudentDashboard() {
 
         <div className="p-6 pb-2">
           <div className="flex items-center gap-3 mb-6">
-            {student.profilePicture ? (
-              <img
-                src={student.profilePicture}
-                alt="Profile"
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-cyan-500/20"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-cyan-500/20">
-                {student.name.charAt(0)}
-              </div>
-            )}
+            <div className="relative inline-block">
+              {student.profilePicture ? (
+                <img
+                  src={student.profilePicture}
+                  alt="Profile"
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-cyan-500/20"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-cyan-500/20">
+                  {student.name.charAt(0)}
+                </div>
+              )}
+              {student.selectedBadge && (() => {
+                 const badgeData = student.selectedBadge === "FIRST_WORKOUT" 
+                    ? { color: "from-blue-400 to-blue-600", icon: Medal }
+                    : student.selectedBadge === "STREAK_7"
+                    ? { color: "from-orange-400 to-red-600", icon: Flame }
+                    : student.selectedBadge === "CENTURION"
+                    ? { color: "from-yellow-400 to-amber-600", icon: Medal }
+                    : student.selectedBadge === "BULL_GROUPED" || student.selectedBadge.startsWith("BULL_PROGRESS_")
+                    ? { color: "from-emerald-400 to-green-600", icon: Dumbbell }
+                    : student.selectedBadge === "BEAST_MODE"
+                    ? { color: "from-rose-500 to-red-700", icon: Flame }
+                    : student.selectedBadge === "MUTANT_MODE"
+                    ? { color: "from-fuchsia-600 to-purple-800", icon: Dumbbell }
+                    : { color: "from-purple-400 to-purple-600", icon: Medal };
+                 const Icon = badgeData.icon;
+                 return (
+                   <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-tr ${badgeData.color} flex items-center justify-center text-white ring-2 ring-white dark:ring-[#0f0f13] shadow-md z-10`}>
+                     <Icon className="w-3 h-3" />
+                   </div>
+                 );
+              })()}
+            </div>
             <div className="flex-1 min-w-0">
               <h2 className="font-bold text-gray-900 dark:text-white truncate">
                 Hola, {student.name.split(" ")[0]}
@@ -805,6 +833,7 @@ export default function StudentDashboard() {
                     ? student.goals.split(", ").filter(Boolean)
                     : [],
                   profilePicture: student.profilePicture || "",
+                  selectedBadge: student.selectedBadge || "",
                   birthDate: student.birthDate
                     ? student.birthDate.split("T")[0]
                     : "",
@@ -847,17 +876,40 @@ export default function StudentDashboard() {
               >
                 <div className="p-6 border-b border-gray-200 dark:border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {student.profilePicture ? (
-                      <img
-                        src={student.profilePicture}
-                        alt="Profile"
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-cyan-500/20"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
-                        {student.name.charAt(0)}
-                      </div>
-                    )}
+                    <div className="relative inline-block">
+                      {student.profilePicture ? (
+                        <img
+                          src={student.profilePicture}
+                          alt="Profile"
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-cyan-500/20"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
+                          {student.name.charAt(0)}
+                        </div>
+                      )}
+                      {student.selectedBadge && (() => {
+                         const badgeData = student.selectedBadge === "FIRST_WORKOUT" 
+                            ? { color: "from-blue-400 to-blue-600", icon: Medal }
+                            : student.selectedBadge === "STREAK_7"
+                            ? { color: "from-orange-400 to-red-600", icon: Flame }
+                            : student.selectedBadge === "CENTURION"
+                            ? { color: "from-yellow-400 to-amber-600", icon: Medal }
+                            : student.selectedBadge === "BULL_GROUPED" || student.selectedBadge.startsWith("BULL_PROGRESS_")
+                            ? { color: "from-emerald-400 to-green-600", icon: Dumbbell }
+                            : student.selectedBadge === "BEAST_MODE"
+                            ? { color: "from-rose-500 to-red-700", icon: Flame }
+                            : student.selectedBadge === "MUTANT_MODE"
+                            ? { color: "from-fuchsia-600 to-purple-800", icon: Dumbbell }
+                            : { color: "from-purple-400 to-purple-600", icon: Medal };
+                         const Icon = badgeData.icon;
+                         return (
+                           <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-tr ${badgeData.color} flex items-center justify-center text-white ring-2 ring-white dark:ring-[#0f0f13] shadow-sm z-10`}>
+                             <Icon className="w-2.5 h-2.5" />
+                           </div>
+                         );
+                      })()}
+                    </div>
                     <div className="min-w-0">
                       <h2 className="font-bold text-gray-900 dark:text-white truncate text-lg">
                         Hola, {student.name.split(" ")[0]}
@@ -1043,7 +1095,12 @@ export default function StudentDashboard() {
                         <div className="flex justify-between items-end mb-2">
                           <div>
                             <p className="text-indigo-100 font-medium text-sm uppercase tracking-wider">Nivel {student.level || 1}</p>
-                            <h3 className="text-3xl font-black">{(student.level || 1) < 10 ? "Principiante" : (student.level || 1) < 30 ? "Atleta" : "Leyenda"}</h3>
+                            <h3 className="text-3xl font-black flex items-center gap-2">
+                              {(student.level || 1) < 36 ? "Principiante" : (student.level || 1) < 108 ? "Intermedio" : (student.level || 1) < 216 ? "Avanzado" : "Atleta"}
+                              <button onClick={() => setShowXPModal(true)} className="p-1.5 hover:bg-white/20 rounded-full transition-colors group" title="Sistema de XP">
+                                <Info className="w-5 h-5 text-indigo-200 group-hover:text-white transition-colors" />
+                              </button>
+                            </h3>
                           </div>
                           <div className="text-right">
                             <p className="text-3xl font-bold">{student.xp || 0} <span className="text-sm font-medium text-indigo-200">XP</span></p>
@@ -1061,52 +1118,96 @@ export default function StudentDashboard() {
                     </div>
 
                     {/* Widget Racha */}
-                    <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-500 shadow-inner">
-                          <Flame className="w-8 h-8" />
+                    <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-500 shadow-inner">
+                            <Flame className="w-8 h-8" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Racha Actual</p>
+                            <h3 className="text-3xl font-black text-gray-800 dark:text-white flex items-baseline gap-2">
+                              {student.currentStreak || 0} <span className="text-lg font-medium text-gray-400">días</span>
+                            </h3>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Racha Actual</p>
-                          <h3 className="text-3xl font-black text-gray-800 dark:text-white flex items-baseline gap-2">
-                            {student.currentStreak || 0} <span className="text-lg font-medium text-gray-400">días</span>
-                          </h3>
+                        <div className="text-right">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Récord</p>
+                          <p className="font-bold text-gray-600 dark:text-gray-300 text-lg">{student.longestStreak || 0} días</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Récord</p>
-                        <p className="font-bold text-gray-600 dark:text-gray-300 text-lg">{student.longestStreak || 0} días</p>
+                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-slate-800 flex items-center justify-center gap-2">
+                        <p className="text-xs font-medium text-orange-500/90 dark:text-orange-400/90 flex items-center gap-1.5">
+                          <span className="text-[10px]">⚠️</span> Si pasas +4 días sin entrenar perderás tu racha
+                        </p>
                       </div>
                     </div>
                   </div>
                   
                   {/* Vitrina de Medallas */}
                   <div className="mt-4 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-                    <h3 className="font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                      <Medal className="w-5 h-5 text-amber-500" /> Vitrina de Medallas
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                        <Medal className="w-5 h-5 text-amber-500" /> Vitrina de Medallas
+                      </h3>
+                      <button onClick={() => setShowBadgesModal(true)} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 px-2.5 py-1 rounded-full">
+                        <Info className="w-4 h-4" /> ¿Cómo ganar más?
+                      </button>
+                    </div>
                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700">
                       {student.badges && student.badges.length > 0 ? (
-                        student.badges.map((badge: any, i: number) => {
-                          const badgeData = badge.badgeId === "FIRST_WORKOUT" 
-                            ? { name: "Primer Paso", color: "from-blue-400 to-blue-600", shadow: "shadow-blue-500/20" }
-                            : badge.badgeId === "STREAK_7"
-                            ? { name: "Racha de Fuego", color: "from-orange-400 to-red-600", shadow: "shadow-red-500/20" }
-                            : badge.badgeId === "CENTURION"
-                            ? { name: "Centurión", color: "from-yellow-400 to-amber-600", shadow: "shadow-amber-500/20" }
-                            : { name: badge.badgeId, color: "from-purple-400 to-purple-600", shadow: "shadow-purple-500/20" };
+                        (() => {
+                          const renderBadges: any[] = [];
+                          let bullCount = 0;
+                          
+                          // Primero agrupamos los toros
+                          student.badges.forEach((b: any) => {
+                            if (b.badgeId.startsWith("BULL_PROGRESS_") || b.badgeId === "STRENGTH_10KG") {
+                              bullCount++;
+                            } else {
+                              renderBadges.push(b);
+                            }
+                          });
 
-                          return (
-                            <div key={i} className="flex flex-col items-center min-w-[90px] group">
-                              <div className={`w-16 h-16 rounded-full bg-gradient-to-tr ${badgeData.color} shadow-lg ${badgeData.shadow} flex items-center justify-center text-white mb-3 transform transition-transform group-hover:scale-110 group-hover:-translate-y-1`}>
-                                <Medal className="w-8 h-8" />
+                          // Agregamos el toro agrupado si existe
+                          if (bullCount > 0) {
+                            renderBadges.push({ badgeId: "BULL_GROUPED", count: bullCount });
+                          }
+
+                          return renderBadges.map((badge: any, i: number) => {
+                            const badgeData = badge.badgeId === "FIRST_WORKOUT" 
+                              ? { name: "Primer Paso", color: "from-blue-400 to-blue-600", shadow: "shadow-blue-500/20", icon: Medal }
+                              : badge.badgeId === "STREAK_7"
+                              ? { name: "Racha de Fuego", color: "from-orange-400 to-red-600", shadow: "shadow-red-500/20", icon: Flame }
+                              : badge.badgeId === "CENTURION"
+                              ? { name: "Centurión", color: "from-yellow-400 to-amber-600", shadow: "shadow-amber-500/20", icon: Medal }
+                              : badge.badgeId === "BULL_GROUPED"
+                              ? { name: `Toro`, color: "from-emerald-400 to-green-600", shadow: "shadow-emerald-500/20", icon: Dumbbell }
+                              : badge.badgeId === "BEAST_MODE"
+                              ? { name: "Bestia", color: "from-rose-500 to-red-700", shadow: "shadow-rose-500/20", icon: Flame }
+                              : badge.badgeId === "MUTANT_MODE"
+                              ? { name: "Mutante", color: "from-fuchsia-600 to-purple-800", shadow: "shadow-purple-500/20", icon: Dumbbell }
+                              : { name: badge.badgeId, color: "from-purple-400 to-purple-600", shadow: "shadow-purple-500/20", icon: Medal };
+
+                            const Icon = badgeData.icon;
+
+                            return (
+                              <div key={i} className="flex flex-col items-center min-w-[90px] group">
+                                <div className={`w-16 h-16 rounded-full bg-gradient-to-tr ${badgeData.color} shadow-lg ${badgeData.shadow} flex items-center justify-center text-white mb-3 transform transition-transform group-hover:scale-110 group-hover:-translate-y-1 relative`}>
+                                  <Icon className="w-8 h-8" />
+                                  {badge.badgeId === "BULL_GROUPED" && badge.count > 1 && (
+                                    <div className="absolute -top-1 -right-1 bg-white text-green-600 text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-green-500 shadow-sm">
+                                      x{badge.count}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center leading-tight">
+                                  {badgeData.name}
+                                </span>
                               </div>
-                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center leading-tight">
-                                {badgeData.name}
-                              </span>
-                            </div>
-                          );
-                        })
+                            );
+                          });
+                        })()
                       ) : (
                         <div className="text-center w-full bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-gray-200 dark:border-slate-700 p-6">
                           <Medal className="w-10 h-10 text-gray-300 dark:text-slate-600 mx-auto mb-2 opacity-50" />
@@ -2272,10 +2373,18 @@ export default function StudentDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   Soporte y Chat
                 </h2>
-                <p className="text-gray-500 dark:text-neutral-400 max-w-md mx-auto">
-                  Próximamente podrás chatear directamente con tu entrenador
-                  desde esta sección. ¡Mantente atento a las actualizaciones!
+                <p className="text-gray-500 dark:text-neutral-400 max-w-md mx-auto mb-6">
+                  Contactar por whatsapp directo al desarrollador de esta aplicacion en caso de urgencias, sugerencias o dudas.
                 </p>
+                <a 
+                  href="https://wa.me/5491176513862" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] hover:bg-[#20b858] text-white font-bold rounded-xl transition-colors mx-auto"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  Whatsapp: +54 9 11 7651-3862
+                </a>
               </div>
             ) : null}
           </div>
@@ -2628,6 +2737,71 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
+                {/* Medalla de Perfil */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
+                    Medalla de Perfil
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">Elige qué medalla desbloqueada mostrar junto a tu foto.</p>
+                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700 items-start">
+                    <div 
+                      onClick={() => setSettingsForm({ ...settingsForm, selectedBadge: "" })}
+                      className={`flex flex-col items-center min-w-[70px] cursor-pointer group ${settingsForm.selectedBadge === "" ? "opacity-100" : "opacity-50 hover:opacity-100"}`}
+                    >
+                      <div className={`w-14 h-14 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center text-gray-400 mb-2 transition-all ${settingsForm.selectedBadge === "" ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-neutral-900 scale-110" : ""}`}>
+                        <Ban className="w-6 h-6" />
+                      </div>
+                      <span className="text-[10px] font-bold text-center">Ninguna</span>
+                    </div>
+
+                    {/* Mapeo de medallas desbloqueadas */}
+                    {(() => {
+                          const renderBadges: any[] = [];
+                          let bullCount = 0;
+                          student.badges?.forEach((b: any) => {
+                            if (b.badgeId.startsWith("BULL_PROGRESS_") || b.badgeId === "STRENGTH_10KG") {
+                              bullCount++;
+                            } else {
+                              renderBadges.push(b);
+                            }
+                          });
+                          if (bullCount > 0) {
+                            renderBadges.push({ badgeId: "BULL_GROUPED", count: bullCount });
+                          }
+
+                          return renderBadges.map((badge: any, i: number) => {
+                            const badgeData = badge.badgeId === "FIRST_WORKOUT" 
+                              ? { name: "Primer Paso", color: "from-blue-400 to-blue-600", icon: Medal }
+                              : badge.badgeId === "STREAK_7"
+                              ? { name: "Racha", color: "from-orange-400 to-red-600", icon: Flame }
+                              : badge.badgeId === "CENTURION"
+                              ? { name: "Centurión", color: "from-yellow-400 to-amber-600", icon: Medal }
+                              : badge.badgeId === "BULL_GROUPED"
+                              ? { name: `Toro`, color: "from-emerald-400 to-green-600", icon: Dumbbell }
+                              : badge.badgeId === "BEAST_MODE"
+                              ? { name: "Bestia", color: "from-rose-500 to-red-700", icon: Flame }
+                              : badge.badgeId === "MUTANT_MODE"
+                              ? { name: "Mutante", color: "from-fuchsia-600 to-purple-800", icon: Dumbbell }
+                              : { name: badge.badgeId, color: "from-purple-400 to-purple-600", icon: Medal };
+
+                            const Icon = badgeData.icon;
+                            const isSelected = settingsForm.selectedBadge === badge.badgeId;
+
+                            return (
+                              <div key={i} onClick={() => setSettingsForm({ ...settingsForm, selectedBadge: badge.badgeId })} className={`flex flex-col items-center min-w-[70px] cursor-pointer group transition-all ${isSelected ? "opacity-100" : "opacity-50 hover:opacity-100"}`}>
+                                <div className={`w-14 h-14 rounded-full bg-gradient-to-tr ${badgeData.color} flex items-center justify-center text-white mb-2 transition-all relative ${isSelected ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-neutral-900 scale-110" : ""}`}>
+                                  <Icon className="w-6 h-6" />
+                                </div>
+                                <span className="text-[10px] font-bold text-center leading-tight max-w-[70px] truncate">
+                                  {badgeData.name}
+                                </span>
+                              </div>
+                            );
+                          });
+                    })()}
+                  </div>
+                </div>
+
                 {/* Guardar */}
                 <div className="pt-4 border-t border-gray-100 dark:border-neutral-800">
                   <button
@@ -2677,6 +2851,190 @@ export default function StudentDashboard() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Overlay Info de XP */}
+      <AnimatePresence>
+        {showXPModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
+              onClick={() => setShowXPModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl z-10 transition-colors p-6"
+            >
+              <button
+                onClick={() => setShowXPModal(false)}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-500">
+                  <Medal className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Sistema de Niveles
+                </h2>
+              </div>
+              
+              <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300">
+                <p>El sistema de experiencia (XP) está diseñado para recompensar tu constancia. Así es como funciona:</p>
+                
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-gray-800 dark:text-white">Completar un día</span>
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">+50 XP</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-gray-200 dark:border-slate-700 pt-3">
+                    <span className="font-semibold text-gray-800 dark:text-white">Subir de nivel</span>
+                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">Cada 100 XP</span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <h4 className="font-bold text-gray-800 dark:text-white mb-2">Rangos:</h4>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span> <strong>Principiante:</strong> Niveles 1 al 35</li>
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500"></span> <strong>Intermedio:</strong> Niveles 36 al 107</li>
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-purple-500"></span> <strong>Avanzado:</strong> Niveles 108 al 215</li>
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-orange-500"></span> <strong>Atleta:</strong> Nivel 216+</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => setShowXPModal(false)}
+                className="mt-8 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors"
+              >
+                Entendido
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Overlay Info de Medallas */}
+      <AnimatePresence>
+        {showBadgesModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
+              onClick={() => setShowBadgesModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl z-10 transition-colors p-6"
+            >
+              <button
+                onClick={() => setShowBadgesModal(false)}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center text-amber-500">
+                  <Medal className="w-6 h-6" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Trofeos Disponibles
+                </h2>
+              </div>
+              
+              <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700">
+                <p>Colecciona estas medallas a medida que superas tus límites. ¡Acá tenés lo que se requiere para obtenerlas!</p>
+                
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 space-y-4">
+                  {/* Primer Entrenamiento */}
+                  <div className="flex gap-4 items-start">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 shadow-lg shadow-blue-500/20 flex items-center justify-center text-white flex-shrink-0">
+                      <Medal className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800 dark:text-white">Primer Paso</h4>
+                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Completa tu primer entrenamiento. ¡El viaje comienza!</p>
+                    </div>
+                  </div>
+
+                  {/* Racha 7 */}
+                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-400 to-red-600 shadow-lg shadow-red-500/20 flex items-center justify-center text-white flex-shrink-0">
+                      <Flame className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800 dark:text-white">Racha de Fuego</h4>
+                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Mantén una racha activa de 7 días consecutivos completando tus rutinas sin fallar.</p>
+                    </div>
+                  </div>
+
+                  {/* Centurión */}
+                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-600 shadow-lg shadow-amber-500/20 flex items-center justify-center text-white flex-shrink-0">
+                      <Medal className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800 dark:text-white">Centurión</h4>
+                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Completa un total de 100 entrenamientos a lo largo de tu trayectoria. Eres una leyenda.</p>
+                    </div>
+                  </div>
+
+                  {/* Fuerza Desatada */}
+                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-400 to-green-600 shadow-lg shadow-emerald-500/20 flex items-center justify-center text-white flex-shrink-0">
+                      <Dumbbell className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800 dark:text-white">Progreso Toro</h4>
+                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Aumenta 10 kg en algún ejercicio respecto a tu marca inicial. ¡Acumulable por cada ejercicio distinto!</p>
+                    </div>
+                  </div>
+
+                  {/* Bestia */}
+                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-rose-500 to-red-700 shadow-lg shadow-rose-500/20 flex items-center justify-center text-white flex-shrink-0">
+                      <Flame className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800 dark:text-white">Bestia</h4>
+                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">¡Colecciona 10 medallas de Toro para desbloquear este nivel de fuerza brutal!</p>
+                    </div>
+                  </div>
+
+                  {/* Mutante */}
+                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-fuchsia-600 to-purple-800 shadow-lg shadow-purple-500/20 flex items-center justify-center text-white flex-shrink-0">
+                      <Dumbbell className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-800 dark:text-white">Mutante</h4>
+                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">¡El nivel máximo! Desbloqueable al juntar 50 medallas de Toro. Solo para leyendas absolutas.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => setShowBadgesModal(false)}
+                className="mt-6 w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-amber-500/20"
+              >
+                Entendido
+              </button>
             </motion.div>
           </div>
         )}

@@ -67,6 +67,7 @@ model Student {
   longestStreak    Int      @default(0)
   lastActivityDate DateTime?
   badges           StudentBadge[]
+  selectedBadge    String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }

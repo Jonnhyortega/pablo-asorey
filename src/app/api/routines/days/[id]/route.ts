@@ -1,6 +1,28 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { processGamification } from "@/lib/gamification";
+import { processGamification, checkWeightMilestone } from "@/lib/gamification";
+
+function extractMaxWeight(weightStr?: any, loggedSetsStr?: any): number {
+  let max = 0;
+  if (weightStr) {
+    const w = parseFloat(String(weightStr).replace(/[^\d.]/g, ''));
+    if (!isNaN(w) && w > max) max = w;
+  }
+  if (loggedSetsStr) {
+    try {
+      const sets = typeof loggedSetsStr === 'string' ? JSON.parse(loggedSetsStr) : loggedSetsStr;
+      if (Array.isArray(sets)) {
+        sets.forEach((set: any) => {
+          if (set.weight) {
+            const w = parseFloat(String(set.weight).replace(/[^\d.]/g, ''));
+            if (!isNaN(w) && w > max) max = w;
+          }
+        });
+      }
+    } catch(e) {}
+  }
+  return max;
+}
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -21,11 +43,13 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       });
     }
 
+    const { recordsBroken, studentId, studentName } = body;
+
     // Actualizar los ejercicios si vienen (peso, observaciones)
     if (exercises && Array.isArray(exercises)) {
       for (const ex of exercises) {
         if (ex.id) {
-          await prisma.exercise.update({
+          const updatedEx = await prisma.exercise.update({
             where: { id: ex.id },
             data: {
               weight: ex.weight !== undefined ? ex.weight : undefined,
@@ -34,11 +58,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
               isCompleted: ex.isCompleted !== undefined ? ex.isCompleted : undefined
             }
           });
+
+          if (studentId && (completedAt || ex.isCompleted)) {
+             const maxW = extractMaxWeight(ex.weight, ex.loggedSets);
+             if (maxW > 0) {
+               checkWeightMilestone(studentId, updatedEx.name, maxW).catch(err => console.error("Milestone err:", err));
+             }
+          }
         }
       }
     }
-
-    const { recordsBroken, studentId, studentName } = body;
 
     // --- REVERSIÓN INTELIGENTE ---
     // Siempre purgamos las notificaciones anteriores de este día para evitar duplicados o falsos positivos (si el usuario editó o desmarcó el día)
@@ -58,6 +87,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
           title: { in: ["Día Completado", "Nuevo Récord"] }
         }
       });
+    }
+
+    // Si se marcó como omitido, rompemos la racha
+    if (isSkipped === true && studentId) {
+      processGamification(studentId, new Date(), true).catch(err => console.error("Gamification skip error:", err));
     }
 
     // Crear notificaciones si se completó el día (o si es una edición que mantiene el completado y trae records)

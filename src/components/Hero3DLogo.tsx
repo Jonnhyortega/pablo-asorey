@@ -126,10 +126,7 @@ export default function Hero3DLogo() {
           <CoinMesh />
         </Float>
         
-        {/* Base de sombra contra el piso para efecto levitación */}
         <ContactShadows position={[0, -2.8, 0]} opacity={0.65} scale={15} blur={2.5} far={4} color="#000000" />
-        
-        <Environment preset="city" />
       </Canvas>
     </div>
   );
