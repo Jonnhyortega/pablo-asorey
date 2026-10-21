@@ -92,12 +92,12 @@ export default function StudentNotificationsBell() {
     <div className="relative" ref={containerRef}>
       <button 
         onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }} 
-        aria-label="Notificaciones"
+        aria-label={unreadCount > 0 ? `Notificaciones, ${unreadCount} sin leer` : "Notificaciones"}
         className="relative flex h-10 w-10 items-center justify-center rounded-panel text-muted transition-colors hover:bg-surface-2 hover:text-text"
       >
         <Bell className="h-5 w-5" strokeWidth={1.5} />
         {unreadCount > 0 && (
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg" aria-label={`${unreadCount} sin leer`} />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg" aria-hidden />
         )}
       </button>
 
@@ -134,7 +134,7 @@ export default function StudentNotificationsBell() {
                           initial={{ backgroundColor: "transparent" }}
                           animate={{ backgroundColor: !notif.read ? "color-mix(in srgb, var(--gold) 6%, transparent)" : "transparent" }}
                           transition={{ duration: 0.5 }}
-                          className={`p-4 hover:bg-surface-2 transition-colors ${!notif.read ? '' : ''}`}
+                          className={`p-4 hover:bg-surface-2 transition-colors ${!notif.read ? 'border-l-2 border-gold' : 'border-l-2 border-transparent'}`}
                         >
                           <div className="flex gap-3">
                             <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getColorForType(notif.type)}`}>

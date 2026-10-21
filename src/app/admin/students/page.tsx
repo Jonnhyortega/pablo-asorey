@@ -198,6 +198,26 @@ export default function AdminStudentsPage() {
   );
 }
 
+function StudentActions({ studentId, onEdit, onDelete, labeled = false }: { studentId: string; onEdit: () => void; onDelete: () => void; labeled?: boolean }) {
+  const base = `flex h-10 items-center justify-center gap-2 rounded-panel border border-line text-muted transition-colors ${labeled ? "flex-1 px-3 text-xs uppercase tracking-[0.12em]" : "w-10"}`;
+  return (
+    <>
+      <Link href={`/admin/students/${studentId}/routines`} className={`${base} hover:border-gold hover:text-gold`} title="Cargar Rutina">
+        <Dumbbell className="h-4 w-4" strokeWidth={1.5} />
+        {labeled && "Rutina"}
+      </Link>
+      <button onClick={onEdit} className={`${base} hover:border-gold hover:text-gold`} title="Editar Alumno">
+        <Edit2 className="h-4 w-4" strokeWidth={1.5} />
+        {labeled && "Editar"}
+      </button>
+      <button onClick={onDelete} className={`${base} hover:border-danger hover:text-danger`} title="Eliminar">
+        <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+        {labeled && "Eliminar"}
+      </button>
+    </>
+  );
+}
+
 function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Student; onEdit: () => void; onDelete: () => void; onViewImage: (url: string) => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -274,18 +294,16 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4 shrink-0" onClick={e => e.stopPropagation()}>
-          <div className="flex gap-1.5 sm:gap-2">
-            <Link href={`/admin/students/${student.id}/routines`} className="flex h-10 w-10 items-center justify-center rounded-panel border border-line text-muted transition-colors hover:border-gold hover:text-gold" title="Cargar Rutina">
-              <Dumbbell className="h-4 w-4" strokeWidth={1.5} />
-            </Link>
-            <button onClick={onEdit} className="flex h-10 w-10 items-center justify-center rounded-panel border border-line text-muted transition-colors hover:border-gold hover:text-gold" title="Editar Alumno">
-              <Edit2 className="h-4 w-4" strokeWidth={1.5} />
-            </button>
-            <button onClick={onDelete} className="flex h-10 w-10 items-center justify-center rounded-panel border border-line text-muted transition-colors hover:border-danger hover:text-danger" title="Eliminar">
-              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-            </button>
+          {/* En celular las acciones viven dentro del detalle expandido */}
+          <div className="hidden gap-2 sm:flex">
+            <StudentActions studentId={student.id} onEdit={onEdit} onDelete={onDelete} />
           </div>
-          <button aria-label={isExpanded ? "Contraer" : "Expandir"} className="p-1 text-muted transition-colors hover:text-text sm:p-2">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? "Contraer" : "Expandir"}
+            className="p-1 text-muted transition-colors hover:text-text sm:p-2"
+          >
             <ChevronDown className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
           </button>
         </div>
@@ -301,6 +319,9 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
             className="border-t border-line"
           >
             <div className="p-4 sm:p-6 bg-surface-2">
+              <div className="mb-5 flex gap-2 sm:hidden">
+                <StudentActions studentId={student.id} onEdit={onEdit} onDelete={onDelete} labeled />
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-1 bg-surface p-4 rounded-panel border border-line">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-muted uppercase tracking-wider">
@@ -639,7 +660,7 @@ function EditStudentModal({ student, onClose, onSave }: { student: Student; onCl
                       setFormData({...formData, paymentDate: null, paymentStatus: 'PENDING'});
                     }
                   }} 
-                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:ring-2 focus:ring-success focus:border-transparent" 
+                  className="w-full rounded-panel border border-line bg-bg px-3.5 py-2.5 text-sm text-text focus:border-gold focus:outline-none" 
                 />
                 <span className="text-[10px] text-muted mt-1 block">El vencimiento se calcula automáticamente a 31 días.</span>
               </div>
@@ -652,7 +673,7 @@ function EditStudentModal({ student, onClose, onSave }: { student: Student; onCl
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] uppercase tracking-[0.2em] text-muted">Lesiones / Cirugías</label>
-                <textarea required value={formData.injuries} onChange={e => setFormData({...formData, injuries: e.target.value})} rows={2} className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:ring-2 focus:ring-danger focus:border-transparent" />
+                <textarea required value={formData.injuries} onChange={e => setFormData({...formData, injuries: e.target.value})} rows={2} className="w-full rounded-panel border border-line bg-bg px-3.5 py-2.5 text-sm text-text focus:border-gold focus:outline-none" />
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] uppercase tracking-[0.2em] text-muted">Último entrenamiento</label>

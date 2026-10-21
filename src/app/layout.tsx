@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Toaster } from "react-hot-toast";
+import ToasterHost from "@/components/ToasterHost";
 
 export default function RootLayout({
   children,
@@ -51,19 +51,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning className={`${inter.variable} ${anton.variable}`}>
       <body className="flex flex-col min-h-screen font-sans">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} enableColorScheme={false}>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              style: {
-                background: "var(--surface)",
-                color: "var(--text)",
-                border: "1px solid var(--line)",
-                borderRadius: 6,
-                fontSize: 14,
-              },
-              iconTheme: { primary: "var(--gold)", secondary: "var(--bg)" },
-            }}
-          />
+          <ToasterHost />
           <LayoutWrapper>
             {children}
           </LayoutWrapper>

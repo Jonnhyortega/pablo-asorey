@@ -1,17 +1,20 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getSiteContent } from '@/lib/content';
 import { Button, Wordmark } from '@/components/ui';
+import { useFocusTrap } from '@/components/ui/useFocusTrap';
 import { cn } from '@/lib/cn';
 
 export default function Navbar() {
   const { nav, hero } = getSiteContent();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -20,17 +23,13 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useFocusTrap(isOpen, navRef, () => setIsOpen(false));
 
   const closeMenu = () => setIsOpen(false);
 
   return (
     <nav
+      ref={navRef}
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-colors duration-300',
         scrolled || isOpen ? 'border-b border-line bg-bg' : 'border-b border-transparent bg-transparent'
@@ -76,7 +75,7 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 bottom-0 top-16 flex flex-col justify-between bg-bg px-5 pb-10 pt-8 md:top-20 xl:hidden"
+            className="fixed inset-x-0 bottom-0 top-16 flex flex-col justify-between gap-8 overflow-y-auto bg-bg px-5 pb-10 pt-8 md:top-20 xl:hidden"
           >
             <ul className="space-y-1">
               {nav.map((link, i) => (

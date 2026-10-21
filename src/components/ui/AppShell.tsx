@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "./Wordmark";
+import { useFocusTrap } from "./useFocusTrap";
 
 export type NavItem = {
   href?: string;
@@ -82,8 +83,11 @@ function NavEntry({ item, collapsed, onNavigate }: { item: NavItem; collapsed: b
 export function AppShell({ brand, nav, title, headerActions, sidebarTop, sidebarFooter, mobileNav = "drawer", children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLElement>(null);
   const groups = groupNav(nav);
   const isBottom = mobileNav === "bottom";
+
+  useFocusTrap(drawerOpen && !isBottom, drawerRef, () => setDrawerOpen(false));
 
   const sidebarBody = (isCollapsed: boolean, onNavigate?: () => void) => (
     <>
@@ -121,7 +125,7 @@ export function AppShell({ brand, nav, title, headerActions, sidebarTop, sidebar
       {!isBottom && drawerOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/70" onClick={() => setDrawerOpen(false)} />
-          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-line bg-bg">
+          <aside ref={drawerRef} role="dialog" aria-modal="true" aria-label="Menú" className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-line bg-bg">
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-5">
               {brand ?? <Wordmark />}
               <button onClick={() => setDrawerOpen(false)} aria-label="Cerrar menú" className="p-1 text-muted hover:text-text">

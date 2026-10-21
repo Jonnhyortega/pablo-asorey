@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useId, useRef, useSyncExternalStore } from "react";
+import { useId, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useFocusTrap } from "./useFocusTrap";
 
 type DialogProps = {
   open: boolean;
@@ -19,60 +20,17 @@ type DialogProps = {
 
 const subscribeNoop = () => () => {};
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+// Primer control del contenido (no el botón de cerrar del encabezado)
+const BODY_FOCUSABLE = '[data-dialog-body] :is(a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]))';
 
 export function Dialog({ open, onClose, title, description, variant = "modal", footer, className, children }: DialogProps) {
   const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
   const reduce = useReducedMotion();
   const titleId = useId();
   const descId = useId();
 
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  });
-
-  useEffect(() => {
-    if (!open) return;
-    const trigger = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    // Respeta un autoFocus ya aplicado; si no, enfoca el primer control del contenido
-    const panel = panelRef.current;
-    if (panel && !panel.contains(document.activeElement)) {
-      const first = panel.querySelector<HTMLElement>(`[data-dialog-body] :is(${FOCUSABLE})`) ?? panel.querySelector<HTMLElement>(FOCUSABLE);
-      (first ?? panel).focus();
-    }
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        onCloseRef.current();
-        return;
-      }
-      if (e.key !== "Tab" || !panelRef.current) return;
-      const items = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
-      if (items.length === 0) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      trigger?.focus?.();
-    };
-  }, [open]);
+  useFocusTrap(open, panelRef, onClose, BODY_FOCUSABLE);
 
   if (!mounted) return null;
 

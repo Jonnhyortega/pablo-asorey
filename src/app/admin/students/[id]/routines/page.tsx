@@ -518,7 +518,7 @@ export default function StudentRoutinesPage() {
                 <><Plus className="w-6 h-6 text-gold" /> Creador de Rutinas</>
               )}
             </h2>
-            <button onClick={handleCancelCreate} className="text-muted hover:text-muted">Cancelar</button>
+            <button onClick={handleCancelCreate} className="text-muted hover:text-text">Cancelar</button>
           </div>
 
           {(!editingSingleDayId && !addingSingleDayToRoutineId) && (
@@ -725,7 +725,7 @@ export default function StudentRoutinesPage() {
                     </div>
                     );
                   })}
-                  <button onClick={() => handleAddExercise(dayIndex)} className="text-sm font-medium text-gold hover:text-gold flex items-center gap-1 mt-2">
+                  <button onClick={() => handleAddExercise(dayIndex)} className="text-sm font-medium text-gold hover:brightness-125 flex items-center gap-1 mt-2">
                     <Plus className="w-3 h-3" /> Añadir Ejercicio
                   </button>
                 </div>
@@ -765,7 +765,7 @@ export default function StudentRoutinesPage() {
             return (
             <div key={routine.id} className="bg-surface rounded-panel border border-line overflow-hidden transition-colors">
               <div 
-                className="bg-surface-2 p-4 border-b border-line flex flex-wrap gap-2 justify-between items-center cursor-pointer hover:bg-surface-2 transition-colors"
+                className="bg-surface-2 p-4 border-b border-line flex flex-wrap gap-2 justify-between items-center cursor-pointer hover:brightness-110 transition-colors"
                 onClick={() => toggleRoutine(routine.id)}
               >
                 <div className="flex items-center gap-2">

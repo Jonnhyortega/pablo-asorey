@@ -146,7 +146,8 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-4 border-t border-line py-8 text-xs text-muted md:flex-row md:items-center md:justify-between">
-          <p>
+          {/* El año puede diferir entre servidor y navegador justo en Año Nuevo */}
+          <p suppressHydrationWarning>
             &copy; {new Date().getFullYear()} {name}. {footer.rights}
           </p>
           <div className="flex gap-6">

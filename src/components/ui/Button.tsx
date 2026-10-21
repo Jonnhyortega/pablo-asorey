@@ -47,7 +47,12 @@ export function Button({
 
   const content = (
     <>
-      {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+      {loading && (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          <span className="sr-only">Cargando</span>
+        </>
+      )}
       {children}
     </>
   );
@@ -69,7 +74,7 @@ export function Button({
   }
 
   return (
-    <button className={classes} disabled={disabled || loading} {...props}>
+    <button className={classes} disabled={disabled || loading} aria-busy={loading || undefined} {...props}>
       {content}
     </button>
   );

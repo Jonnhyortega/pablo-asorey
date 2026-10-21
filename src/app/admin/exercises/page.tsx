@@ -195,14 +195,14 @@ export default function AdminExercisesPage() {
                       <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => handleOpenModal(ex)} 
-                          className="p-2 text-gold bg-gold/10 hover:bg-gold/10 rounded-panel transition-colors" 
+                          className="p-2 text-gold bg-gold/10 hover:brightness-110 rounded-panel transition-colors" 
                           title="Editar Ejercicio"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => setExerciseToDelete(ex)} 
-                          className="p-2 text-danger bg-danger/10 hover:bg-danger/10 rounded-panel transition-colors" 
+                          className="p-2 text-danger bg-danger/10 hover:brightness-110 rounded-panel transition-colors" 
                           title="Eliminar Ejercicio"
                         >
                           <Trash2 className="w-4 h-4" />

@@ -10,12 +10,15 @@
   --muted: #8B8494;
   --gold: #C8A24C;
   --gold-line: #5A4A24;
+  --silver: #B8B4C0;
+  --bronze: #B9845A;
   --success: #8FC9A0;
   --danger: #E08A7A;
   color-scheme: dark;
 }
 
-html.light [data-panel] {
+html.light [data-panel],
+html.light .toaster-panel {
   --bg: #F6F3EE;
   --surface: #FFFFFF;
   --surface-2: #EFEAE2;
@@ -24,6 +27,8 @@ html.light [data-panel] {
   --muted: #6E6676;
   --gold: #9C7A2E;
   --gold-line: #D9C7A0;
+  --silver: #6F6A78;
+  --bronze: #8A5A33;
   --success: #2F7A4A;
   --danger: #B0442F;
   color-scheme: light;
@@ -38,6 +43,8 @@ html.light [data-panel] {
   --color-muted: var(--muted);
   --color-gold: var(--gold);
   --color-gold-line: var(--gold-line);
+  --color-silver: var(--silver);
+  --color-bronze: var(--bronze);
   --color-success: var(--success);
   --color-danger: var(--danger);
 
@@ -63,6 +70,12 @@ html.light [data-panel] {
 
   section[id] {
     scroll-margin-top: 4rem;
+  }
+
+  @media (min-width: 768px) {
+    section[id] {
+      scroll-margin-top: 5rem;
+    }
   }
 
   ::selection {

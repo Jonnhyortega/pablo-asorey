@@ -49,6 +49,14 @@ import {
   Bar,
 } from "recharts";
 
+// Escala de metales para niveles y medallas: bronce → plata → oro → oro macizo
+const METAL = {
+  bronze: "border-bronze/60 bg-bronze/10 text-bronze",
+  silver: "border-silver/60 bg-silver/10 text-silver",
+  gold: "border-gold bg-gold/10 text-gold",
+  solid: "border-gold bg-gold text-bg",
+};
+
 export default function StudentDashboard() {
   const [student, setStudent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -631,7 +639,7 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
+      <div data-panel className="min-h-screen bg-bg flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-gold" />
       </div>
     );
@@ -639,7 +647,7 @@ export default function StudentDashboard() {
 
   if (!student)
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center text-text">
+      <div data-panel className="min-h-screen bg-bg flex items-center justify-center text-text">
         Estudiante no encontrado
       </div>
     );
@@ -700,8 +708,8 @@ export default function StudentDashboard() {
   };
 
   const currentLevel = student.level || 1;
-  const levelRingColor = currentLevel < 36 ? "ring-success" : currentLevel < 108 ? "ring-gold" : currentLevel < 216 ? "ring-gold" : "ring-gold";
-  const levelBorderColor = currentLevel < 36 ? "border-success/40" : currentLevel < 108 ? "border-gold" : currentLevel < 216 ? "border-gold" : "border-gold";
+  const levelBorderColor = currentLevel < 36 ? "border-bronze" : currentLevel < 108 ? "border-silver" : "border-gold";
+  const levelTextColor = currentLevel < 36 ? "text-bronze" : currentLevel < 108 ? "text-silver" : "text-gold";
 
   const openSettings = () => {
     setSettingsForm({
@@ -928,7 +936,7 @@ export default function StudentDashboard() {
                     <Card className="relative overflow-hidden">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <p className="text-[11px] uppercase tracking-[0.2em] text-gold">Nivel {student.level || 1}</p>
+                          <p className={`text-[11px] uppercase tracking-[0.2em] ${levelTextColor}`}>Nivel {student.level || 1}</p>
                           <h3 className="mt-2 flex items-center gap-2 font-display text-3xl uppercase leading-none text-text">
                             {(student.level || 1) < 36 ? "Principiante" : (student.level || 1) < 108 ? "Intermedio" : (student.level || 1) < 216 ? "Avanzado" : "Atleta"}
                             <button onClick={() => setShowXPModal(true)} className="rounded-full p-1 text-muted transition-colors hover:text-gold" title="Sistema de XP" aria-label="Sistema de XP">
@@ -1004,24 +1012,24 @@ export default function StudentDashboard() {
 
                           return renderBadges.map((badge: any, i: number) => {
                             const badgeData = badge.badgeId === "FIRST_WORKOUT" 
-                              ? { name: "Primer Paso", color: "from-gold to-gold", shadow: "", icon: Medal }
+                              ? { name: "Primer Paso", color: METAL.bronze, shadow: "", icon: Medal }
                               : badge.badgeId === "STREAK_7"
-                              ? { name: "Racha de Fuego", color: "from-gold to-danger", shadow: "", icon: Flame }
+                              ? { name: "Racha de Fuego", color: METAL.silver, shadow: "", icon: Flame }
                               : badge.badgeId === "CENTURION"
-                              ? { name: "Centurión", color: "from-gold to-gold", shadow: "", icon: Medal }
+                              ? { name: "Centurión", color: METAL.gold, shadow: "", icon: Medal }
                               : badge.badgeId === "BULL_GROUPED"
-                              ? { name: `Toro`, color: "from-success to-success", shadow: "", icon: Dumbbell }
+                              ? { name: `Toro`, color: METAL.silver, shadow: "", icon: Dumbbell }
                               : badge.badgeId === "BEAST_MODE"
-                              ? { name: "Bestia", color: "from-danger to-danger", shadow: "", icon: Flame }
+                              ? { name: "Bestia", color: METAL.gold, shadow: "", icon: Flame }
                               : badge.badgeId === "MUTANT_MODE"
-                              ? { name: "Mutante", color: "from-gold to-gold", shadow: "", icon: Dumbbell }
-                              : { name: badge.badgeId, color: "from-gold to-gold", shadow: "", icon: Medal };
+                              ? { name: "Mutante", color: METAL.solid, shadow: "", icon: Dumbbell }
+                              : { name: badge.badgeId, color: METAL.bronze, shadow: "", icon: Medal };
 
                             const Icon = badgeData.icon;
 
                             return (
                               <div key={i} className="flex flex-col items-center min-w-[90px] group">
-                                <div className={`w-16 h-16 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold mb-3 transform transition-transform group-hover:scale-110 group-hover:-translate-y-1 relative`}>
+                                <div className={`w-16 h-16 rounded-full border ${badgeData.color} flex items-center justify-center mb-3 transform transition-transform group-hover:scale-110 group-hover:-translate-y-1 relative`}>
                                   <Icon className="w-8 h-8" />
                                   {badge.badgeId === "BULL_GROUPED" && badge.count > 1 && (
                                     <div className="absolute -top-1 -right-1 bg-surface text-success text-[10px] font-semibold w-6 h-6 rounded-full flex items-center justify-center border-2 border-success/40">
@@ -1088,7 +1096,7 @@ export default function StudentDashboard() {
                           pendingDays.map((day) => (
                             <div
                               key={day.id}
-                              className="bg-surface border border-line rounded-panel overflow-hidden transition-all hover:border-line"
+                              className="bg-surface border border-line rounded-panel overflow-hidden transition-all"
                             >
                               <button
                                 onClick={() =>
@@ -1348,7 +1356,7 @@ export default function StudentDashboard() {
                                                                     dIdx,
                                                                   )
                                                                 }
-                                                                className="p-1.5 text-danger hover:text-danger hover:bg-danger/10 rounded-panel transition-colors shrink-0"
+                                                                className="p-1.5 text-danger hover:bg-danger/10 rounded-panel transition-colors shrink-0"
                                                                 title="Eliminar Drop"
                                                               >
                                                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1365,7 +1373,7 @@ export default function StudentDashboard() {
                                                                 idx,
                                                               )
                                                             }
-                                                            className="text-xs font-semibold text-gold hover:text-gold flex items-center gap-1 transition-colors"
+                                                            className="text-xs font-semibold text-gold hover:brightness-125 flex items-center gap-1 transition-colors"
                                                           >
                                                             + Añadir Drop
                                                           </button>
@@ -1377,7 +1385,7 @@ export default function StudentDashboard() {
                                                                 idx,
                                                               )
                                                             }
-                                                            className="text-xs text-danger hover:text-danger transition-colors"
+                                                            className="text-xs text-danger transition-colors"
                                                           >
                                                             Eliminar Serie
                                                             Completa
@@ -1445,7 +1453,7 @@ export default function StudentDashboard() {
                                                               idx,
                                                             )
                                                           }
-                                                          className="p-2 text-danger hover:text-danger hover:bg-danger/10 rounded-panel transition-colors shrink-0"
+                                                          className="p-2 text-danger hover:bg-danger/10 rounded-panel transition-colors shrink-0"
                                                           title="Eliminar serie"
                                                         >
                                                           <Trash2 className="w-4 h-4" />
@@ -1492,7 +1500,7 @@ export default function StudentDashboard() {
                                                   addSet(ex.id);
                                                 }
                                               }}
-                                              className="text-xs font-semibold text-success hover:text-success flex items-center gap-1 mb-4 bg-success/10 px-3 py-1.5 rounded-panel transition-colors"
+                                              className="text-xs font-semibold text-success flex items-center gap-1 mb-4 bg-success/10 px-3 py-1.5 rounded-panel transition-colors"
                                             >
                                               + Añadir Serie
                                             </button>
@@ -2443,7 +2451,7 @@ export default function StudentDashboard() {
                   onClick={() =>
                     !savingSettings && !uploadingImage && setShowSettings(false)
                   }
-                  className="p-2 text-muted hover:text-muted rounded-full hover:bg-surface-2 transition-colors disabled:opacity-50"
+                  className="p-2 text-muted hover:text-text rounded-full hover:bg-surface-2 transition-colors disabled:opacity-50"
                   disabled={uploadingImage}
                 >
                   <X className="w-5 h-5" />
@@ -2561,7 +2569,7 @@ export default function StudentDashboard() {
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
                             isSelected
                               ? "bg-gold border-gold text-bg"
-                              : "bg-surface border-line text-muted hover:border-line"
+                              : "bg-surface border-line text-muted"
                           }`}
                         >
                           {goal}
@@ -2605,25 +2613,25 @@ export default function StudentDashboard() {
 
                           return renderBadges.map((badge: any, i: number) => {
                             const badgeData = badge.badgeId === "FIRST_WORKOUT" 
-                              ? { name: "Primer Paso", color: "from-gold to-gold", icon: Medal }
+                              ? { name: "Primer Paso", color: METAL.bronze, icon: Medal }
                               : badge.badgeId === "STREAK_7"
-                              ? { name: "Racha", color: "from-gold to-danger", icon: Flame }
+                              ? { name: "Racha", color: METAL.silver, icon: Flame }
                               : badge.badgeId === "CENTURION"
-                              ? { name: "Centurión", color: "from-gold to-gold", icon: Medal }
+                              ? { name: "Centurión", color: METAL.gold, icon: Medal }
                               : badge.badgeId === "BULL_GROUPED"
-                              ? { name: `Toro`, color: "from-success to-success", icon: Dumbbell }
+                              ? { name: `Toro`, color: METAL.silver, icon: Dumbbell }
                               : badge.badgeId === "BEAST_MODE"
-                              ? { name: "Bestia", color: "from-danger to-danger", icon: Flame }
+                              ? { name: "Bestia", color: METAL.gold, icon: Flame }
                               : badge.badgeId === "MUTANT_MODE"
-                              ? { name: "Mutante", color: "from-gold to-gold", icon: Dumbbell }
-                              : { name: badge.badgeId, color: "from-gold to-gold", icon: Medal };
+                              ? { name: "Mutante", color: METAL.solid, icon: Dumbbell }
+                              : { name: badge.badgeId, color: METAL.bronze, icon: Medal };
 
                             const Icon = badgeData.icon;
                             const isSelected = settingsForm.selectedBadge === badge.badgeId;
 
                             return (
                               <div key={i} onClick={() => setSettingsForm({ ...settingsForm, selectedBadge: badge.badgeId })} className={`flex flex-col items-center min-w-[70px] cursor-pointer group transition-all ${isSelected ? "opacity-100" : "opacity-50 hover:opacity-100"}`}>
-                                <div className={`w-14 h-14 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold mb-2 transition-all relative ${isSelected ? "ring-2 ring-gold ring-offset-2 scale-110" : ""}`}>
+                                <div className={`w-14 h-14 rounded-full border ${badgeData.color} flex items-center justify-center mb-2 transition-all relative ${isSelected ? "ring-2 ring-gold ring-offset-2 scale-110" : ""}`}>
                                   <Icon className="w-6 h-6" />
                                 </div>
                                 <span className="text-[10px] font-bold text-center leading-tight max-w-[70px] truncate">
@@ -2709,7 +2717,7 @@ export default function StudentDashboard() {
             >
               <button
                 onClick={() => setShowXPModal(false)}
-                className="absolute top-4 right-4 p-2 text-muted hover:text-muted rounded-full hover:bg-surface-2 transition-colors"
+                className="absolute top-4 right-4 p-2 text-muted hover:text-text rounded-full hover:bg-surface-2 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2783,7 +2791,7 @@ export default function StudentDashboard() {
             >
               <button
                 onClick={() => setShowBadgesModal(false)}
-                className="absolute top-4 right-4 p-2 text-muted hover:text-muted rounded-full hover:bg-surface-2 transition-colors"
+                className="absolute top-4 right-4 p-2 text-muted hover:text-text rounded-full hover:bg-surface-2 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2803,7 +2811,7 @@ export default function StudentDashboard() {
                 <div className="bg-surface-2 rounded-panel p-4 space-y-4">
                   {/* Primer Entrenamiento */}
                   <div className="flex gap-4 items-start">
-                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full border ${METAL.bronze} flex items-center justify-center flex-shrink-0`}>
                       <Medal className="w-6 h-6" />
                     </div>
                     <div>
@@ -2814,7 +2822,7 @@ export default function StudentDashboard() {
 
                   {/* Racha 7 */}
                   <div className="flex gap-4 items-start border-t border-line pt-4">
-                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full border ${METAL.silver} flex items-center justify-center flex-shrink-0`}>
                       <Flame className="w-6 h-6" />
                     </div>
                     <div>
@@ -2825,7 +2833,7 @@ export default function StudentDashboard() {
 
                   {/* Centurión */}
                   <div className="flex gap-4 items-start border-t border-line pt-4">
-                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full border ${METAL.gold} flex items-center justify-center flex-shrink-0`}>
                       <Medal className="w-6 h-6" />
                     </div>
                     <div>
@@ -2836,7 +2844,7 @@ export default function StudentDashboard() {
 
                   {/* Fuerza Desatada */}
                   <div className="flex gap-4 items-start border-t border-line pt-4">
-                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full border ${METAL.silver} flex items-center justify-center flex-shrink-0`}>
                       <Dumbbell className="w-6 h-6" />
                     </div>
                     <div>
@@ -2847,7 +2855,7 @@ export default function StudentDashboard() {
 
                   {/* Bestia */}
                   <div className="flex gap-4 items-start border-t border-line pt-4">
-                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full border ${METAL.gold} flex items-center justify-center flex-shrink-0`}>
                       <Flame className="w-6 h-6" />
                     </div>
                     <div>
@@ -2858,7 +2866,7 @@ export default function StudentDashboard() {
 
                   {/* Mutante */}
                   <div className="flex gap-4 items-start border-t border-line pt-4">
-                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
+                    <div className={`w-12 h-12 rounded-full border ${METAL.solid} flex items-center justify-center flex-shrink-0`}>
                       <Dumbbell className="w-6 h-6" />
                     </div>
                     <div>
