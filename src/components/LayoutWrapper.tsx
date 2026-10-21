@@ -13,7 +13,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const isLoginPath = path.startsWith("/login");
   const isAplicarPath = path.startsWith("/aplicar");
 
-  if (isAdminPath) {
+  if (isAdminPath || path.startsWith("/ui-kit")) {
     return <>{children}</>;
   }
 
