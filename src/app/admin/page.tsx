@@ -1,84 +1,84 @@
 export const dynamic = 'force-dynamic';
+
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { Users, MessageSquare, ArrowRight } from "lucide-react";
+import { ArrowRight, Inbox } from "lucide-react";
+import { getAdminMetrics } from "@/lib/admin-metrics";
+import { Badge, Card, PageHeader, StatTile } from "@/components/ui";
+import { cn } from "@/lib/cn";
 
 export default async function AdminDashboard() {
-  const [messagesCount, subscribersCount, recentMessages] = await Promise.all([
-    prisma.contactMessage.count(),
-    prisma.newsletterSubscriber.count(),
+  const [metrics, recentMessages] = await Promise.all([
+    getAdminMetrics(),
     prisma.contactMessage.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
     }),
   ]);
 
+  const today = new Date().toLocaleDateString("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    timeZone: "America/Argentina/Buenos_Aires",
+  });
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Resumen del sitio</h2>
+    <div className="mx-auto max-w-6xl space-y-8">
+      <PageHeader eyebrow={today} title="Buen día, Pablo" />
 
-      {/* Tarjetas de Estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
-            <MessageSquare size={32} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Mensajes (Leads)</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{messagesCount}</p>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
-          <div className="p-4 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full">
-            <Users size={32} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Suscriptores (Newsletter)</p>
-            <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{subscribersCount}</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile label="Alumnos activos" value={metrics.activeStudents} suffix={`/ ${metrics.totalStudents}`} />
+        <StatTile label="Pagos pendientes" value={metrics.pendingPayments} tone={metrics.pendingPayments > 0 ? "gold" : "default"} />
+        <StatTile label="Mensajes (Leads)" value={metrics.messages} />
+        <StatTile label="Suscriptores" value={metrics.subscribers} />
       </div>
 
-      {/* Lista Rápida */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden transition-colors">
-        <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Últimos Mensajes</h3>
-          <Link href="/admin/leads" className="text-sm text-[#dda124] hover:text-yellow-500 hover:underline flex items-center gap-1 font-semibold">
-            Ver todos <ArrowRight size={16} />
+      <Card padded={false}>
+        <div className="flex items-center justify-between border-b border-line px-5 py-4 md:px-6">
+          <h2 className="font-display text-xl uppercase text-text">Últimos Mensajes</h2>
+          <Link href="/admin/leads" className="flex items-center gap-1 text-[11px] uppercase tracking-[0.2em] text-gold transition-colors hover:text-text">
+            Ver todos <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        
+
         {recentMessages.length === 0 ? (
-          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-            Aún no tienes mensajes nuevos en tu bandeja de entrada.
+          <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+            <Inbox className="h-8 w-8 text-muted" strokeWidth={1.25} />
+            <p className="text-sm text-muted">Aún no tienes mensajes nuevos en tu bandeja de entrada.</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100 dark:divide-slate-800">
+          <ul className="divide-y divide-line">
             {recentMessages.map((msg) => (
-              <div key={msg.id} className={`p-6 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors ${!msg.read ? 'bg-blue-50/20 dark:bg-blue-900/10' : ''}`}>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-gray-900 dark:text-gray-100">{msg.name}</span>
-                    {!msg.read && <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs px-2 py-0.5 rounded-full font-bold">Nuevo</span>}
+              <li
+                key={msg.id}
+                className={cn("flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-surface-2 sm:flex-row sm:items-center md:px-6", !msg.read && "bg-gold/[0.03]")}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="truncate font-medium text-text">{msg.name}</span>
+                    {!msg.read && <Badge tone="gold">Nuevo</Badge>}
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-xl">{msg.message}</p>
+                  <p className="truncate text-sm text-muted">{msg.message}</p>
                 </div>
-                <div className="text-right flex flex-col items-end">
-                  <span className="text-sm text-gray-500 dark:text-gray-500">
-                    {msg.createdAt.toLocaleDateString('es-AR', {
-                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                <div className="flex shrink-0 flex-col sm:items-end">
+                  <span className="text-xs text-muted">
+                    {msg.createdAt.toLocaleDateString("es-AR", {
+                      day: "2-digit",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </span>
-                  <a href={`mailto:${msg.email}`} className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline mt-1">
+                  <a href={`mailto:${msg.email}`} className="mt-1 max-w-[16rem] truncate text-sm text-text underline decoration-line underline-offset-4 hover:decoration-gold">
                     {msg.email}
                   </a>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

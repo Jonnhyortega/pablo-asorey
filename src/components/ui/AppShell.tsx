@@ -16,13 +16,18 @@ export type NavItem = {
   group?: string;
 };
 
+// Un slot puede depender de si la sidebar está colapsada
+type Slot = React.ReactNode | ((collapsed: boolean) => React.ReactNode);
+
+const renderSlot = (slot: Slot, collapsed: boolean) => (typeof slot === "function" ? slot(collapsed) : slot);
+
 type AppShellProps = {
   brand?: React.ReactNode;
   nav: NavItem[];
   title: string;
   headerActions?: React.ReactNode;
-  sidebarTop?: React.ReactNode;
-  sidebarFooter?: React.ReactNode;
+  sidebarTop?: Slot;
+  sidebarFooter?: Slot;
   mobileNav?: "drawer" | "bottom";
   children: React.ReactNode;
 };
@@ -82,7 +87,7 @@ export function AppShell({ brand, nav, title, headerActions, sidebarTop, sidebar
 
   const sidebarBody = (isCollapsed: boolean, onNavigate?: () => void) => (
     <>
-      {sidebarTop && <div className={cn("border-b border-line py-5", isCollapsed ? "px-2" : "px-4")}>{sidebarTop}</div>}
+      {sidebarTop && <div className={cn("border-b border-line py-5", isCollapsed ? "px-2" : "px-4")}>{renderSlot(sidebarTop, isCollapsed)}</div>}
       <nav className={cn("flex-1 space-y-6 overflow-y-auto py-6", isCollapsed ? "px-2" : "px-3")}>
         {groups.map((g, i) => (
           <div key={g.name ?? i} className="space-y-1">
@@ -98,7 +103,7 @@ export function AppShell({ brand, nav, title, headerActions, sidebarTop, sidebar
           </div>
         ))}
       </nav>
-      {sidebarFooter && <div className={cn("space-y-1 border-t border-line py-4", isCollapsed ? "flex flex-col items-center px-2" : "px-3")}>{sidebarFooter}</div>}
+      {sidebarFooter && <div className={cn("space-y-1 border-t border-line py-4", isCollapsed ? "flex flex-col items-center px-2" : "px-3")}>{renderSlot(sidebarFooter, isCollapsed)}</div>}
     </>
   );
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
+import { cn } from "@/lib/cn";
 
 export default function LogoutButton({ isCollapsed }: { isCollapsed?: boolean }) {
   const router = useRouter();
@@ -17,13 +18,16 @@ export default function LogoutButton({ isCollapsed }: { isCollapsed?: boolean })
   };
 
   return (
-    <button 
-      onClick={handleLogout} 
-      className={`flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-600 hover:text-red-600 dark:hover:bg-red-900/20 dark:text-gray-400 dark:hover:text-red-400 transition-colors ${isCollapsed ? 'p-2.5 w-auto' : 'gap-3 px-4 py-2.5 w-full'}`}
+    <button
+      onClick={handleLogout}
+      className={cn(
+        "flex h-10 items-center rounded-panel text-sm text-muted transition-colors hover:bg-surface-2 hover:text-danger",
+        isCollapsed ? "w-10 justify-center" : "w-full gap-3 px-3"
+      )}
       title={isCollapsed ? "Cerrar Sesión" : undefined}
     >
-      <LogOut size={20} className="shrink-0" />
-      {!isCollapsed && <span className="font-medium truncate">Cerrar Sesión</span>}
+      <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+      {!isCollapsed && <span className="truncate">Cerrar Sesión</span>}
     </button>
   );
 }
