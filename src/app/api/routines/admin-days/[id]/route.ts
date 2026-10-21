@@ -40,6 +40,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             where: { id: ex.id },
             data: {
               name: ex.name,
+              order: exercises.findIndex((e: any) => e.id === ex.id || e === ex),
               sets_reps: ex.sets_reps,
               rest: ex.rest,
               videoUrl: ex.videoUrl || "",
@@ -50,6 +51,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
           })),
           create: exercises.filter((ex: any) => !ex.id).map((ex: any) => ({
             name: ex.name,
+            order: exercises.findIndex((e: any) => e === ex),
             sets_reps: ex.sets_reps,
             rest: ex.rest,
             videoUrl: ex.videoUrl || "",

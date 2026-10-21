@@ -50,10 +50,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                 order: index,
                 exercises: {
                   deleteMany: exercisesToDelete.length > 0 ? { id: { in: exercisesToDelete } } : undefined,
-                  update: day.exercises.filter((ex: any) => ex.id).map((ex: any) => ({
+                  update: day.exercises.filter((ex: any) => ex.id).map((ex: any, exIndex: number) => ({
                     where: { id: ex.id },
                     data: {
                       name: ex.name,
+                      order: day.exercises.findIndex((e: any) => e === ex),
                       sets_reps: ex.sets_reps,
                       rest: ex.rest,
                       videoUrl: ex.videoUrl || "",
@@ -62,8 +63,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
                       observations: ex.observations || ""
                     }
                   })),
-                  create: day.exercises.filter((ex: any) => !ex.id).map((ex: any) => ({
+                  create: day.exercises.filter((ex: any) => !ex.id).map((ex: any, exIndex: number) => ({
                     name: ex.name,
+                    order: day.exercises.findIndex((e: any) => e === ex),
                     sets_reps: ex.sets_reps,
                     rest: ex.rest,
                     videoUrl: ex.videoUrl || "",
@@ -79,8 +81,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             dayName: day.dayName,
             order: index,
             exercises: {
-              create: day.exercises.map((ex: any) => ({
+              create: day.exercises.map((ex: any, exIndex: number) => ({
                 name: ex.name,
+                order: exIndex,
                 sets_reps: ex.sets_reps,
                 rest: ex.rest,
                 videoUrl: ex.videoUrl || "",

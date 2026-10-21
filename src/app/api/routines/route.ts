@@ -22,7 +22,11 @@ export async function GET(request: Request) {
       include: {
         days: {
           include: {
-            exercises: true
+            exercises: {
+              orderBy: {
+                order: 'asc'
+              }
+            }
           },
           orderBy: {
             order: 'asc'
@@ -61,8 +65,9 @@ export async function POST(request: Request) {
             dayName: day.dayName,
             order: day.order || index,
             exercises: {
-              create: day.exercises.map((ex: any) => ({
+              create: day.exercises.map((ex: any, exIndex: number) => ({
                 name: ex.name,
+                order: exIndex,
                 sets_reps: ex.sets_reps,
                 rest: ex.rest,
                 videoUrl: ex.videoUrl || "",
@@ -77,7 +82,11 @@ export async function POST(request: Request) {
       include: {
         days: {
           include: {
-            exercises: true
+            exercises: {
+              orderBy: {
+                order: 'asc'
+              }
+            }
           }
         }
       }

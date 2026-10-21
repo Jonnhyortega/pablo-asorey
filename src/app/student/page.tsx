@@ -697,6 +697,10 @@ export default function StudentDashboard() {
     setExpandedWeeks((prev) => ({ ...prev, [week]: !prev[week] }));
   };
 
+  const currentLevel = student.level || 1;
+  const levelRingColor = currentLevel < 36 ? "ring-green-500" : currentLevel < 108 ? "ring-blue-500" : currentLevel < 216 ? "ring-purple-500" : "ring-orange-500";
+  const levelBorderColor = currentLevel < 36 ? "border-green-500" : currentLevel < 108 ? "border-blue-500" : currentLevel < 216 ? "border-purple-500" : "border-orange-500";
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f13] text-gray-900 dark:text-white font-sans transition-colors duration-300 flex overflow-hidden">
       {/* Sidebar Desktop */}
@@ -717,10 +721,10 @@ export default function StudentDashboard() {
                 <img
                   src={student.profilePicture}
                   alt="Profile"
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-cyan-500/20"
+                  className={`w-12 h-12 rounded-full object-cover ring-2 ${levelRingColor}`}
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-cyan-500/20">
+                <div className={`w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-lg text-white shadow-lg ring-2 ${levelRingColor}`}>
                   {student.name.charAt(0)}
                 </div>
               )}
@@ -881,10 +885,10 @@ export default function StudentDashboard() {
                         <img
                           src={student.profilePicture}
                           alt="Profile"
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-cyan-500/20"
+                          className={`w-10 h-10 rounded-full object-cover ring-2 ${levelRingColor}`}
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg ring-2 ${levelRingColor}`}>
                           {student.name.charAt(0)}
                         </div>
                       )}
@@ -2620,7 +2624,7 @@ export default function StudentDashboard() {
                 {/* Foto de Perfil */}
                 <div className="flex flex-col items-center gap-3">
                   <div className="relative group cursor-pointer">
-                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-950 flex items-center justify-center relative">
+                    <div className={`w-24 h-24 rounded-full overflow-hidden border-4 ${levelBorderColor} bg-gray-50 dark:bg-neutral-950 flex items-center justify-center relative`}>
                       {settingsForm.profilePicture ? (
                         <img
                           src={settingsForm.profilePicture}
@@ -2905,12 +2909,18 @@ export default function StudentDashboard() {
 
                 <div className="pt-2">
                   <h4 className="font-bold text-gray-800 dark:text-white mb-2">Rangos:</h4>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2 mb-4">
                     <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span> <strong>Principiante:</strong> Niveles 1 al 35</li>
                     <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500"></span> <strong>Intermedio:</strong> Niveles 36 al 107</li>
                     <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-purple-500"></span> <strong>Avanzado:</strong> Niveles 108 al 215</li>
                     <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-orange-500"></span> <strong>Atleta:</strong> Nivel 216+</li>
                   </ul>
+                  <div className="text-xs text-gray-500 dark:text-neutral-400 bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/30 flex gap-2 items-start">
+                    <Info className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                    <p>
+                      Estos niveles representan los datos ingresados en el sistema en el día a día del entrenamiento, no representan tu nivel en la vida real. Si ya sos un atleta avanzado no le prestes atención, este sistema es con fines lúdicos y de motivación.
+                    </p>
+                  </div>
                 </div>
               </div>
               

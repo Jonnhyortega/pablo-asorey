@@ -20,8 +20,9 @@ export async function POST(request: Request) {
         dayName,
         order: order || 0,
         exercises: {
-          create: exercises.map((ex: any) => ({
+          create: exercises.map((ex: any, exIndex: number) => ({
             name: ex.name,
+            order: exIndex,
             sets_reps: ex.sets_reps,
             rest: ex.rest,
             videoUrl: ex.videoUrl || "",

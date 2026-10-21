@@ -101,6 +101,7 @@ model Exercise {
   routineDayId String
   routineDay   RoutineDay @relation(fields: [routineDayId], references: [id], onDelete: Cascade)
   name         String
+  order        Int        @default(0)
   sets_reps    String
   rest         String
   weight       String     @default("")

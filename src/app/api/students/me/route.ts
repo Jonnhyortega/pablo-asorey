@@ -24,7 +24,9 @@ export async function GET(request: Request) {
           include: {
             days: {
               include: {
-                exercises: true
+                exercises: {
+                  orderBy: { order: 'asc' }
+                }
               },
               orderBy: {
                 order: 'asc'
