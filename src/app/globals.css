@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
-
 /* Noir y oro: oscuro por defecto; el claro solo aplica dentro de los paneles */
 :root {
   --bg: #0A0810;
