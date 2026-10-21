@@ -31,6 +31,8 @@ import {
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppShell, Badge, Button, Card, Dialog, StatTile, type NavItem } from "@/components/ui";
+import { chartTheme, tooltipStyle } from "@/lib/chart-theme";
 import StudentNotificationsBell from "./StudentNotificationsBell";
 import {
   LineChart,
@@ -629,15 +631,15 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-gold" />
       </div>
     );
   }
 
   if (!student)
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-bg flex items-center justify-center text-text">
         Estudiante no encontrado
       </div>
     );
@@ -698,310 +700,142 @@ export default function StudentDashboard() {
   };
 
   const currentLevel = student.level || 1;
-  const levelRingColor = currentLevel < 36 ? "ring-green-500" : currentLevel < 108 ? "ring-blue-500" : currentLevel < 216 ? "ring-purple-500" : "ring-orange-500";
-  const levelBorderColor = currentLevel < 36 ? "border-green-500" : currentLevel < 108 ? "border-blue-500" : currentLevel < 216 ? "border-purple-500" : "border-orange-500";
+  const levelRingColor = currentLevel < 36 ? "ring-success" : currentLevel < 108 ? "ring-gold" : currentLevel < 216 ? "ring-gold" : "ring-gold";
+  const levelBorderColor = currentLevel < 36 ? "border-success/40" : currentLevel < 108 ? "border-gold" : currentLevel < 216 ? "border-gold" : "border-gold";
+
+  const openSettings = () => {
+    setSettingsForm({
+      weight: student.weight || "",
+      goals: student.goals
+        ? student.goals.split(", ").filter(Boolean)
+        : [],
+      profilePicture: student.profilePicture || "",
+      selectedBadge: student.selectedBadge || "",
+      birthDate: student.birthDate
+        ? student.birthDate.split("T")[0]
+        : "",
+    });
+    setShowSettings(true);
+  };
+
+  const viewTitles: Record<typeof activeView, string> = {
+    dashboard: "Resumen General",
+    upcoming: "Próximos Entrenamientos",
+    history: "Historial de Rutinas",
+    progress: "Tus Progresos",
+    support: "Soporte y Chat",
+  };
+
+  const studentNav: NavItem[] = [
+    { label: "Resumen", icon: Activity, active: activeView === "dashboard", onSelect: () => setActiveView("dashboard") },
+    { label: "Entrenamientos", icon: Calendar, active: activeView === "upcoming", onSelect: () => setActiveView("upcoming") },
+    { label: "Historial", icon: CheckCircle, active: activeView === "history", onSelect: () => setActiveView("history") },
+    { label: "Progresos", icon: Dumbbell, active: activeView === "progress", onSelect: () => setActiveView("progress") },
+    { label: "Soporte", icon: MessageSquare, active: activeView === "support", onSelect: () => setActiveView("support") },
+  ];
+
+  const avatar = (
+    <div className="relative shrink-0">
+      {student.profilePicture ? (
+        <img src={student.profilePicture} alt="Profile" className="h-11 w-11 rounded-full border border-gold-line object-cover" />
+      ) : (
+        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-gold-line bg-surface-2 font-display text-lg text-gold">
+          {student.name.charAt(0)}
+        </div>
+      )}
+      {student.selectedBadge && (
+        <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border border-bg bg-gold text-bg">
+          <Medal className="h-3 w-3" />
+        </span>
+      )}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f13] text-gray-900 dark:text-white font-sans transition-colors duration-300 flex overflow-hidden">
-      {/* Sidebar Desktop */}
-      <aside className="hidden md:flex flex-col w-72 border-r border-gray-200 dark:border-white/5 bg-white dark:bg-[#0f0f13] z-10 shrink-0 h-screen overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-white/5 flex items-center justify-between sticky top-0 bg-white/90 dark:bg-[#0f0f13]/90 backdrop-blur-md z-20">
-          <div className="font-black text-xl text-gray-900 dark:text-white flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-cyan-500 text-white flex items-center justify-center font-bold">
-              P
-            </div>
-            <span>Panel Atleta</span>
-          </div>
-        </div>
-
-        <div className="p-6 pb-2">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="relative inline-block">
-              {student.profilePicture ? (
-                <img
-                  src={student.profilePicture}
-                  alt="Profile"
-                  className={`w-12 h-12 rounded-full object-cover ring-2 ${levelRingColor}`}
-                />
-              ) : (
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-lg text-white shadow-lg ring-2 ${levelRingColor}`}>
-                  {student.name.charAt(0)}
-                </div>
-              )}
-              {student.selectedBadge && (() => {
-                 const badgeData = student.selectedBadge === "FIRST_WORKOUT" 
-                    ? { color: "from-blue-400 to-blue-600", icon: Medal }
-                    : student.selectedBadge === "STREAK_7"
-                    ? { color: "from-orange-400 to-red-600", icon: Flame }
-                    : student.selectedBadge === "CENTURION"
-                    ? { color: "from-yellow-400 to-amber-600", icon: Medal }
-                    : student.selectedBadge === "BULL_GROUPED" || student.selectedBadge.startsWith("BULL_PROGRESS_")
-                    ? { color: "from-emerald-400 to-green-600", icon: Dumbbell }
-                    : student.selectedBadge === "BEAST_MODE"
-                    ? { color: "from-rose-500 to-red-700", icon: Flame }
-                    : student.selectedBadge === "MUTANT_MODE"
-                    ? { color: "from-fuchsia-600 to-purple-800", icon: Dumbbell }
-                    : { color: "from-purple-400 to-purple-600", icon: Medal };
-                 const Icon = badgeData.icon;
-                 return (
-                   <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-tr ${badgeData.color} flex items-center justify-center text-white ring-2 ring-white dark:ring-[#0f0f13] shadow-md z-10`}>
-                     <Icon className="w-3 h-3" />
-                   </div>
-                 );
-              })()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-gray-900 dark:text-white truncate">
-                Hola, {student.name.split(" ")[0]}
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                Atleta Activo
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto pb-6">
-          <button
-            onClick={() => setActiveView("dashboard")}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "dashboard" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shadow-sm shadow-cyan-500/5" : "text-gray-500 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800/50 hover:text-gray-900 dark:hover:text-white"}`}
-          >
-            <Activity className="w-5 h-5" /> <span>Resumen</span>
-          </button>
-          <button
-            onClick={() => setActiveView("upcoming")}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "upcoming" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shadow-sm shadow-cyan-500/5" : "text-gray-500 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800/50 hover:text-gray-900 dark:hover:text-white"}`}
-          >
-            <Calendar className="w-5 h-5" /> <span>Entrenamientos</span>
-          </button>
-          <button
-            onClick={() => setActiveView("history")}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "history" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shadow-sm shadow-cyan-500/5" : "text-gray-500 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800/50 hover:text-gray-900 dark:hover:text-white"}`}
-          >
-            <CheckCircle className="w-5 h-5" /> <span>Historial</span>
-          </button>
-          <button
-            onClick={() => setActiveView("progress")}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "progress" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shadow-sm shadow-cyan-500/5" : "text-gray-500 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800/50 hover:text-gray-900 dark:hover:text-white"}`}
-          >
-            <Dumbbell className="w-5 h-5" /> <span>Progresos</span>
-          </button>
-          <button
-            onClick={() => setActiveView("support")}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "support" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold shadow-sm shadow-cyan-500/5" : "text-gray-500 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800/50 hover:text-gray-900 dark:hover:text-white"}`}
-          >
-            <MessageSquare className="w-5 h-5" /> <span>Soporte</span>
-          </button>
-        </nav>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Mobile Header */}
-        <header className="md:hidden flex-shrink-0 sticky top-0 z-40 bg-white/80 dark:bg-[#0f0f13]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 transition-colors duration-300">
-          <div className="px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsMobileMenuOpen(true)}
-                className="p-2 -ml-2 text-gray-500 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-              <div className="font-black text-lg text-gray-900 dark:text-white">
-                Panel Atleta
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <StudentNotificationsBell />
-              <ThemeToggle />
-            </div>
-          </div>
-        </header>
-
-        {/* Desktop Header */}
-        <header className="hidden md:flex flex-shrink-0 sticky top-0 z-40 bg-white/80 dark:bg-[#0f0f13]/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-white/5 px-6 py-4 items-center justify-between transition-colors duration-300">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            {activeView === "dashboard" && "Resumen General"}
-            {activeView === "upcoming" && "Próximos Entrenamientos"}
-            {activeView === "history" && "Historial de Rutinas"}
-            {activeView === "progress" && "Tus Progresos"}
-            {activeView === "support" && "Soporte y Chat"}
-          </h1>
+    <AppShell
+      nav={studentNav}
+      title={viewTitles[activeView]}
+      mobileNav="bottom"
+      sidebarTop={(collapsed) =>
+        collapsed ? (
+          <div className="flex justify-center">{avatar}</div>
+        ) : (
           <div className="flex items-center gap-3">
-            <StudentNotificationsBell />
-            <button
-              onClick={() => {
-                setSettingsForm({
-                  weight: student.weight || "",
-                  goals: student.goals
-                    ? student.goals.split(", ").filter(Boolean)
-                    : [],
-                  profilePicture: student.profilePicture || "",
-                  selectedBadge: student.selectedBadge || "",
-                  birthDate: student.birthDate
-                    ? student.birthDate.split("T")[0]
-                    : "",
-                });
-                setShowSettings(true);
-              }}
-              className="p-2.5 text-gray-500 dark:text-neutral-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-xl transition-all"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-            <div className="scale-90 origin-right">
-              <ThemeToggle />
+            {avatar}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-text">Hola, {student.name.split(" ")[0]}</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-gold">Atleta Activo</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="p-2.5 text-gray-500 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
           </div>
-        </header>
-
-        {/* Mobile Sidebar Overlay */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="fixed inset-0 bg-black/60 z-50 md:hidden backdrop-blur-sm"
-              />
-              <motion.aside
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-[#0f0f13] shadow-2xl z-50 md:hidden flex flex-col"
-              >
-                <div className="p-6 border-b border-gray-200 dark:border-white/5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative inline-block">
-                      {student.profilePicture ? (
-                        <img
-                          src={student.profilePicture}
-                          alt="Profile"
-                          className={`w-10 h-10 rounded-full object-cover ring-2 ${levelRingColor}`}
-                        />
-                      ) : (
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-white shadow-lg ring-2 ${levelRingColor}`}>
-                          {student.name.charAt(0)}
-                        </div>
-                      )}
-                      {student.selectedBadge && (() => {
-                         const badgeData = student.selectedBadge === "FIRST_WORKOUT" 
-                            ? { color: "from-blue-400 to-blue-600", icon: Medal }
-                            : student.selectedBadge === "STREAK_7"
-                            ? { color: "from-orange-400 to-red-600", icon: Flame }
-                            : student.selectedBadge === "CENTURION"
-                            ? { color: "from-yellow-400 to-amber-600", icon: Medal }
-                            : student.selectedBadge === "BULL_GROUPED" || student.selectedBadge.startsWith("BULL_PROGRESS_")
-                            ? { color: "from-emerald-400 to-green-600", icon: Dumbbell }
-                            : student.selectedBadge === "BEAST_MODE"
-                            ? { color: "from-rose-500 to-red-700", icon: Flame }
-                            : student.selectedBadge === "MUTANT_MODE"
-                            ? { color: "from-fuchsia-600 to-purple-800", icon: Dumbbell }
-                            : { color: "from-purple-400 to-purple-600", icon: Medal };
-                         const Icon = badgeData.icon;
-                         return (
-                           <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-tr ${badgeData.color} flex items-center justify-center text-white ring-2 ring-white dark:ring-[#0f0f13] shadow-sm z-10`}>
-                             <Icon className="w-2.5 h-2.5" />
-                           </div>
-                         );
-                      })()}
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="font-bold text-gray-900 dark:text-white truncate text-lg">
-                        Hola, {student.name.split(" ")[0]}
-                      </h2>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 text-gray-500 bg-gray-100 dark:bg-neutral-800 rounded-full"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-                  <button
-                    onClick={() => {
-                      setActiveView("dashboard");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "dashboard" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold" : "text-gray-500 dark:text-neutral-400"}`}
-                  >
-                    <Activity className="w-5 h-5" /> <span>Resumen</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveView("upcoming");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "upcoming" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold" : "text-gray-500 dark:text-neutral-400"}`}
-                  >
-                    <Calendar className="w-5 h-5" /> <span>Entrenamientos</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveView("history");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "history" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold" : "text-gray-500 dark:text-neutral-400"}`}
-                  >
-                    <CheckCircle className="w-5 h-5" /> <span>Historial</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveView("progress");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "progress" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold" : "text-gray-500 dark:text-neutral-400"}`}
-                  >
-                    <Dumbbell className="w-5 h-5" /> <span>Progresos</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveView("support");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 ${activeView === "support" ? "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold" : "text-gray-500 dark:text-neutral-400"}`}
-                  >
-                    <MessageSquare className="w-5 h-5" /> <span>Soporte</span>
-                  </button>
-                </nav>
-                <div className="p-4 border-t border-gray-200 dark:border-white/5">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 py-3 text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl font-bold"
-                  >
-                    <LogOut className="w-5 h-5" /> Cerrar Sesión
-                  </button>
-                </div>
-              </motion.aside>
-            </>
-          )}
-        </AnimatePresence>
-
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 pb-24 space-y-8">
+        )
+      }
+      headerActions={
+        <>
+          <StudentNotificationsBell />
+          <button onClick={openSettings} aria-label="Configuración" className="flex h-10 w-10 items-center justify-center rounded-panel text-muted transition-colors hover:bg-surface-2 hover:text-text">
+            <Settings className="h-5 w-5" strokeWidth={1.5} />
+          </button>
+          <div className="hidden sm:block">
+            <ThemeToggle isCollapsed />
+          </div>
+          <button onClick={handleLogout} aria-label="Cerrar Sesión" className="flex h-10 w-10 items-center justify-center rounded-panel text-muted transition-colors hover:bg-surface-2 hover:text-danger">
+            <LogOut className="h-5 w-5" strokeWidth={1.5} />
+          </button>
+        </>
+      }
+      sidebarFooter={(collapsed) => <ThemeToggle isCollapsed={collapsed} />}
+    >
+          <div className="mx-auto w-full max-w-5xl space-y-8">
             {activeView === "dashboard" ? (
               <>
+                {/* Próximo entrenamiento */}
+                {(() => {
+                  const nextDay = pendingDays[0] ?? null;
+                  return (
+                    <Card className="relative overflow-hidden border-gold-line">
+                      <span className="pointer-events-none absolute -right-4 -top-6 select-none font-display text-[9rem] leading-none text-gold/[0.06]" aria-hidden>
+                        {pendingDays.length}
+                      </span>
+                      <p className="text-[11px] uppercase tracking-[0.3em] text-gold">Hoy toca</p>
+                      {nextDay ? (
+                        <>
+                          <h2 className="mt-2 font-display text-4xl uppercase leading-none text-text md:text-5xl">{nextDay.dayName}</h2>
+                          <p className="mt-2 text-sm text-muted">
+                            {nextDay.exercises?.length ?? 0} ejercicios · {nextDay.routineDates}
+                          </p>
+                          <Button
+                            variant="primary"
+                            size="lg"
+                            className="mt-6 w-full sm:w-auto"
+                            onClick={() => {
+                              setActiveView("upcoming");
+                              setExpandedDayId(nextDay.id);
+                            }}
+                          >
+                            Empezar entrenamiento
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="mt-2 font-display text-3xl uppercase leading-none text-text">Sin entrenamientos pendientes</h2>
+                          <p className="mt-2 text-sm text-muted">Cuando el profe cargue tu próxima rutina la vas a ver acá.</p>
+                        </>
+                      )}
+                    </Card>
+                  );
+                })()}
+
                 {/* Resumen y Pagos */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors">
+                  <div className="bg-surface border border-line rounded-panel p-5 transition-colors">
                     <div className="flex items-center gap-3 mb-2">
-                      <Activity className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                      <h3 className="font-semibold text-gray-700 dark:text-neutral-300">
+                      <Activity className="w-5 h-5 text-gold" />
+                      <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">
                         Tus Datos
                       </h3>
                     </div>
-                    <p className="text-2xl font-bold">{student.weight} kg</p>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+                    <p className="font-display text-4xl leading-none tabular-nums">{student.weight} <span className="font-sans text-sm text-muted">kg</span></p>
+                    <p className="text-sm text-muted mt-1">
                       Meta:{" "}
                       {student.goals.length > 30
                         ? student.goals.substring(0, 30) + "..."
@@ -1009,18 +843,18 @@ export default function StudentDashboard() {
                     </p>
                   </div>
 
-                  <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors flex flex-col justify-between">
+                  <div className="bg-surface border border-line rounded-panel p-5 transition-colors flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <Wallet
-                          className={`w-5 h-5 ${student.paymentStatus === "VERIFYING" ? "text-blue-500" : !student.paymentDate ? "text-orange-500 dark:text-orange-400" : new Date(student.paymentDate).setHours(23, 59, 59, 999) < new Date().getTime() ? "text-red-500 dark:text-red-400" : "text-emerald-500 dark:text-emerald-400"}`}
+                          className={`w-5 h-5 ${student.paymentStatus === "VERIFYING" ? "text-gold" : !student.paymentDate ? "text-gold" : new Date(student.paymentDate).setHours(23, 59, 59, 999) < new Date().getTime() ? "text-danger" : "text-success"}`}
                         />
-                        <h3 className="font-semibold text-gray-700 dark:text-neutral-300">
+                        <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">
                           Estado de Cuota
                         </h3>
                       </div>
                       <p
-                        className={`text-xl font-bold ${student.paymentStatus === "VERIFYING" ? "text-blue-500" : !student.paymentDate ? "text-orange-500 dark:text-orange-400" : new Date(student.paymentDate).setHours(23, 59, 59, 999) < new Date().getTime() ? "text-red-500 dark:text-red-400" : "text-emerald-500 dark:text-emerald-400"}`}
+                        className={`font-display text-3xl uppercase leading-none ${student.paymentStatus === "VERIFYING" ? "text-gold" : !student.paymentDate ? "text-gold" : new Date(student.paymentDate).setHours(23, 59, 59, 999) < new Date().getTime() ? "text-danger" : "text-success"}`}
                       >
                         {student.paymentStatus === "VERIFYING"
                           ? "En Verificación"
@@ -1036,7 +870,7 @@ export default function StudentDashboard() {
                               : "Al Día"}
                       </p>
                       {student.paymentDate && (
-                        <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+                        <p className="text-sm text-muted mt-1">
                           Vence: {formatDateUTC(student.paymentDate)}
                         </p>
                       )}
@@ -1053,7 +887,7 @@ export default function StudentDashboard() {
                         <button
                           onClick={handlePaymentReport}
                           disabled={saving}
-                          className="mt-3 w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 text-sm font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                          className="mt-4 flex w-full items-center justify-center gap-2 rounded-panel border border-gold py-2.5 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-bg"
                         >
                           {saving ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -1065,21 +899,21 @@ export default function StudentDashboard() {
                       )}
 
                     {student.paymentStatus === "VERIFYING" && (
-                      <p className="mt-3 text-xs font-semibold text-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 py-2 px-3 rounded-lg text-center">
+                      <p className="mt-3 text-xs font-semibold text-gold bg-gold/10 py-2 px-3 rounded-panel text-center">
                         El profe está revisando tu pago
                       </p>
                     )}
                   </div>
 
-                  <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm dark:shadow-lg transition-colors">
+                  <div className="bg-surface border border-line rounded-panel p-5 transition-colors">
                     <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="w-5 h-5 text-purple-500 dark:text-purple-400" />
-                      <h3 className="font-semibold text-gray-700 dark:text-neutral-300">
+                      <CheckCircle className="w-5 h-5 text-gold" />
+                      <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted">
                         Progreso
                       </h3>
                     </div>
-                    <p className="text-2xl font-bold">{completedDays.length}</p>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
+                    <p className="font-display text-4xl leading-none tabular-nums">{completedDays.length}</p>
+                    <p className="text-sm text-muted mt-1">
                       Sesiones completadas
                     </p>
                   </div>
@@ -1087,78 +921,68 @@ export default function StudentDashboard() {
 
                 {/* --- SECCIÓN DE GAMIFICACIÓN --- */}
                 <div className="mt-8">
-                  <h2 className="text-xl font-black text-gray-800 dark:text-white mb-4">Tu Progreso como Atleta</h2>
+                  <h2 className="mb-4 font-display text-2xl uppercase text-text">Tu Progreso como Atleta</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     
                     {/* Widget Nivel / XP */}
-                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-20">
-                        <Dumbbell className="w-32 h-32 rotate-12 transform translate-x-4 -translate-y-4" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="flex justify-between items-end mb-2">
-                          <div>
-                            <p className="text-indigo-100 font-medium text-sm uppercase tracking-wider">Nivel {student.level || 1}</p>
-                            <h3 className="text-3xl font-black flex items-center gap-2">
-                              {(student.level || 1) < 36 ? "Principiante" : (student.level || 1) < 108 ? "Intermedio" : (student.level || 1) < 216 ? "Avanzado" : "Atleta"}
-                              <button onClick={() => setShowXPModal(true)} className="p-1.5 hover:bg-white/20 rounded-full transition-colors group" title="Sistema de XP">
-                                <Info className="w-5 h-5 text-indigo-200 group-hover:text-white transition-colors" />
-                              </button>
-                            </h3>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-3xl font-bold">{student.xp || 0} <span className="text-sm font-medium text-indigo-200">XP</span></p>
-                          </div>
+                    <Card className="relative overflow-hidden">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-gold">Nivel {student.level || 1}</p>
+                          <h3 className="mt-2 flex items-center gap-2 font-display text-3xl uppercase leading-none text-text">
+                            {(student.level || 1) < 36 ? "Principiante" : (student.level || 1) < 108 ? "Intermedio" : (student.level || 1) < 216 ? "Avanzado" : "Atleta"}
+                            <button onClick={() => setShowXPModal(true)} className="rounded-full p-1 text-muted transition-colors hover:text-gold" title="Sistema de XP" aria-label="Sistema de XP">
+                              <Info className="h-4 w-4" />
+                            </button>
+                          </h3>
                         </div>
-                        {/* Barra de progreso de XP (cada nivel son 100 XP) */}
-                        <div className="w-full bg-black/20 rounded-full h-3 mt-4 overflow-hidden">
-                          <div 
-                            className="bg-white h-full rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: `${((student.xp || 0) % 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-indigo-100 mt-2 text-right">{100 - ((student.xp || 0) % 100)} XP para Nivel {(student.level || 1) + 1}</p>
+                        <p className="shrink-0 font-display text-3xl leading-none tabular-nums text-text">
+                          {student.xp || 0} <span className="font-sans text-xs text-gold">XP</span>
+                        </p>
                       </div>
-                    </div>
+                      {/* Barra de progreso de XP (cada nivel son 100 XP) */}
+                      <div className="mt-6 h-[3px] w-full bg-line">
+                        <div className="h-full bg-gold transition-all duration-1000 ease-out" style={{ width: `${((student.xp || 0) % 100)}%` }} />
+                      </div>
+                      <p className="mt-2 text-right text-xs text-muted">{100 - ((student.xp || 0) % 100)} XP para Nivel {(student.level || 1) + 1}</p>
+                    </Card>
 
                     {/* Widget Racha */}
-                    <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col">
-                      <div className="flex items-center justify-between w-full">
+                    <Card className="flex flex-col">
+                      <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-2xl bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center text-orange-500 shadow-inner">
-                            <Flame className="w-8 h-8" />
+                          <div className="flex h-12 w-12 items-center justify-center rounded-panel border border-gold-line text-gold">
+                            <Flame className="h-6 w-6" strokeWidth={1.5} />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Racha Actual</p>
-                            <h3 className="text-3xl font-black text-gray-800 dark:text-white flex items-baseline gap-2">
-                              {student.currentStreak || 0} <span className="text-lg font-medium text-gray-400">días</span>
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Racha Actual</p>
+                            <h3 className="mt-1 flex items-baseline gap-2 font-display text-3xl leading-none text-text">
+                              {student.currentStreak || 0} <span className="font-sans text-sm text-muted">días</span>
                             </h3>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Récord</p>
-                          <p className="font-bold text-gray-600 dark:text-gray-300 text-lg">{student.longestStreak || 0} días</p>
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-muted">Récord</p>
+                          <p className="mt-1 font-display text-xl text-text">{student.longestStreak || 0} días</p>
                         </div>
                       </div>
-                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-slate-800 flex items-center justify-center gap-2">
-                        <p className="text-xs font-medium text-orange-500/90 dark:text-orange-400/90 flex items-center gap-1.5">
-                          <span className="text-[10px]">⚠️</span> Si pasas +4 días sin entrenar perderás tu racha
-                        </p>
-                      </div>
-                    </div>
+                      <p className="mt-auto border-t border-line pt-3 text-center text-xs text-muted">
+                        Si pasas +4 días sin entrenar perderás tu racha
+                      </p>
+                    </Card>
                   </div>
-                  
+
                   {/* Vitrina de Medallas */}
-                  <div className="mt-4 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                  <div className="mt-4 bg-surface border border-line rounded-panel p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                        <Medal className="w-5 h-5 text-amber-500" /> Vitrina de Medallas
+                      <h3 className="flex items-center gap-2 font-display text-xl uppercase text-text">
+                        <Medal className="h-5 w-5 text-gold" strokeWidth={1.5} /> Vitrina de Medallas
                       </h3>
-                      <button onClick={() => setShowBadgesModal(true)} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 px-2.5 py-1 rounded-full">
+                      <button onClick={() => setShowBadgesModal(true)} className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted transition-colors hover:text-gold">
                         <Info className="w-4 h-4" /> ¿Cómo ganar más?
                       </button>
                     </div>
-                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700">
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
                       {student.badges && student.badges.length > 0 ? (
                         (() => {
                           const renderBadges: any[] = [];
@@ -1180,32 +1004,32 @@ export default function StudentDashboard() {
 
                           return renderBadges.map((badge: any, i: number) => {
                             const badgeData = badge.badgeId === "FIRST_WORKOUT" 
-                              ? { name: "Primer Paso", color: "from-blue-400 to-blue-600", shadow: "shadow-blue-500/20", icon: Medal }
+                              ? { name: "Primer Paso", color: "from-gold to-gold", shadow: "", icon: Medal }
                               : badge.badgeId === "STREAK_7"
-                              ? { name: "Racha de Fuego", color: "from-orange-400 to-red-600", shadow: "shadow-red-500/20", icon: Flame }
+                              ? { name: "Racha de Fuego", color: "from-gold to-danger", shadow: "", icon: Flame }
                               : badge.badgeId === "CENTURION"
-                              ? { name: "Centurión", color: "from-yellow-400 to-amber-600", shadow: "shadow-amber-500/20", icon: Medal }
+                              ? { name: "Centurión", color: "from-gold to-gold", shadow: "", icon: Medal }
                               : badge.badgeId === "BULL_GROUPED"
-                              ? { name: `Toro`, color: "from-emerald-400 to-green-600", shadow: "shadow-emerald-500/20", icon: Dumbbell }
+                              ? { name: `Toro`, color: "from-success to-success", shadow: "", icon: Dumbbell }
                               : badge.badgeId === "BEAST_MODE"
-                              ? { name: "Bestia", color: "from-rose-500 to-red-700", shadow: "shadow-rose-500/20", icon: Flame }
+                              ? { name: "Bestia", color: "from-danger to-danger", shadow: "", icon: Flame }
                               : badge.badgeId === "MUTANT_MODE"
-                              ? { name: "Mutante", color: "from-fuchsia-600 to-purple-800", shadow: "shadow-purple-500/20", icon: Dumbbell }
-                              : { name: badge.badgeId, color: "from-purple-400 to-purple-600", shadow: "shadow-purple-500/20", icon: Medal };
+                              ? { name: "Mutante", color: "from-gold to-gold", shadow: "", icon: Dumbbell }
+                              : { name: badge.badgeId, color: "from-gold to-gold", shadow: "", icon: Medal };
 
                             const Icon = badgeData.icon;
 
                             return (
                               <div key={i} className="flex flex-col items-center min-w-[90px] group">
-                                <div className={`w-16 h-16 rounded-full bg-gradient-to-tr ${badgeData.color} shadow-lg ${badgeData.shadow} flex items-center justify-center text-white mb-3 transform transition-transform group-hover:scale-110 group-hover:-translate-y-1 relative`}>
+                                <div className={`w-16 h-16 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold mb-3 transform transition-transform group-hover:scale-110 group-hover:-translate-y-1 relative`}>
                                   <Icon className="w-8 h-8" />
                                   {badge.badgeId === "BULL_GROUPED" && badge.count > 1 && (
-                                    <div className="absolute -top-1 -right-1 bg-white text-green-600 text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-green-500 shadow-sm">
+                                    <div className="absolute -top-1 -right-1 bg-surface text-success text-[10px] font-semibold w-6 h-6 rounded-full flex items-center justify-center border-2 border-success/40">
                                       x{badge.count}
                                     </div>
                                   )}
                                 </div>
-                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center leading-tight">
+                                <span className="text-xs font-bold text-text text-center leading-tight">
                                   {badgeData.name}
                                 </span>
                               </div>
@@ -1213,10 +1037,10 @@ export default function StudentDashboard() {
                           });
                         })()
                       ) : (
-                        <div className="text-center w-full bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-gray-200 dark:border-slate-700 p-6">
-                          <Medal className="w-10 h-10 text-gray-300 dark:text-slate-600 mx-auto mb-2 opacity-50" />
-                          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Todavía no has obtenido medallas.</p>
-                          <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">¡Completa tu primer entrenamiento para empezar tu colección!</p>
+                        <div className="text-center w-full bg-surface-2 rounded-panel border border-dashed border-line p-6">
+                          <Medal className="w-10 h-10 text-muted mx-auto mb-2 opacity-50" />
+                          <p className="text-muted text-sm font-medium">Todavía no has obtenido medallas.</p>
+                          <p className="text-muted text-xs mt-1">¡Completa tu primer entrenamiento para empezar tu colección!</p>
                         </div>
                       )}
                     </div>
@@ -1233,16 +1057,16 @@ export default function StudentDashboard() {
                     onClick={() => setIsUpcomingExpanded(!isUpcomingExpanded)}
                   >
                     <div className="flex items-center gap-2">
-                      <Dumbbell className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                      <Dumbbell className="w-6 h-6 text-success" />
+                      <h2 className="text-xl font-bold text-text">
                         Próximos Entrenamientos
                       </h2>
                     </div>
-                    <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                    <div className="p-1 rounded-full hover:bg-surface-2 transition-colors">
                       {isUpcomingExpanded ? (
-                        <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                        <ChevronUp className="w-6 h-6 text-muted" />
                       ) : (
-                        <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                        <ChevronDown className="w-6 h-6 text-muted" />
                       )}
                     </div>
                   </div>
@@ -1256,7 +1080,7 @@ export default function StudentDashboard() {
                         className="space-y-4 overflow-hidden"
                       >
                         {pendingDays.length === 0 ? (
-                          <div className="bg-white dark:bg-neutral-900/50 border border-gray-200 dark:border-neutral-800 rounded-2xl p-8 text-center text-gray-500 dark:text-neutral-500 transition-colors">
+                          <div className="bg-surface border border-line rounded-panel p-8 text-center text-muted transition-colors">
                             <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                             <p>No tienes rutinas pendientes. ¡Buen trabajo!</p>
                           </div>
@@ -1264,7 +1088,7 @@ export default function StudentDashboard() {
                           pendingDays.map((day) => (
                             <div
                               key={day.id}
-                              className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl overflow-hidden transition-all shadow-sm dark:shadow-lg hover:border-gray-300 dark:hover:border-neutral-700"
+                              className="bg-surface border border-line rounded-panel overflow-hidden transition-all hover:border-line"
                             >
                               <button
                                 onClick={() =>
@@ -1275,21 +1099,21 @@ export default function StudentDashboard() {
                                 className="w-full flex justify-between items-center p-5 text-left focus:outline-none"
                               >
                                 <div>
-                                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                                  <h3 className="font-bold text-lg text-text">
                                     {day.dayName}
                                   </h3>
-                                  <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                                  <p className="text-xs text-muted mt-1">
                                     Rutina: {day.routineDates}
                                   </p>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-gold/10 text-gold">
                                     {day.exercises.length} Ejercicios
                                   </span>
                                   {expandedDayId === day.id ? (
-                                    <ChevronUp className="w-5 h-5 text-gray-400 dark:text-neutral-400" />
+                                    <ChevronUp className="w-5 h-5 text-muted" />
                                   ) : (
-                                    <ChevronDown className="w-5 h-5 text-gray-400 dark:text-neutral-400" />
+                                    <ChevronDown className="w-5 h-5 text-muted" />
                                   )}
                                 </div>
                               </button>
@@ -1302,11 +1126,11 @@ export default function StudentDashboard() {
                                     exit={{ height: 0 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="p-5 pt-0 border-t border-gray-100 dark:border-neutral-800 space-y-6 mt-4 transition-colors">
+                                    <div className="p-5 pt-0 border-t border-line space-y-6 mt-4 transition-colors">
                                       {day.exercises.map((ex: any) => (
 <div
                                           key={ex.id}
-                                          className="bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl p-4 mt-8 transition-colors"
+                                          className="bg-surface-2 border border-line rounded-panel p-4 mt-8 transition-colors"
                                         >
                                           <div className="flex justify-between items-start gap-3 mb-3">
                                             <div className="flex-1 min-w-0">
@@ -1327,12 +1151,12 @@ export default function StudentDashboard() {
                                                         )
                                                       }
                                                     />
-                                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${exerciseEdits[ex.id]?.isCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-300 dark:border-neutral-600 text-transparent group-hover:border-emerald-400"}`}>
+                                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${exerciseEdits[ex.id]?.isCompleted ? "bg-success border-success/40 text-bg" : "border-line text-transparent group-hover:border-success/40"}`}>
                                                       <CheckCircle className="w-4 h-4" />
                                                     </div>
                                                   </div>
                                                   <h4
-                                                    className={`font-bold text-base transition-colors leading-tight break-words pt-0.5 ${exerciseEdits[ex.id]?.isCompleted ? "text-gray-400 dark:text-neutral-500 line-through" : "text-red-500 dark:text-white group-hover:text-emerald-500"}`}
+                                                    className={`font-bold text-base transition-colors leading-tight break-words pt-0.5 ${exerciseEdits[ex.id]?.isCompleted ? "text-muted line-through" : "text-danger group-hover:text-success"}`}
                                                   >
                                                     {ex.name}
                                                   </h4>
@@ -1346,11 +1170,11 @@ export default function StudentDashboard() {
                                                     if (hist) {
                                                       return (
                                                         <div className="text-[10px] font-semibold mt-1 mb-0.5 flex flex-wrap items-center gap-2">
-                                                          <span className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                                                          <span className="bg-gold/10 text-gold px-1.5 py-0.5 rounded">
                                                             Último:{" "}
                                                             {hist.lastWeight}kg
                                                           </span>
-                                                          <span className="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 px-1.5 py-0.5 rounded">
+                                                          <span className="bg-success/10 text-success px-1.5 py-0.5 rounded">
                                                             Récord:{" "}
                                                             {hist.maxWeight}kg
                                                           </span>
@@ -1361,16 +1185,16 @@ export default function StudentDashboard() {
                                                   })()}
                                                 </div>
                                               </div>
-                                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-gray-500 dark:text-neutral-400 pl-6">
-                                                <span className="text-purple-600 dark:text-purple-400 break-words max-w-full">
+                                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-muted pl-6">
+                                                <span className="text-gold break-words max-w-full">
                                                   {ex.trackingType === "TIME"
-                                                    ? "Tiempo: "
+                                                    ? "Tiempo:"
                                                     : ex.trackingType ===
                                                         "CIRCUIT"
-                                                      ? "Circuito: "
+                                                      ? "Circuito:"
                                                       : ex.trackingType ===
                                                           "HIIT"
-                                                        ? "Intervalos: "
+                                                        ? "Intervalos:"
                                                         : ex.trackingType ===
                                                             "DROP_SET"
                                                           ? "Súper Serie/Drop: "
@@ -1379,28 +1203,28 @@ export default function StudentDashboard() {
                                                 </span>
                                                 {ex.weight && (
                                                   <>
-                                                    <span className="text-gray-300 dark:text-neutral-600">
+                                                    <span className="text-muted">
                                                       •
                                                     </span>
-                                                    <span className="text-emerald-600 dark:text-emerald-400 break-words max-w-full font-bold">
+                                                    <span className="text-success break-words max-w-full font-bold">
                                                       {ex.trackingType ===
                                                       "TIME"
-                                                        ? "Intensidad: "
+                                                        ? "Intensidad:"
                                                         : ex.trackingType ===
                                                             "CIRCUIT"
                                                           ? "Detalle de Carga: "
                                                           : ex.trackingType ===
                                                               "HIIT"
-                                                            ? "Carga/Intensidad: "
+                                                            ? "Carga/Intensidad:"
                                                             : ex.trackingType ===
                                                                 "DROP_SET"
-                                                              ? "Cargas: "
-                                                              : "Peso: "}
+                                                              ? "Cargas:"
+                                                              : "Peso:"}
                                                       {ex.weight}
                                                     </span>
                                                   </>
                                                 )}
-                                                <span className="text-gray-300 dark:text-neutral-600">
+                                                <span className="text-muted">
                                                   •
                                                 </span>
                                                 <span className="break-words max-w-full">
@@ -1408,10 +1232,10 @@ export default function StudentDashboard() {
                                                 </span>
                                                 {ex.observations && (
                                                   <>
-                                                    <span className="text-gray-300 dark:text-neutral-600">
+                                                    <span className="text-muted">
                                                       •
                                                     </span>
-                                                    <span className="break-words max-w-full text-xs italic text-gray-400">
+                                                    <span className="break-words max-w-full text-xs italic text-muted">
                                                       Obs: {ex.observations}
                                                     </span>
                                                   </>
@@ -1425,7 +1249,7 @@ export default function StudentDashboard() {
                                                     ex.videoUrl,
                                                   )
                                                 }
-                                                className="shrink-0 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors mt-0.5"
+                                                className="shrink-0 text-gold hover:text-gold flex items-center gap-1.5 bg-gold/10 px-2.5 py-1.5 rounded-panel text-xs font-semibold transition-colors mt-0.5"
                                               >
                                                 <PlaySquare className="w-3.5 h-3.5" />{" "}
                                                 Ver Video
@@ -1433,8 +1257,8 @@ export default function StudentDashboard() {
                                             )}
                                           </div>
 
-                                          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-neutral-800 transition-colors">
-                                            <label className="block text-xs font-semibold text-gray-500 dark:text-neutral-500 mb-2 uppercase tracking-wider">
+                                          <div className="mt-4 pt-4 border-t border-line transition-colors">
+                                            <label className="block text-xs font-semibold text-muted mb-2 uppercase tracking-wider">
                                               Registro de Series
                                             </label>
                                             <div className="space-y-3 mb-3">
@@ -1444,10 +1268,10 @@ export default function StudentDashboard() {
                                                 (set: any, idx: number) => (
                                                   <div
                                                     key={idx}
-                                                    className={`flex flex-col gap-2 ${set.drops ? "bg-gray-100/50 dark:bg-neutral-800/30 p-3 rounded-xl border border-gray-200/50 dark:border-neutral-700/50" : "flex-row items-center"}`}
+                                                    className={`flex flex-col gap-2 ${set.drops ? "bg-surface-2 p-3 rounded-panel border border-line" : "flex-row items-center"}`}
                                                   >
                                                     <div
-                                                      className={`${set.drops ? "w-full text-left mb-1 text-sm" : "w-8 text-center text-xs"} flex-shrink-0 font-bold text-gray-400 dark:text-neutral-500`}
+                                                      className={`${set.drops ? "w-full text-left mb-1 text-sm" : "w-8 text-center text-xs"} flex-shrink-0 font-bold text-muted`}
                                                     >
                                                       {set.drops
                                                         ? `Serie #${idx + 1}`
@@ -1465,13 +1289,14 @@ export default function StudentDashboard() {
                                                               key={dIdx}
                                                               className="flex items-center gap-2 w-full"
                                                             >
-                                                              <div className="w-5 text-center text-[10px] font-bold text-purple-400 dark:text-purple-500 flex-shrink-0">
+                                                              <div className="w-5 text-center text-[10px] font-bold text-gold flex-shrink-0">
                                                                 D{dIdx + 1}
                                                               </div>
                                                               <div className="flex-1 flex gap-2">
                                                                 <div className="flex-1">
                                                                   <input
                                                                     type="number"
+                                                                    inputMode="numeric"
                                                                     placeholder="Reps"
                                                                     value={
                                                                       drop.reps
@@ -1488,7 +1313,7 @@ export default function StudentDashboard() {
                                                                           .value,
                                                                       )
                                                                     }
-                                                                    className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                                                    className="h-11 w-full rounded-panel border border-line bg-bg px-2 text-base text-text outline-none transition-colors placeholder:text-muted focus:border-gold sm:text-sm"
                                                                   />
                                                                 </div>
                                                                 <div className="flex-1">
@@ -1510,7 +1335,7 @@ export default function StudentDashboard() {
                                                                           .value,
                                                                       )
                                                                     }
-                                                                    className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-2 py-1.5 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                                                    className="h-11 w-full rounded-panel border border-line bg-bg px-2 text-base text-text outline-none transition-colors placeholder:text-muted focus:border-gold sm:text-sm"
                                                                   />
                                                                 </div>
                                                               </div>
@@ -1523,7 +1348,7 @@ export default function StudentDashboard() {
                                                                     dIdx,
                                                                   )
                                                                 }
-                                                                className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
+                                                                className="p-1.5 text-danger hover:text-danger hover:bg-danger/10 rounded-panel transition-colors shrink-0"
                                                                 title="Eliminar Drop"
                                                               >
                                                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1540,7 +1365,7 @@ export default function StudentDashboard() {
                                                                 idx,
                                                               )
                                                             }
-                                                            className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:text-purple-700 flex items-center gap-1 transition-colors"
+                                                            className="text-xs font-semibold text-gold hover:text-gold flex items-center gap-1 transition-colors"
                                                           >
                                                             + Añadir Drop
                                                           </button>
@@ -1552,7 +1377,7 @@ export default function StudentDashboard() {
                                                                 idx,
                                                               )
                                                             }
-                                                            className="text-xs text-red-400 hover:text-red-500 transition-colors"
+                                                            className="text-xs text-danger hover:text-danger transition-colors"
                                                           >
                                                             Eliminar Serie
                                                             Completa
@@ -1586,7 +1411,7 @@ export default function StudentDashboard() {
                                                                     .value,
                                                                 )
                                                               }
-                                                              className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                                              className="h-11 w-full rounded-panel border border-line bg-bg px-3 text-base text-text outline-none transition-colors placeholder:text-muted focus:border-gold sm:text-sm"
                                                             />
                                                           </div>
                                                           <div className="flex-1">
@@ -1608,7 +1433,7 @@ export default function StudentDashboard() {
                                                                     .value,
                                                                 )
                                                               }
-                                                              className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                                              className="h-11 w-full rounded-panel border border-line bg-bg px-3 text-base text-text outline-none transition-colors placeholder:text-muted focus:border-gold sm:text-sm"
                                                             />
                                                           </div>
                                                         </div>
@@ -1620,7 +1445,7 @@ export default function StudentDashboard() {
                                                               idx,
                                                             )
                                                           }
-                                                          className="p-2 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors shrink-0"
+                                                          className="p-2 text-danger hover:text-danger hover:bg-danger/10 rounded-panel transition-colors shrink-0"
                                                           title="Eliminar serie"
                                                         >
                                                           <Trash2 className="w-4 h-4" />
@@ -1667,13 +1492,13 @@ export default function StudentDashboard() {
                                                   addSet(ex.id);
                                                 }
                                               }}
-                                              className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 mb-4 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-lg transition-colors"
+                                              className="text-xs font-semibold text-success hover:text-success flex items-center gap-1 mb-4 bg-success/10 px-3 py-1.5 rounded-panel transition-colors"
                                             >
                                               + Añadir Serie
                                             </button>
 
                                             <div>
-                                              <label className="block text-xs font-medium text-gray-500 dark:text-neutral-500 mb-1">
+                                              <label className="block text-xs font-medium text-muted mb-1">
                                                 Feedback Privado (opcional)
                                               </label>
                                               <input
@@ -1690,7 +1515,7 @@ export default function StudentDashboard() {
                                                     e.target.value,
                                                   )
                                                 }
-                                                className="w-full bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none placeholder:text-gray-400 dark:placeholder:text-neutral-600 transition-colors"
+                                                className="h-11 w-full rounded-panel border border-line bg-bg px-3 text-base text-text outline-none transition-colors placeholder:text-muted focus:border-gold sm:text-sm"
                                               />
                                             </div>
                                           </div>
@@ -1702,7 +1527,7 @@ export default function StudentDashboard() {
                                           onClick={() =>
                                             setCompletingDayId(day.id)
                                           }
-                                          className="w-full sm:flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-900/20"
+                                          className="flex h-14 w-full items-center justify-center gap-2 rounded-panel bg-gold text-sm font-medium uppercase tracking-[0.15em] text-bg transition-all hover:brightness-110 sm:flex-1"
                                         >
                                           <CheckCircle className="w-5 h-5" />
                                           Marcar Día como Realizado
@@ -1711,7 +1536,7 @@ export default function StudentDashboard() {
                                           onClick={() =>
                                             setSkippingDayId(day.id)
                                           }
-                                          className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300 font-semibold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-all"
+                                          className="flex h-14 w-full items-center justify-center gap-2 rounded-panel border border-line px-6 text-sm uppercase tracking-[0.15em] text-muted transition-colors hover:text-text sm:w-auto"
                                         >
                                           <Ban className="w-5 h-5 opacity-70" />
                                           <span className="hidden sm:inline">
@@ -1748,16 +1573,16 @@ export default function StudentDashboard() {
                           }
                         >
                           <div className="flex items-center gap-2">
-                            <Calendar className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                            <Calendar className="w-6 h-6 text-gold" />
+                            <h2 className="text-xl font-bold text-text">
                               Rutinas Realizadas
                             </h2>
                           </div>
-                          <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                          <div className="p-1 rounded-full hover:bg-surface-2 transition-colors">
                             {isHistoryExpanded ? (
-                              <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                              <ChevronUp className="w-6 h-6 text-muted" />
                             ) : (
-                              <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                              <ChevronDown className="w-6 h-6 text-muted" />
                             )}
                           </div>
                         </div>
@@ -1771,14 +1596,14 @@ export default function StudentDashboard() {
                               className="space-y-3 overflow-hidden"
                             >
                               {Object.entries(groupedCompletedDays).map(([week, daysInWeek]) => (
-                                <div key={week} className="border border-gray-200 dark:border-neutral-800 rounded-xl overflow-hidden mb-4 shadow-sm dark:shadow-none">
+                                <div key={week} className="border border-line rounded-panel overflow-hidden mb-4">
                                   <div 
-                                    className="bg-gray-50 dark:bg-neutral-900 px-4 py-3 flex items-center justify-between cursor-pointer select-none"
+                                    className="bg-surface-2 px-4 py-3 flex items-center justify-between cursor-pointer select-none"
                                     onClick={() => toggleWeek(week)}
                                   >
-                                    <h3 className="font-bold text-gray-800 dark:text-gray-200">{week}</h3>
-                                    <div className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors">
-                                      {expandedWeeks[week] ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+                                    <h3 className="font-bold text-text">{week}</h3>
+                                    <div className="p-1 rounded-full hover:bg-line transition-colors">
+                                      {expandedWeeks[week] ? <ChevronUp className="w-5 h-5 text-muted" /> : <ChevronDown className="w-5 h-5 text-muted" />}
                                     </div>
                                   </div>
                                   <AnimatePresence initial={false}>
@@ -1787,13 +1612,13 @@ export default function StudentDashboard() {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: "auto", opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        className="bg-white dark:bg-[#0f0f13]"
+                                        className="bg-surface"
                                       >
                                         <div className="p-4 space-y-4">
                                           {daysInWeek.map((day) => (
                                 <div
                                   key={day.id}
-                                  className="bg-white dark:bg-neutral-900/60 border border-gray-200 dark:border-neutral-800 rounded-xl overflow-hidden transition-all shadow-sm dark:shadow-none"
+                                  className="bg-surface border border-line rounded-panel overflow-hidden transition-all"
                                 >
                                   <button
                                     onClick={() =>
@@ -1803,18 +1628,18 @@ export default function StudentDashboard() {
                                           : day.id,
                                       )
                                     }
-                                    className="w-full flex justify-between items-center p-4 text-left focus:outline-none hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors"
+                                    className="w-full flex justify-between items-center p-4 text-left focus:outline-none hover:bg-surface-2 transition-colors"
                                   >
                                     <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-500">
+                                      <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center text-success">
                                         <CheckCircle className="w-5 h-5" />
                                       </div>
                                       <div>
-                                        <h3 className="font-bold text-base text-gray-900 dark:text-white">
+                                        <h3 className="font-bold text-base text-text">
                                           {day.dayName}
                                         </h3>
                                         <div className="flex items-center gap-2 mt-0.5">
-                                          <p className="text-xs text-gray-500 dark:text-neutral-400">
+                                          <p className="text-xs text-muted">
                                             Realizado el:{" "}
                                             {formatDateUTC(day.completedAt)}
                                           </p>
@@ -1826,7 +1651,7 @@ export default function StudentDashboard() {
                                               );
                                               setEditingDateDayId(day.id);
                                             }}
-                                            className="p-1 text-gray-400 hover:text-blue-500 dark:text-neutral-500 dark:hover:text-blue-400 bg-gray-100 hover:bg-blue-50 dark:bg-neutral-800 dark:hover:bg-blue-900/30 rounded transition-colors cursor-pointer"
+                                            className="p-1 text-muted hover:text-gold bg-surface-2 hover:bg-gold/10 rounded transition-colors cursor-pointer"
                                           >
                                             <Edit2 className="w-3 h-3" />
                                           </div>
@@ -1834,9 +1659,9 @@ export default function StudentDashboard() {
                                       </div>
                                     </div>
                                     {expandedCompletedDayId === day.id ? (
-                                      <ChevronUp className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
+                                      <ChevronUp className="w-5 h-5 text-muted" />
                                     ) : (
-                                      <ChevronDown className="w-5 h-5 text-gray-400 dark:text-neutral-500" />
+                                      <ChevronDown className="w-5 h-5 text-muted" />
                                     )}
                                   </button>
 
@@ -1848,27 +1673,27 @@ export default function StudentDashboard() {
                                         exit={{ height: 0 }}
                                         className="overflow-hidden"
                                       >
-                                        <div className="p-4 pt-0 border-t border-gray-100 dark:border-neutral-800/50 space-y-3 mt-2 transition-colors">
+                                        <div className="p-4 pt-0 border-t border-line space-y-3 mt-2 transition-colors">
                                           {day.exercises.map((ex: any) => (
                                             <div
                                               key={ex.id}
-                                              className="bg-gray-50 dark:bg-neutral-950/50 border border-gray-100 dark:border-neutral-800/50 rounded-lg p-3 text-sm transition-colors"
+                                              className="bg-surface-2 border border-line rounded-panel p-3 text-sm transition-colors"
                                             >
                                               <div className="flex items-center gap-2 mb-1">
                                                 {ex.isCompleted ? (
-                                                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                                  <CheckCircle className="w-4 h-4 text-success" />
                                                 ) : (
-                                                  <div className="w-4 h-4 rounded-full border-2 border-gray-400 dark:border-neutral-600 flex items-center justify-center">
-                                                    <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-neutral-600 rounded-full"></div>
+                                                  <div className="w-4 h-4 rounded-full border-2 border-line flex items-center justify-center">
+                                                    <div className="w-1.5 h-1.5 bg-surface-2 rounded-full"></div>
                                                   </div>
                                                 )}
                                                 <h4
-                                                  className={`font-bold ${ex.isCompleted ? "text-gray-800 dark:text-neutral-300" : "text-gray-500 dark:text-neutral-500"}`}
+                                                  className={`font-bold ${ex.isCompleted ? "text-text" : "text-muted"}`}
                                                 >
                                                   {ex.name}
                                                 </h4>
                                               </div>
-                                              <p className="text-xs text-gray-500 dark:text-neutral-500 mb-2 pl-6">
+                                              <p className="text-xs text-muted mb-2 pl-6">
                                                 {ex.sets_reps}
                                               </p>
                                               {(() => {
@@ -1892,7 +1717,7 @@ export default function StudentDashboard() {
                                                   !hasSets
                                                 ) {
                                                   return (
-                                                    <span className="text-xs text-gray-400 dark:text-neutral-600 italic mt-2 block pt-2 border-t border-gray-200 dark:border-neutral-800/50 transition-colors">
+                                                    <span className="text-xs text-muted italic mt-2 block pt-2 border-t border-line transition-colors">
                                                       Sin registro de series ni
                                                       observaciones
                                                     </span>
@@ -1900,7 +1725,7 @@ export default function StudentDashboard() {
                                                 }
 
                                                 return (
-                                                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-neutral-800/50 transition-colors">
+                                                  <div className="mt-2 pt-2 border-t border-line transition-colors">
                                                     {hasSets && (
                                                       <div className="mb-2 space-y-1">
                                                         {parsedSets.map(
@@ -1910,16 +1735,16 @@ export default function StudentDashboard() {
                                                           ) => (
                                                             <div
                                                               key={i}
-                                                              className="text-xs text-gray-600 dark:text-neutral-400 flex gap-2"
+                                                              className="text-xs text-muted flex gap-2"
                                                             >
-                                                              <span className="font-bold text-gray-400">
+                                                              <span className="font-bold text-muted">
                                                                 Serie {i + 1}:
                                                               </span>
                                                               <span>
                                                                 {s.reps || "-"}{" "}
                                                                 reps
                                                               </span>
-                                                              <span className="text-gray-300 dark:text-neutral-700">
+                                                              <span className="text-muted">
                                                                 |
                                                               </span>
                                                               <span>
@@ -1934,16 +1759,16 @@ export default function StudentDashboard() {
                                                     )}
                                                     {!hasSets &&
                                                       hasOldWeight && (
-                                                        <div className="text-xs text-gray-600 dark:text-neutral-400 mb-1">
-                                                          <span className="text-gray-400 dark:text-neutral-500 font-bold">
+                                                        <div className="text-xs text-muted mb-1">
+                                                          <span className="text-muted font-bold">
                                                             Peso antiguo:
                                                           </span>{" "}
                                                           {ex.weight}
                                                         </div>
                                                       )}
                                                     {hasObs && (
-                                                      <div className="text-xs text-gray-600 dark:text-neutral-400">
-                                                        <span className="text-gray-400 dark:text-neutral-500 font-bold">
+                                                      <div className="text-xs text-muted">
+                                                        <span className="text-muted font-bold">
                                                           Obs:
                                                         </span>{" "}
                                                         {ex.observations}
@@ -1981,16 +1806,16 @@ export default function StudentDashboard() {
                           }
                         >
                           <div className="flex items-center gap-2">
-                            <Ban className="w-6 h-6 text-gray-500 dark:text-neutral-500" />
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                            <Ban className="w-6 h-6 text-muted" />
+                            <h2 className="text-xl font-bold text-text">
                               Clases Omitidas
                             </h2>
                           </div>
-                          <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                          <div className="p-1 rounded-full hover:bg-surface-2 transition-colors">
                             {isSkippedExpanded ? (
-                              <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                              <ChevronUp className="w-6 h-6 text-muted" />
                             ) : (
-                              <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                              <ChevronDown className="w-6 h-6 text-muted" />
                             )}
                           </div>
                         </div>
@@ -2006,17 +1831,17 @@ export default function StudentDashboard() {
                               {skippedDays.map((day) => (
                                 <div
                                   key={day.id}
-                                  className="bg-white dark:bg-neutral-900/40 border border-dashed border-gray-300 dark:border-neutral-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors shadow-sm dark:shadow-none"
+                                  className="bg-surface border border-dashed border-line rounded-panel p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center text-gray-500 dark:text-neutral-500">
+                                    <div className="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center text-muted">
                                       <Ban className="w-5 h-5" />
                                     </div>
                                     <div>
-                                      <h3 className="font-bold text-base text-gray-700 dark:text-neutral-300">
+                                      <h3 className="font-bold text-base text-text">
                                         {day.dayName}
                                       </h3>
-                                      <p className="text-xs text-gray-500 dark:text-neutral-500 mt-0.5">
+                                      <p className="text-xs text-muted mt-0.5">
                                         {day.routineDates} • Marcado como no
                                         realizado
                                       </p>
@@ -2024,7 +1849,7 @@ export default function StudentDashboard() {
                                   </div>
                                   <button
                                     onClick={() => handleRevertDay(day.id)}
-                                    className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-300 font-medium rounded-lg text-sm transition-colors"
+                                    className="w-full sm:w-auto px-4 py-2 bg-surface-2 hover:bg-line text-text font-medium rounded-panel text-sm transition-colors"
                                   >
                                     Revertir a Pendiente
                                   </button>
@@ -2051,16 +1876,16 @@ export default function StudentDashboard() {
                         }
                       >
                         <div className="flex items-center gap-2">
-                          <Activity className="w-6 h-6 text-purple-500 dark:text-purple-400" />
-                          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                          <Activity className="w-6 h-6 text-gold" />
+                          <h2 className="text-xl font-bold text-text">
                             Adherencia y Consistencia
                           </h2>
                         </div>
-                        <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                        <div className="p-1 rounded-full hover:bg-surface-2 transition-colors">
                           {isAdherenceExpanded ? (
-                            <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                            <ChevronUp className="w-6 h-6 text-muted" />
                           ) : (
-                            <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                            <ChevronDown className="w-6 h-6 text-muted" />
                           )}
                         </div>
                       </div>
@@ -2074,8 +1899,8 @@ export default function StudentDashboard() {
                             className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden"
                           >
                             {/* Gráfico de Torta - Adherencia General */}
-                            <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm flex flex-col items-center">
-                              <h3 className="text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-4 w-full text-left">
+                            <div className="bg-surface border border-line rounded-panel p-4 sm:p-6 flex flex-col items-center">
+                              <h3 className="text-sm font-semibold text-text mb-4 w-full text-left">
                                 Tasa de Adherencia
                               </h3>
                               <div className="h-48 w-full relative flex items-center justify-center">
@@ -2102,41 +1927,41 @@ export default function StudentDashboard() {
                                       dataKey="value"
                                       stroke="none"
                                     >
-                                      <Cell fill="#10B981" />{" "}
+                                      <Cell fill="var(--gold)" />
                                       {/* Emerald 500 */}
-                                      <Cell fill="#EF4444" /> {/* Red 500 */}
+                                      <Cell fill="var(--line)" />
                                     </Pie>
                                     <Tooltip
                                       contentStyle={{
-                                        borderRadius: "12px",
-                                        border: "none",
+                                        borderRadius: "6px",
+                                        border: "1px solid var(--line)",
                                         backgroundColor:
-                                          "var(--tw-colors-neutral-900)",
+                                          "var(--surface)",
                                       }}
                                       itemStyle={{
-                                        color: "#fff",
+                                        color: "var(--text)",
                                         fontWeight: "bold",
                                       }}
                                     />
                                   </PieChart>
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                  <span className="text-3xl font-black text-gray-900 dark:text-white">
+                                  <span className="font-display text-4xl leading-none text-text">
                                     {adherenceStats.adherence.percentage}%
                                   </span>
-                                  <span className="text-xs font-medium text-gray-500">
+                                  <span className="text-xs font-medium text-muted">
                                     Completado
                                   </span>
                                 </div>
                               </div>
-                              <div className="w-full flex justify-between px-4 mt-4 text-xs font-medium text-gray-500">
+                              <div className="w-full flex justify-between px-4 mt-4 text-xs font-medium text-muted">
                                 <div className="flex items-center gap-1.5">
-                                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                  <div className="w-3 h-3 rounded-full bg-success"></div>
                                   Completados (
                                   {adherenceStats.adherence.completed})
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                  <div className="w-3 h-3 rounded-full bg-danger"></div>
                                   Omitidos ({adherenceStats.adherence.skipped})
                                 </div>
                               </div>
@@ -2145,8 +1970,8 @@ export default function StudentDashboard() {
                             {/* Gráfico de Barras - Días Fallados */}
                             {adherenceStats.missedDaysOfWeek &&
                               adherenceStats.adherence.skipped > 0 && (
-                                <div className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm">
-                                  <h3 className="text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-4">
+                                <div className="bg-surface border border-line rounded-panel p-4 sm:p-6">
+                                  <h3 className="text-sm font-semibold text-text mb-4">
                                     Días que sueles fallar
                                   </h3>
                                   <div className="h-48 w-full">
@@ -2166,7 +1991,7 @@ export default function StudentDashboard() {
                                         <CartesianGrid
                                           strokeDasharray="3 3"
                                           vertical={false}
-                                          stroke="#374151"
+                                          stroke="var(--line)"
                                           opacity={0.2}
                                         />
                                         <XAxis
@@ -2175,36 +2000,43 @@ export default function StudentDashboard() {
                                             val.substring(0, 3)
                                           }
                                           tick={{ fontSize: 10 }}
-                                          stroke="#9CA3AF"
+                                          stroke="var(--muted)"
                                           axisLine={false}
                                           tickLine={false}
                                         />
                                         <YAxis
                                           tick={{ fontSize: 10 }}
-                                          stroke="#9CA3AF"
+                                          stroke="var(--muted)"
                                           axisLine={false}
                                           tickLine={false}
                                           allowDecimals={false}
                                         />
                                         <Tooltip
                                           contentStyle={{
-                                            borderRadius: "12px",
+                                            borderRadius: "6px",
                                             border: "none",
                                             backgroundColor:
-                                              "var(--tw-colors-neutral-900)",
+                                              "var(--surface)",
                                           }}
                                           itemStyle={{
-                                            color: "#EF4444",
+                                            color: "var(--danger)",
                                             fontWeight: "bold",
                                           }}
                                           cursor={{ fill: "transparent" }}
                                         />
                                         <Bar
                                           dataKey="count"
-                                          fill="#EF4444"
-                                          radius={[4, 4, 0, 0]}
+                                          fill="var(--muted)"
+                                          radius={[2, 2, 0, 0]}
                                           name="Omitidos"
-                                        />
+                                        >
+                                          {adherenceStats.missedDaysOfWeek.map((d: { name: string; count: number }) => (
+                                            <Cell
+                                              key={d.name}
+                                              fill={d.count > 0 && d.count === Math.max(...adherenceStats.missedDaysOfWeek!.map((x: { count: number }) => x.count)) ? "var(--danger)" : "var(--muted)"}
+                                            />
+                                          ))}
+                                        </Bar>
                                       </BarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2225,16 +2057,16 @@ export default function StudentDashboard() {
                     }
                   >
                     <div className="flex items-center gap-2">
-                      <Activity className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                      <Activity className="w-6 h-6 text-gold" />
+                      <h2 className="text-xl font-bold text-text">
                         Tu Progreso de Fuerza
                       </h2>
                     </div>
-                    <div className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                    <div className="p-1 rounded-full hover:bg-surface-2 transition-colors">
                       {isProgressionExpanded ? (
-                        <ChevronUp className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                        <ChevronUp className="w-6 h-6 text-muted" />
                       ) : (
-                        <ChevronDown className="w-6 h-6 text-gray-500 dark:text-neutral-400" />
+                        <ChevronDown className="w-6 h-6 text-muted" />
                       )}
                     </div>
                   </div>
@@ -2245,10 +2077,10 @@ export default function StudentDashboard() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-sm transition-colors overflow-hidden"
+                        className="bg-surface border border-line rounded-panel p-4 sm:p-6 transition-colors overflow-hidden"
                       >
                         {Object.keys(stats).length === 0 ? (
-                          <div className="py-8 text-center text-gray-500 dark:text-neutral-500">
+                          <div className="py-8 text-center text-muted">
                             <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
                             <p>
                               Aún no tienes suficientes datos de pesos
@@ -2262,7 +2094,7 @@ export default function StudentDashboard() {
                         ) : (
                           <>
                             <div className="mb-6">
-                              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                              <label className="block text-sm font-medium text-text mb-2">
                                 Seleccionar Ejercicio
                               </label>
                               <div className="relative">
@@ -2271,7 +2103,7 @@ export default function StudentDashboard() {
                                   onChange={(e) =>
                                     setActiveStatExercise(e.target.value)
                                   }
-                                  className="w-full appearance-none bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 pr-10 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                                  className="w-full appearance-none bg-surface-2 border border-line rounded-panel px-4 py-3 pr-10 text-text focus:ring-2 focus:ring-gold outline-none transition-colors"
                                 >
                                   {Object.keys(stats).map((exName) => (
                                     <option key={exName} value={exName}>
@@ -2279,7 +2111,7 @@ export default function StudentDashboard() {
                                     </option>
                                   ))}
                                 </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none" />
                               </div>
                             </div>
 
@@ -2302,7 +2134,7 @@ export default function StudentDashboard() {
                                       <CartesianGrid
                                         strokeDasharray="3 3"
                                         vertical={false}
-                                        stroke="#374151"
+                                        stroke="var(--line)"
                                         opacity={0.2}
                                       />
                                       <XAxis
@@ -2311,27 +2143,27 @@ export default function StudentDashboard() {
                                           formatDateUTC(val).substring(0, 5)
                                         }
                                         tick={{ fontSize: 12 }}
-                                        stroke="#9CA3AF"
+                                        stroke="var(--muted)"
                                         axisLine={false}
                                         tickLine={false}
                                       />
                                       <YAxis
                                         tick={{ fontSize: 12 }}
-                                        stroke="#9CA3AF"
+                                        stroke="var(--muted)"
                                         axisLine={false}
                                         tickLine={false}
                                       />
                                       <Tooltip
                                         contentStyle={{
-                                          borderRadius: "12px",
+                                          borderRadius: "6px",
                                           border: "none",
                                           boxShadow:
                                             "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
                                           backgroundColor:
-                                            "var(--tw-colors-neutral-900)",
+                                            "var(--surface)",
                                         }}
                                         itemStyle={{
-                                          color: "#60A5FA",
+                                          color: "var(--gold)",
                                           fontWeight: "bold",
                                         }}
                                         labelFormatter={(val) =>
@@ -2345,18 +2177,18 @@ export default function StudentDashboard() {
                                       <Line
                                         type="monotone"
                                         dataKey="maxWeight"
-                                        stroke="#3B82F6"
+                                        stroke="var(--gold)"
                                         strokeWidth={3}
                                         dot={{
                                           r: 4,
                                           strokeWidth: 2,
-                                          fill: "#fff",
+                                          fill: "var(--bg)",
                                         }}
                                         activeDot={{
                                           r: 6,
-                                          stroke: "#3B82F6",
+                                          stroke: "var(--gold)",
                                           strokeWidth: 2,
-                                          fill: "#fff",
+                                          fill: "var(--bg)",
                                         }}
                                         animationDuration={1500}
                                       />
@@ -2372,19 +2204,19 @@ export default function StudentDashboard() {
                 </section>
               </>
             ) : activeView === "support" ? (
-              <div className="bg-white dark:bg-[#15151a] border border-gray-100 dark:border-white/5 rounded-3xl p-8 text-center shadow-sm">
-                <MessageSquare className="w-16 h-16 text-cyan-500 mx-auto mb-4 opacity-80" />
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              <div className="bg-surface border border-line rounded-panel p-8 text-center">
+                <MessageSquare className="w-16 h-16 text-gold mx-auto mb-4 opacity-80" />
+                <h2 className="text-2xl font-bold text-text mb-2">
                   Soporte y Chat
                 </h2>
-                <p className="text-gray-500 dark:text-neutral-400 max-w-md mx-auto mb-6">
+                <p className="text-muted max-w-md mx-auto mb-6">
                   Contactar por whatsapp directo al desarrollador de esta aplicacion en caso de urgencias, sugerencias o dudas.
                 </p>
                 <a 
                   href="https://wa.me/5491176513862" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] hover:bg-[#20b858] text-white font-bold rounded-xl transition-colors mx-auto"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:brightness-110 text-bg font-bold rounded-panel transition-colors mx-auto"
                 >
                   <MessageSquare className="w-5 h-5" />
                   Whatsapp: +54 9 11 7651-3862
@@ -2392,8 +2224,6 @@ export default function StudentDashboard() {
               </div>
             ) : null}
           </div>
-        </main>
-      </div>
 
       {/* Overlay de Confirmación de Fecha de Completado */}
       <AnimatePresence>
@@ -2403,48 +2233,48 @@ export default function StudentDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={() => setCompletingDayId(null)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
+              className="relative bg-surface border border-line rounded-panel w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
             >
-              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
+              <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center text-success mb-4">
                 <CheckCircle className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl font-bold text-text mb-2">
                 ¡Día Completado!
               </h2>
-              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
+              <p className="text-sm text-muted mb-6">
                 Selecciona qué día realizaste esta rutina.
               </p>
 
               <div className="w-full text-left mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-text mb-2">
                   Fecha de realización
                 </label>
                 <input
                   type="date"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-colors"
+                  className="w-full bg-surface-2 border border-line rounded-panel px-4 py-3 text-text focus:border-gold outline-none transition-colors"
                 />
               </div>
 
               <div className="w-full flex gap-3">
                 <button
                   onClick={() => setCompletingDayId(null)}
-                  className="flex-1 py-3 text-gray-500 dark:text-neutral-400 font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+                  className="flex-1 py-3 text-muted font-medium hover:bg-surface-2 rounded-panel transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCompleteDay}
                   disabled={saving}
-                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-success hover:brightness-110 text-bg font-bold rounded-panel transition-colors flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -2466,49 +2296,49 @@ export default function StudentDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={() => setSkippingDayId(null)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
+              className="relative bg-surface border border-line rounded-panel w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
             >
-              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 mb-4">
+              <div className="w-16 h-16 rounded-full bg-danger/10 flex items-center justify-center text-danger mb-4">
                 <Ban className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl font-bold text-text mb-2">
                 ¿Omitir clase?
               </h2>
-              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
+              <p className="text-sm text-muted mb-6">
                 Esta clase no aparecerá más en tus pendientes. Podrás revertir
                 esto más tarde si te equivocaste.
               </p>
 
               <div className="w-full text-left mb-6">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-text mb-2">
                   ¿Qué día te tocaba realizarla?
                 </label>
                 <input
                   type="date"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  className="w-full p-3 bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-red-500 font-medium text-gray-900 dark:text-gray-100 outline-none"
+                  className="w-full p-3 bg-surface-2 border border-line rounded-panel focus:ring-2 focus:ring-danger font-medium text-text outline-none"
                 />
               </div>
 
               <div className="w-full flex gap-3">
                 <button
                   onClick={() => setSkippingDayId(null)}
-                  className="flex-1 py-3 text-gray-500 dark:text-neutral-400 font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+                  className="flex-1 py-3 text-muted font-medium hover:bg-surface-2 rounded-panel transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleSkipDay}
                   disabled={saving}
-                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-danger hover:brightness-110 text-bg font-bold rounded-panel transition-colors flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -2530,48 +2360,48 @@ export default function StudentDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={() => setEditingDateDayId(null)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
+              className="relative bg-surface border border-line rounded-panel w-full max-w-sm p-6 flex flex-col items-center text-center transition-colors"
             >
-              <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
+              <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center text-gold mb-4">
                 <Calendar className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-xl font-bold text-text mb-2">
                 Editar fecha
               </h2>
-              <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
+              <p className="text-sm text-muted mb-6">
                 Modifica el día en el que realizaste esta clase.
               </p>
 
               <div className="w-full text-left mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-text mb-2">
                   Nueva fecha
                 </label>
                 <input
                   type="date"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                  className="w-full bg-surface-2 border border-line rounded-panel px-4 py-3 text-text focus:ring-2 focus:ring-gold outline-none transition-colors"
                 />
               </div>
 
               <div className="w-full flex gap-3">
                 <button
                   onClick={() => setEditingDateDayId(null)}
-                  className="flex-1 py-3 text-gray-500 dark:text-neutral-400 font-medium hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+                  className="flex-1 py-3 text-muted font-medium hover:bg-surface-2 rounded-panel transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleEditDate}
                   disabled={saving}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gold hover:brightness-110 text-bg font-bold rounded-panel transition-colors flex items-center justify-center gap-2"
                 >
                   {saving ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -2593,7 +2423,7 @@ export default function StudentDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={() =>
                 !savingSettings && !uploadingImage && setShowSettings(false)
               }
@@ -2602,18 +2432,18 @@ export default function StudentDashboard() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto flex flex-col transition-colors"
+              className="relative bg-surface border border-line rounded-panel w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto flex flex-col transition-colors"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Settings className="w-5 h-5 text-blue-500" /> Configuración
+                <h2 className="text-xl font-bold text-text flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-gold" /> Configuración
                   de Perfil
                 </h2>
                 <button
                   onClick={() =>
                     !savingSettings && !uploadingImage && setShowSettings(false)
                   }
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                  className="p-2 text-muted hover:text-muted rounded-full hover:bg-surface-2 transition-colors disabled:opacity-50"
                   disabled={uploadingImage}
                 >
                   <X className="w-5 h-5" />
@@ -2624,7 +2454,7 @@ export default function StudentDashboard() {
                 {/* Foto de Perfil */}
                 <div className="flex flex-col items-center gap-3">
                   <div className="relative group cursor-pointer">
-                    <div className={`w-24 h-24 rounded-full overflow-hidden border-4 ${levelBorderColor} bg-gray-50 dark:bg-neutral-950 flex items-center justify-center relative`}>
+                    <div className={`w-24 h-24 rounded-full overflow-hidden border-4 ${levelBorderColor} bg-surface-2 flex items-center justify-center relative`}>
                       {settingsForm.profilePicture ? (
                         <img
                           src={settingsForm.profilePicture}
@@ -2634,11 +2464,11 @@ export default function StudentDashboard() {
                           onError={() => setUploadingImage(false)}
                         />
                       ) : (
-                        <User className="w-10 h-10 text-gray-400 dark:text-neutral-600" />
+                        <User className="w-10 h-10 text-muted" />
                       )}
 
                       <label
-                        className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${uploadingImage ? "opacity-100 cursor-not-allowed" : "opacity-0 group-hover:opacity-100 cursor-pointer"}`}
+                        className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-text transition-opacity ${uploadingImage ? "opacity-100 cursor-not-allowed" : "opacity-0 group-hover:opacity-100 cursor-pointer"}`}
                       >
                         {uploadingImage ? (
                           <Loader2 className="w-6 h-6 animate-spin" />
@@ -2658,7 +2488,7 @@ export default function StudentDashboard() {
                       </label>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-neutral-500 font-medium">
+                  <p className="text-xs text-muted font-medium">
                     Toca para actualizar tu foto
                   </p>
                 </div>
@@ -2666,7 +2496,7 @@ export default function StudentDashboard() {
                 {/* Peso y Fecha Nacimiento */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">
+                    <label className="block text-sm font-semibold text-text mb-1.5">
                       Peso actual (kg)
                     </label>
                     <input
@@ -2680,11 +2510,11 @@ export default function StudentDashboard() {
                           weight: e.target.value,
                         })
                       }
-                      className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors"
+                      className="w-full bg-surface-2 border border-line rounded-panel px-4 py-3 text-text focus:ring-2 focus:ring-gold outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-1.5">
+                    <label className="block text-sm font-semibold text-text mb-1.5">
                       F. Nacimiento
                     </label>
                     <input
@@ -2696,14 +2526,14 @@ export default function StudentDashboard() {
                           birthDate: e.target.value,
                         })
                       }
-                      className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-300 dark:border-neutral-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors color-scheme-dark"
+                      className="w-full bg-surface-2 border border-line rounded-panel px-4 py-3 text-text focus:ring-2 focus:ring-gold outline-none transition-colors color-scheme-dark"
                     />
                   </div>
                 </div>
 
                 {/* Objetivos */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-semibold text-text mb-2">
                     Tus objetivos principales
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -2730,8 +2560,8 @@ export default function StudentDashboard() {
                           }}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
                             isSelected
-                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                              : "bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-400 hover:border-gray-400 dark:hover:border-neutral-500"
+                              ? "bg-gold border-gold text-bg"
+                              : "bg-surface border-line text-muted hover:border-line"
                           }`}
                         >
                           {goal}
@@ -2743,16 +2573,16 @@ export default function StudentDashboard() {
 
                 {/* Medalla de Perfil */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2">
+                  <label className="block text-sm font-semibold text-text mb-2">
                     Medalla de Perfil
                   </label>
-                  <p className="text-xs text-gray-500 mb-3">Elige qué medalla desbloqueada mostrar junto a tu foto.</p>
-                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700 items-start">
+                  <p className="text-xs text-muted mb-3">Elige qué medalla desbloqueada mostrar junto a tu foto.</p>
+                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin items-start">
                     <div 
                       onClick={() => setSettingsForm({ ...settingsForm, selectedBadge: "" })}
                       className={`flex flex-col items-center min-w-[70px] cursor-pointer group ${settingsForm.selectedBadge === "" ? "opacity-100" : "opacity-50 hover:opacity-100"}`}
                     >
-                      <div className={`w-14 h-14 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center text-gray-400 mb-2 transition-all ${settingsForm.selectedBadge === "" ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-neutral-900 scale-110" : ""}`}>
+                      <div className={`w-14 h-14 rounded-full bg-line flex items-center justify-center text-muted mb-2 transition-all ${settingsForm.selectedBadge === "" ? "ring-2 ring-gold ring-offset-2 scale-110" : ""}`}>
                         <Ban className="w-6 h-6" />
                       </div>
                       <span className="text-[10px] font-bold text-center">Ninguna</span>
@@ -2775,25 +2605,25 @@ export default function StudentDashboard() {
 
                           return renderBadges.map((badge: any, i: number) => {
                             const badgeData = badge.badgeId === "FIRST_WORKOUT" 
-                              ? { name: "Primer Paso", color: "from-blue-400 to-blue-600", icon: Medal }
+                              ? { name: "Primer Paso", color: "from-gold to-gold", icon: Medal }
                               : badge.badgeId === "STREAK_7"
-                              ? { name: "Racha", color: "from-orange-400 to-red-600", icon: Flame }
+                              ? { name: "Racha", color: "from-gold to-danger", icon: Flame }
                               : badge.badgeId === "CENTURION"
-                              ? { name: "Centurión", color: "from-yellow-400 to-amber-600", icon: Medal }
+                              ? { name: "Centurión", color: "from-gold to-gold", icon: Medal }
                               : badge.badgeId === "BULL_GROUPED"
-                              ? { name: `Toro`, color: "from-emerald-400 to-green-600", icon: Dumbbell }
+                              ? { name: `Toro`, color: "from-success to-success", icon: Dumbbell }
                               : badge.badgeId === "BEAST_MODE"
-                              ? { name: "Bestia", color: "from-rose-500 to-red-700", icon: Flame }
+                              ? { name: "Bestia", color: "from-danger to-danger", icon: Flame }
                               : badge.badgeId === "MUTANT_MODE"
-                              ? { name: "Mutante", color: "from-fuchsia-600 to-purple-800", icon: Dumbbell }
-                              : { name: badge.badgeId, color: "from-purple-400 to-purple-600", icon: Medal };
+                              ? { name: "Mutante", color: "from-gold to-gold", icon: Dumbbell }
+                              : { name: badge.badgeId, color: "from-gold to-gold", icon: Medal };
 
                             const Icon = badgeData.icon;
                             const isSelected = settingsForm.selectedBadge === badge.badgeId;
 
                             return (
                               <div key={i} onClick={() => setSettingsForm({ ...settingsForm, selectedBadge: badge.badgeId })} className={`flex flex-col items-center min-w-[70px] cursor-pointer group transition-all ${isSelected ? "opacity-100" : "opacity-50 hover:opacity-100"}`}>
-                                <div className={`w-14 h-14 rounded-full bg-gradient-to-tr ${badgeData.color} flex items-center justify-center text-white mb-2 transition-all relative ${isSelected ? "ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-neutral-900 scale-110" : ""}`}>
+                                <div className={`w-14 h-14 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold mb-2 transition-all relative ${isSelected ? "ring-2 ring-gold ring-offset-2 scale-110" : ""}`}>
                                   <Icon className="w-6 h-6" />
                                 </div>
                                 <span className="text-[10px] font-bold text-center leading-tight max-w-[70px] truncate">
@@ -2807,11 +2637,11 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Guardar */}
-                <div className="pt-4 border-t border-gray-100 dark:border-neutral-800">
+                <div className="pt-4 border-t border-line">
                   <button
                     onClick={handleSaveSettings}
                     disabled={savingSettings || uploadingImage}
-                    className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3.5 bg-gold hover:brightness-110 text-bg font-medium uppercase tracking-[0.15em] text-sm rounded-panel transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {savingSettings ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -2834,18 +2664,18 @@ export default function StudentDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={() => setSelectedVideoUrl(null)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-4xl aspect-video bg-white dark:bg-neutral-900 rounded-xl overflow-hidden shadow-2xl z-10 transition-colors"
+              className="relative w-full max-w-4xl aspect-video bg-surface rounded-panel overflow-hidden z-10 transition-colors"
             >
               <button
                 onClick={() => setSelectedVideoUrl(null)}
-                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full z-20 transition-colors"
+                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-text rounded-full z-20 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2868,55 +2698,55 @@ export default function StudentDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={() => setShowXPModal(false)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl z-10 transition-colors p-6"
+              className="relative w-full max-w-md bg-surface rounded-panel overflow-hidden z-10 transition-colors p-6"
             >
               <button
                 onClick={() => setShowXPModal(false)}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                className="absolute top-4 right-4 p-2 text-muted hover:text-muted rounded-full hover:bg-surface-2 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-500">
+                <div className="w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center text-gold">
                   <Medal className="w-6 h-6" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-text">
                   Sistema de Niveles
                 </h2>
               </div>
               
-              <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300">
+              <div className="space-y-4 text-sm text-muted">
                 <p>El sistema de experiencia (XP) está diseñado para recompensar tu constancia. Así es como funciona:</p>
                 
-                <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 space-y-3">
+                <div className="bg-surface-2 rounded-panel p-4 space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gray-800 dark:text-white">Completar un día</span>
-                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">+50 XP</span>
+                    <span className="font-semibold text-text">Completar un día</span>
+                    <span className="text-gold font-bold">+50 XP</span>
                   </div>
-                  <div className="flex justify-between items-center border-t border-gray-200 dark:border-slate-700 pt-3">
-                    <span className="font-semibold text-gray-800 dark:text-white">Subir de nivel</span>
-                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">Cada 100 XP</span>
+                  <div className="flex justify-between items-center border-t border-line pt-3">
+                    <span className="font-semibold text-text">Subir de nivel</span>
+                    <span className="text-gold font-bold">Cada 100 XP</span>
                   </div>
                 </div>
 
                 <div className="pt-2">
-                  <h4 className="font-bold text-gray-800 dark:text-white mb-2">Rangos:</h4>
+                  <h4 className="font-bold text-text mb-2">Rangos:</h4>
                   <ul className="space-y-2 mb-4">
-                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500"></span> <strong>Principiante:</strong> Niveles 1 al 35</li>
-                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500"></span> <strong>Intermedio:</strong> Niveles 36 al 107</li>
-                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-purple-500"></span> <strong>Avanzado:</strong> Niveles 108 al 215</li>
-                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-orange-500"></span> <strong>Atleta:</strong> Nivel 216+</li>
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-success"></span> <strong>Principiante:</strong> Niveles 1 al 35</li>
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gold"></span> <strong>Intermedio:</strong> Niveles 36 al 107</li>
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gold"></span> <strong>Avanzado:</strong> Niveles 108 al 215</li>
+                    <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-gold"></span> <strong>Atleta:</strong> Nivel 216+</li>
                   </ul>
-                  <div className="text-xs text-gray-500 dark:text-neutral-400 bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/30 flex gap-2 items-start">
-                    <Info className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                  <div className="text-xs text-muted bg-gold/10 p-3 rounded-panel border border-gold-line flex gap-2 items-start">
+                    <Info className="w-4 h-4 text-gold shrink-0 mt-0.5" />
                     <p>
                       Estos niveles representan los datos ingresados en el sistema en el día a día del entrenamiento, no representan tu nivel en la vida real. Si ya sos un atleta avanzado no le prestes atención, este sistema es con fines lúdicos y de motivación.
                     </p>
@@ -2926,7 +2756,7 @@ export default function StudentDashboard() {
               
               <button
                 onClick={() => setShowXPModal(false)}
-                className="mt-8 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors"
+                className="mt-8 w-full py-3 bg-gold hover:brightness-110 text-bg font-bold rounded-panel transition-colors"
               >
                 Entendido
               </button>
@@ -2942,98 +2772,98 @@ export default function StudentDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 dark:bg-black/90 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={() => setShowBadgesModal(false)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-2xl z-10 transition-colors p-6"
+              className="relative w-full max-w-md bg-surface rounded-panel overflow-hidden z-10 transition-colors p-6"
             >
               <button
                 onClick={() => setShowBadgesModal(false)}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-neutral-300 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                className="absolute top-4 right-4 p-2 text-muted hover:text-muted rounded-full hover:bg-surface-2 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center text-amber-500">
+                <div className="w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center text-gold">
                   <Medal className="w-6 h-6" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-text">
                   Trofeos Disponibles
                 </h2>
               </div>
               
-              <div className="space-y-4 text-sm text-gray-600 dark:text-gray-300 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700">
+              <div className="space-y-4 text-sm text-muted max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin">
                 <p>Colecciona estas medallas a medida que superas tus límites. ¡Acá tenés lo que se requiere para obtenerlas!</p>
                 
-                <div className="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 space-y-4">
+                <div className="bg-surface-2 rounded-panel p-4 space-y-4">
                   {/* Primer Entrenamiento */}
                   <div className="flex gap-4 items-start">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 shadow-lg shadow-blue-500/20 flex items-center justify-center text-white flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
                       <Medal className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 dark:text-white">Primer Paso</h4>
-                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Completa tu primer entrenamiento. ¡El viaje comienza!</p>
+                      <h4 className="font-bold text-text">Primer Paso</h4>
+                      <p className="text-xs mt-1 text-muted">Completa tu primer entrenamiento. ¡El viaje comienza!</p>
                     </div>
                   </div>
 
                   {/* Racha 7 */}
-                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-orange-400 to-red-600 shadow-lg shadow-red-500/20 flex items-center justify-center text-white flex-shrink-0">
+                  <div className="flex gap-4 items-start border-t border-line pt-4">
+                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
                       <Flame className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 dark:text-white">Racha de Fuego</h4>
-                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Mantén una racha activa de 7 días consecutivos completando tus rutinas sin fallar.</p>
+                      <h4 className="font-bold text-text">Racha de Fuego</h4>
+                      <p className="text-xs mt-1 text-muted">Mantén una racha activa de 7 días consecutivos completando tus rutinas sin fallar.</p>
                     </div>
                   </div>
 
                   {/* Centurión */}
-                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-600 shadow-lg shadow-amber-500/20 flex items-center justify-center text-white flex-shrink-0">
+                  <div className="flex gap-4 items-start border-t border-line pt-4">
+                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
                       <Medal className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 dark:text-white">Centurión</h4>
-                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Completa un total de 100 entrenamientos a lo largo de tu trayectoria. Eres una leyenda.</p>
+                      <h4 className="font-bold text-text">Centurión</h4>
+                      <p className="text-xs mt-1 text-muted">Completa un total de 100 entrenamientos a lo largo de tu trayectoria. Eres una leyenda.</p>
                     </div>
                   </div>
 
                   {/* Fuerza Desatada */}
-                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-400 to-green-600 shadow-lg shadow-emerald-500/20 flex items-center justify-center text-white flex-shrink-0">
+                  <div className="flex gap-4 items-start border-t border-line pt-4">
+                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
                       <Dumbbell className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 dark:text-white">Progreso Toro</h4>
-                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">Aumenta 10 kg en algún ejercicio respecto a tu marca inicial. ¡Acumulable por cada ejercicio distinto!</p>
+                      <h4 className="font-bold text-text">Progreso Toro</h4>
+                      <p className="text-xs mt-1 text-muted">Aumenta 10 kg en algún ejercicio respecto a tu marca inicial. ¡Acumulable por cada ejercicio distinto!</p>
                     </div>
                   </div>
 
                   {/* Bestia */}
-                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-rose-500 to-red-700 shadow-lg shadow-rose-500/20 flex items-center justify-center text-white flex-shrink-0">
+                  <div className="flex gap-4 items-start border-t border-line pt-4">
+                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
                       <Flame className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 dark:text-white">Bestia</h4>
-                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">¡Colecciona 10 medallas de Toro para desbloquear este nivel de fuerza brutal!</p>
+                      <h4 className="font-bold text-text">Bestia</h4>
+                      <p className="text-xs mt-1 text-muted">¡Colecciona 10 medallas de Toro para desbloquear este nivel de fuerza brutal!</p>
                     </div>
                   </div>
 
                   {/* Mutante */}
-                  <div className="flex gap-4 items-start border-t border-gray-200 dark:border-slate-700 pt-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-fuchsia-600 to-purple-800 shadow-lg shadow-purple-500/20 flex items-center justify-center text-white flex-shrink-0">
+                  <div className="flex gap-4 items-start border-t border-line pt-4">
+                    <div className="w-12 h-12 rounded-full border border-gold-line bg-gold/10 flex items-center justify-center text-gold flex-shrink-0">
                       <Dumbbell className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 dark:text-white">Mutante</h4>
-                      <p className="text-xs mt-1 text-gray-500 dark:text-gray-400">¡El nivel máximo! Desbloqueable al juntar 50 medallas de Toro. Solo para leyendas absolutas.</p>
+                      <h4 className="font-bold text-text">Mutante</h4>
+                      <p className="text-xs mt-1 text-muted">¡El nivel máximo! Desbloqueable al juntar 50 medallas de Toro. Solo para leyendas absolutas.</p>
                     </div>
                   </div>
                 </div>
@@ -3041,7 +2871,7 @@ export default function StudentDashboard() {
               
               <button
                 onClick={() => setShowBadgesModal(false)}
-                className="mt-6 w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-amber-500/20"
+                className="mt-6 w-full py-3 bg-gold hover:brightness-110 text-bg font-bold rounded-panel transition-colors"
               >
                 Entendido
               </button>
@@ -3049,6 +2879,6 @@ export default function StudentDashboard() {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </AppShell>
   );
 }
