@@ -73,13 +73,12 @@ export default function AdminNotificationsBell() {
     <div className="relative">
       <button 
         onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }} 
-        className="relative p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+        aria-label="Notificaciones"
+        className="relative flex h-10 w-10 items-center justify-center rounded-panel text-muted transition-colors hover:bg-surface-2 hover:text-text"
       >
-        <Bell size={24} />
+        <Bell className="h-5 w-5" strokeWidth={1.5} />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white dark:border-slate-900">
-            {unreadCount}
-          </span>
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg" aria-label={`${unreadCount} sin leer`} />
         )}
       </button>
 
@@ -89,7 +88,7 @@ export default function AdminNotificationsBell() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm" 
+            className="fixed inset-0 z-[100] bg-black/50" 
             onClick={() => setIsOpen(false)}
           ></motion.div>,
           document.body
@@ -103,40 +102,40 @@ export default function AdminNotificationsBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-800 z-[101] overflow-hidden flex flex-col max-h-[80vh]"
+            className="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-panel border border-line z-[101] overflow-hidden flex flex-col max-h-[80vh]"
             onClick={handleDropdownClick}
           >
-              <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50/80 dark:bg-slate-800/80 backdrop-blur-md">
-                <h3 className="font-bold text-gray-800 dark:text-gray-100">Notificaciones</h3>
-                <span className="text-xs bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full font-semibold">{unreadCount} nuevas</span>
+              <div className="p-4 border-b border-line flex justify-between items-center">
+                <h3 className="font-display text-lg uppercase text-text">Notificaciones</h3>
+                <span className="text-[11px] uppercase tracking-[0.2em] text-gold">{unreadCount} nuevas</span>
               </div>
               
               <div className="overflow-y-auto flex-1">
                 {notifications.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                  <div className="p-8 text-center text-muted">
                     <Bell className="w-12 h-12 mx-auto mb-3 opacity-20" />
                     <p className="text-sm">No tienes notificaciones aún.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100 dark:divide-slate-800">
+                  <div className="divide-y divide-line">
                     <AnimatePresence>
                       {notifications.map((notif) => (
                         <motion.div 
                           layout
                           key={notif.id} 
                           initial={{ backgroundColor: "transparent" }}
-                          animate={{ backgroundColor: !notif.read ? "var(--tw-colors-blue-50)" : "transparent" }}
+                          animate={{ backgroundColor: !notif.read ? "color-mix(in srgb, var(--gold) 6%, transparent)" : "transparent" }}
                           transition={{ duration: 0.5 }}
-                          className={`p-4 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors ${!notif.read ? 'dark:bg-blue-900/10' : ''}`}
+                          className={`p-4 hover:bg-surface-2 transition-colors ${!notif.read ? '' : ''}`}
                         >
                           <div className="flex gap-3">
-                            <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notif.type === 'PAYMENT_REQUEST' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}`}>
+                            <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${notif.type === 'PAYMENT_REQUEST' ? 'bg-success/10 text-success' : 'bg-gold/10 text-gold'}`}>
                               {notif.type === 'PAYMENT_REQUEST' ? <DollarSign size={20} /> : <Info size={20} />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className={`text-sm font-bold truncate ${!notif.read ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>{notif.title}</h4>
-                              <p className={`text-sm mt-0.5 line-clamp-2 ${!notif.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>{notif.message}</p>
-                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                              <h4 className={`text-sm font-bold truncate ${!notif.read ? 'text-text' : 'text-muted'}`}>{notif.title}</h4>
+                              <p className={`text-sm mt-0.5 line-clamp-2 ${!notif.read ? 'text-text' : 'text-muted'}`}>{notif.message}</p>
+                              <p className="text-xs text-muted mt-2">
                                 {new Date(notif.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </p>
                             </div>
@@ -148,7 +147,7 @@ export default function AdminNotificationsBell() {
                               >
                                 <button 
                                   onClick={(e) => handleResolve(notif.id, e)}
-                                  className="p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm"
+                                  className="p-1.5 bg-gold hover:brightness-110 text-bg rounded-panel transition-colors"
                                   title="Marcar como resuelto"
                                 >
                                   <Check size={16} strokeWidth={3} />
