@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, CheckCircle, Loader2, Camera, Dumbbell, Clock, Activity, Target, ShieldAlert } from "lucide-react";
 import Link from "next/link";
+import { Button, Input, Select, Textarea, Wordmark } from "@/components/ui";
+import { cn } from "@/lib/cn";
 
 export default function StudentForm() {
   const [formData, setFormData] = useState({
@@ -132,139 +134,109 @@ export default function StudentForm() {
 
   if (submitSuccess) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-white">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl"
+      <div className="flex min-h-screen items-center justify-center bg-bg p-5">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md border border-line bg-surface p-10 text-center"
         >
-          <CheckCircle className="w-20 h-20 text-emerald-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold mb-4">¡Formulario Enviado!</h2>
-          <p className="text-neutral-400 mb-8">
+          <CheckCircle className="mx-auto h-12 w-12 text-gold" strokeWidth={1.25} />
+          <h2 className="mt-6 font-display text-3xl uppercase text-text">¡Formulario Enviado!</h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted">
             Tus datos han sido registrados correctamente. Pronto nos pondremos en contacto contigo para comenzar a entrenar.
           </p>
-          <Link href="/" className="inline-block bg-white text-black font-semibold py-3 px-8 rounded-full hover:bg-neutral-200 transition-colors">
+          <Button href="/" variant="secondary" className="mt-8 rounded-brand">
             Volver al inicio
-          </Link>
+          </Button>
         </motion.div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-neutral-950 text-white py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-              Comenzá tu <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Transformación</span>
-            </h1>
-            <p className="text-neutral-400 text-lg max-w-2xl mx-auto">
-              Completá este formulario para conocerte mejor y diseñar un plan de entrenamiento 100% adaptado a tus objetivos y necesidades.
-            </p>
-          </motion.div>
-        </div>
+  const sectionTitle = "flex items-center gap-3 border-b border-line pb-4 font-display text-2xl uppercase text-text";
+  const sectionIcon = "h-5 w-5 text-gold";
+  const fieldLabel = "flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted";
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-neutral-900/50 backdrop-blur-xl border border-neutral-800 rounded-lg p-6 sm:p-10 shadow-2xl"
-        >
-          <form onSubmit={handleSubmit} className="space-y-8">
-            
+  return (
+    <div className="min-h-screen bg-bg px-5 pb-24 pt-10 md:px-8">
+      <div className="mx-auto max-w-3xl">
+        <Link href="/" aria-label="Inicio" className="inline-block">
+          <Wordmark size="md" />
+        </Link>
+
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="border-b border-line py-14 md:py-20">
+          <h1 className="font-display uppercase leading-[0.9] text-text" style={{ fontSize: "clamp(3rem, 9vw, 6rem)" }}>
+            Comenzá tu <span className="text-gold">Transformación</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-muted">
+            Completá este formulario para conocerte mejor y diseñar un plan de entrenamiento 100% adaptado a tus objetivos y necesidades.
+          </p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <form onSubmit={handleSubmit} className="space-y-14 pt-12">
             {/* Datos Personales */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold border-b border-neutral-800 pb-2 flex items-center gap-2">
-                <Activity className="w-6 h-6 text-blue-400" />
+              <h2 className={sectionTitle}>
+                <Activity className={sectionIcon} strokeWidth={1.5} />
                 Datos Personales
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Nombre Completo</label>
-                  <input required name="name" value={formData.name} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Ej: Juan Pérez" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Email</label>
-                  <input required type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="ejemplo@correo.com" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Fecha de Nacimiento</label>
-                  <input required type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600 appearance-none color-scheme-dark" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">Altura (cm)</label>
-                  <input required type="number" name="height" value={formData.height} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Ej: 175" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium text-neutral-300">Peso aproximado (kg)</label>
-                  <input required type="number" name="weight" value={formData.weight} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600" placeholder="Ej: 70" />
-                </div>
+              <div className="grid gap-5 md:grid-cols-2">
+                <Input label="Nombre Completo" required name="name" value={formData.name} onChange={handleInputChange} placeholder="Ej: Juan Pérez" />
+                <Input label="Email" required type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="ejemplo@correo.com" />
+                <Input label="Fecha de Nacimiento" required type="date" name="birthDate" value={formData.birthDate} onChange={handleInputChange} />
+                <Input label="Altura (cm)" required type="number" name="height" value={formData.height} onChange={handleInputChange} placeholder="Ej: 175" />
+                <Input label="Peso aproximado (kg)" required type="number" name="weight" value={formData.weight} onChange={handleInputChange} placeholder="Ej: 70" />
               </div>
             </section>
 
             {/* Entrenamiento */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold border-b border-neutral-800 pb-2 flex items-center gap-2 mt-8">
-                <Dumbbell className="w-6 h-6 text-emerald-400" />
+              <h2 className={sectionTitle}>
+                <Dumbbell className={sectionIcon} strokeWidth={1.5} />
                 Preferencias de Entrenamiento
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">¿Cuántos días querés entrenar por semana?</label>
-                  <select required name="trainingDays" value={formData.trainingDays} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white appearance-none">
-                    <option value="" disabled>Selecciona una opción</option>
-                    {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                      <option key={num} value={`${num} día${num > 1 ? 's' : ''}`}>{num} día{num > 1 ? 's' : ''}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-300">¿Cuánto tiempo querés que dure cada sesión?</label>
-                  <select required name="sessionDuration" value={formData.sessionDuration} onChange={handleInputChange} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white appearance-none">
-                    <option value="" disabled>Selecciona una opción</option>
-                    <option value="1hs">1 hora</option>
-                    <option value="2hs">2 horas</option>
-                    <option value="3hs">3 horas</option>
-                    <option value="Mas horas">Más de 3 horas</option>
-                  </select>
-                </div>
+              <div className="grid gap-5 md:grid-cols-2">
+                <Select label="¿Cuántos días querés entrenar por semana?" required name="trainingDays" value={formData.trainingDays} onChange={handleInputChange}>
+                  <option value="" disabled>Selecciona una opción</option>
+                  {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+                    <option key={num} value={`${num} día${num > 1 ? 's' : ''}`}>{num} día{num > 1 ? 's' : ''}</option>
+                  ))}
+                </Select>
+                <Select label="¿Cuánto tiempo querés que dure cada sesión?" required name="sessionDuration" value={formData.sessionDuration} onChange={handleInputChange}>
+                  <option value="" disabled>Selecciona una opción</option>
+                  <option value="1hs">1 hora</option>
+                  <option value="2hs">2 horas</option>
+                  <option value="3hs">3 horas</option>
+                  <option value="Mas horas">Más de 3 horas</option>
+                </Select>
               </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300">Experiencia en deportes</label>
-                <textarea required name="sportsExperience" value={formData.sportsExperience} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="¿Qué deportes practicaste y por cuánto tiempo?" />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                  <ShieldAlert className="w-4 h-4 text-red-400" />
+              <Textarea label="Experiencia en deportes" required name="sportsExperience" value={formData.sportsExperience} onChange={handleInputChange} rows={3} placeholder="¿Qué deportes practicaste y por cuánto tiempo?" />
+              <div className="space-y-1.5">
+                <label htmlFor="injuries" className={fieldLabel}>
+                  <ShieldAlert className="h-3.5 w-3.5" />
                   Lesiones y/o cirugías
                 </label>
-                <textarea required name="injuries" value={formData.injuries} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="Detalla cualquier lesión o cirugía relevante para tu entrenamiento" />
+                <Textarea id="injuries" required name="injuries" value={formData.injuries} onChange={handleInputChange} rows={3} placeholder="Detalla cualquier lesión o cirugía relevante para tu entrenamiento" />
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-orange-400" />
+              <div className="space-y-1.5">
+                <label htmlFor="lastTraining" className={fieldLabel}>
+                  <Clock className="h-3.5 w-3.5" />
                   Último entrenamiento (¿cuándo fue y qué hiciste?)
                 </label>
-                <textarea required name="lastTraining" value={formData.lastTraining} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="Cuentanos sobre tu última sesión de entrenamiento..." />
+                <Textarea id="lastTraining" required name="lastTraining" value={formData.lastTraining} onChange={handleInputChange} rows={3} placeholder="Cuentanos sobre tu última sesión de entrenamiento..." />
               </div>
             </section>
 
             {/* Objetivos y Entorno */}
             <section className="space-y-6">
-              <h2 className="text-2xl font-bold border-b border-neutral-800 pb-2 flex items-center gap-2 mt-8">
-                <Target className="w-6 h-6 text-purple-400" />
+              <h2 className={sectionTitle}>
+                <Target className={sectionIcon} strokeWidth={1.5} />
                 Objetivos y Entorno
               </h2>
-              <div className="space-y-4">
-                <label className="text-sm font-medium text-neutral-300">Selecciona tus objetivos (puedes elegir varios)</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-3">
+                <p className={fieldLabel}>Selecciona tus objetivos (puedes elegir varios)</p>
+                <div className="grid gap-2 sm:grid-cols-2">
                   {GOAL_OPTIONS.map((goal) => {
                     const isSelected = selectedGoals.includes(goal);
                     return (
@@ -272,19 +244,18 @@ export default function StudentForm() {
                         key={goal}
                         type="button"
                         onClick={() => toggleGoal(goal)}
-                        className={`text-left px-4 py-3 rounded-xl border text-sm transition-all flex items-center justify-between ${
-                          isSelected 
-                            ? 'bg-purple-500/10 border-purple-500/50 text-purple-300' 
-                            : 'bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700'
-                        }`}
+                        aria-pressed={isSelected}
+                        className={cn(
+                          "flex items-center justify-between gap-3 rounded-panel border px-4 py-3 text-left text-sm transition-colors",
+                          isSelected ? "border-gold bg-gold/10 text-text" : "border-line bg-surface text-muted hover:border-muted"
+                        )}
                       >
                         {goal}
-                        {isSelected && <CheckCircle className="w-4 h-4 text-purple-400" />}
+                        {isSelected && <CheckCircle className="h-4 w-4 shrink-0 text-gold" />}
                       </button>
-                    )
+                    );
                   })}
                 </div>
-                
                 <AnimatePresence>
                   {selectedGoals.includes("Objetivo Específico / Otro") && (
                     <motion.div
@@ -293,104 +264,77 @@ export default function StudentForm() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-2">
-                        <label className="text-sm font-medium text-neutral-300 mb-2 block">Detalla tu objetivo específico</label>
-                        <textarea 
-                          required 
-                          value={specificGoal} 
-                          onChange={(e) => setSpecificGoal(e.target.value)} 
-                          rows={2} 
-                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" 
-                          placeholder="Ej: Llegar a levantar 250kg en sentadilla, o competir en Diciembre..." 
+                      <div className="pt-3">
+                        <Textarea
+                          label="Detalla tu objetivo específico"
+                          required
+                          value={specificGoal}
+                          onChange={(e) => setSpecificGoal(e.target.value)}
+                          rows={2}
+                          placeholder="Ej: Llegar a levantar 250kg en sentadilla, o competir en Diciembre..."
                         />
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-300">Gimnasio en donde entrenás / entrenarías</label>
-                <textarea required name="gym" value={formData.gym} onChange={handleInputChange} rows={3} className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all text-white placeholder:text-neutral-600 resize-none" placeholder="Describe el gimnasio o los materiales que tienes disponibles en casa." />
-              </div>
+              <Textarea label="Gimnasio en donde entrenás / entrenarías" required name="gym" value={formData.gym} onChange={handleInputChange} rows={3} placeholder="Describe el gimnasio o los materiales que tienes disponibles en casa." />
 
               {/* Upload de Fotos */}
-              <div className="space-y-4 pt-4">
-                <label className="text-sm font-medium text-neutral-300 flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-neutral-400" />
+              <div className="space-y-3">
+                <p className={fieldLabel}>
+                  <Camera className="h-3.5 w-3.5" />
                   Fotos y videos del gym o materiales (Opcional)
-                </label>
-                
-                <div className="flex flex-wrap gap-4">
+                </p>
+                <div className="flex flex-wrap gap-3">
                   <AnimatePresence>
                     {photos.map((url, idx) => (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.8 }}
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        key={idx} 
-                        className="relative w-24 h-24 rounded-xl overflow-hidden border border-neutral-700 group"
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        key={idx}
+                        className="relative h-24 w-24 overflow-hidden rounded-panel border border-line"
                       >
-                        <img src={url} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={url} alt={`Upload ${idx}`} className="h-full w-full object-cover" />
                         <button
                           type="button"
                           onClick={() => removePhoto(idx)}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                          aria-label="Quitar foto"
+                          className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-bg/80 text-text hover:text-danger"
                         >
-                          <X className="text-white w-6 h-6" />
+                          <X className="h-3.5 w-3.5" />
                         </button>
                       </motion.div>
                     ))}
                   </AnimatePresence>
-                  
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="w-24 h-24 rounded-xl border-2 border-dashed border-neutral-700 flex flex-col items-center justify-center text-neutral-500 hover:text-white hover:border-neutral-500 transition-colors bg-neutral-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex h-24 w-24 flex-col items-center justify-center gap-2 rounded-panel border border-dashed border-line text-muted transition-colors hover:border-gold hover:text-gold disabled:opacity-50"
                   >
                     {isUploading ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
-                        <Upload className="w-6 h-6 mb-1" />
-                        <span className="text-xs">Subir</span>
+                        <Upload className="h-5 w-5" strokeWidth={1.5} />
+                        <span className="text-[11px] uppercase tracking-[0.2em]">Subir</span>
                       </>
                     )}
                   </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    multiple
-                    accept="image/*,video/*"
-                    className="hidden"
-                  />
+                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} multiple accept="image/*,video/*" className="hidden" />
                 </div>
               </div>
             </section>
 
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl text-sm">
-                {error}
-              </div>
-            )}
+            {error && <div className="border border-danger/40 px-4 py-3 text-sm text-danger">{error}</div>}
 
-            <div className="pt-6">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center disabled:opacity-70 shadow-lg shadow-blue-900/20"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Enviando...
-                  </span>
-                ) : (
-                  "Enviar Formulario"
-                )}
-              </button>
+            <div className="border-t border-line pt-8">
+              <Button type="submit" variant="primary" size="lg" loading={isSubmitting} className="w-full rounded-brand md:w-auto">
+                {isSubmitting ? "Enviando..." : "Enviar Formulario"}
+              </Button>
             </div>
           </form>
         </motion.div>

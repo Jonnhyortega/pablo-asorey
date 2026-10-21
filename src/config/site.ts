@@ -37,6 +37,8 @@ export const siteConfig = {
   historia: {
     heroTitle: "MI HISTORIA",
     heroSubtitle: "Transformando pasión en resultados reales",
+    ctaText: "QUIERO CREAR MI HISTORIA",
+    ctaHref: "https://wa.me/541160218709",
     imagePlaceholder: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827835/hero_hlzyig.png",
     timeline: [
       {

@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function MiHistoriaPage() {
   return (
-    <div className="pt-24 min-h-screen bg-white">
+    <div className="min-h-screen bg-bg pt-16 md:pt-20">
       <HistoriaTimeline />
     </div>
   );
