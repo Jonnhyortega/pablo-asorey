@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Funnel_Display } from "next/font/google";
+import { Inter, Anton } from "next/font/google";
 import "./globals.css";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import { siteConfig } from "@/config/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const funnel = Funnel_Display({ subsets: ["latin"], variable: "--font-funnel" });
+const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" });
 
 export const metadata: Metadata = {
   title: `${siteConfig.name} | ${siteConfig.subtitle}`,
@@ -48,10 +48,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning className={`${inter.variable} ${funnel.variable}`}>
-      <body className="flex flex-col min-h-screen bg-white dark:bg-[#0f0f13] text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Toaster position="top-center" />
+    <html lang="es" suppressHydrationWarning className={`${inter.variable} ${anton.variable}`}>
+      <body className="flex flex-col min-h-screen font-sans">
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: "var(--surface)",
+                color: "var(--text)",
+                border: "1px solid var(--line)",
+                borderRadius: 6,
+                fontSize: 14,
+              },
+              iconTheme: { primary: "var(--gold)", secondary: "var(--bg)" },
+            }}
+          />
           <LayoutWrapper>
             {children}
           </LayoutWrapper>

@@ -50,7 +50,7 @@ export default function Navbar() {
               <Image src={siteConfig.logo} alt={siteConfig.name} width={50} height={50} className="object-contain drop-shadow-md" priority />
             ) : (
               <>
-                <span className="text-3xl font-funnel font-black tracking-tighter leading-none text-white drop-shadow-md">
+                <span className="text-3xl font-display font-black tracking-tighter leading-none text-white drop-shadow-md">
                   {siteConfig.shortName}
                 </span>
                 <span className="text-xs font-extrabold tracking-widest text-gray-300">

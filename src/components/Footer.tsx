@@ -19,7 +19,7 @@ export default function Footer() {
                 </div>
               ) : (
                 <>
-                  <span className="text-4xl font-funnel font-black tracking-tighter leading-none text-white italic drop-shadow-[0_2px_5px_rgba(0,0,0,0.5)]">
+                  <span className="text-4xl font-display font-black tracking-tighter leading-none text-white italic drop-shadow-[0_2px_5px_rgba(0,0,0,0.5)]">
                     {siteConfig.shortName}
                   </span>
                   <span className="text-xs font-extrabold tracking-widest text-gray-300 italic">

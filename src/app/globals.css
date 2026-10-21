@@ -2,26 +2,74 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme {
-  --color-primary-orange: #dda124;
-  --color-primary-hover: #b88114;
-  --color-dark-bg: #2d0b3f;
-  --color-light-bg: #f4f5f7;
-  --color-text-white: #ffffff;
-  --color-text-dark: #333333;
-  --color-text-gray: #666666;
-  
+/* Noir y oro: oscuro por defecto; el claro solo aplica dentro de los paneles */
+:root {
+  --bg: #0A0810;
+  --surface: #120E19;
+  --surface-2: #17121F;
+  --line: #241D2E;
+  --text: #F3EEE6;
+  --muted: #8B8494;
+  --gold: #C8A24C;
+  --gold-line: #5A4A24;
+  --success: #8FC9A0;
+  --danger: #E08A7A;
+  color-scheme: dark;
+}
+
+html.light [data-panel] {
+  --bg: #F6F3EE;
+  --surface: #FFFFFF;
+  --surface-2: #EFEAE2;
+  --line: #E2DBD0;
+  --text: #15111B;
+  --muted: #6E6676;
+  --gold: #9C7A2E;
+  --gold-line: #D9C7A0;
+  --success: #2F7A4A;
+  --danger: #B0442F;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-gold: var(--gold);
+  --color-gold-line: var(--gold-line);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+
   --font-sans: var(--font-inter);
+  --font-display: var(--font-anton);
+
+  --radius-brand: 2px;
+  --radius-panel: 6px;
 }
 
 @layer base {
   body {
     font-family: var(--font-sans);
-    background-color: var(--color-light-bg);
-    color: var(--color-text-dark);
+    background-color: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-funnel);
+
+  [data-panel] {
+    background-color: var(--bg);
+    color: var(--text);
+  }
+
+  ::selection {
+    background-color: var(--gold);
+    color: var(--bg);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--gold);
+    outline-offset: 2px;
   }
 }
