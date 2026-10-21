@@ -1,24 +1,21 @@
 import Hero from "@/components/Hero";
-import VideoSection from "@/components/VideoSection";
-import EntrenaSection from "@/components/EntrenaSection";
+import AsesoriaSection from "@/components/AsesoriaSection";
 import FeaturesSection from "@/components/FeaturesSection";
+import AntesDespuesSection from "@/components/AntesDespuesSection";
 import PlanesSection from "@/components/PlanesSection";
 import ValoresSection from "@/components/ValoresSection";
-import AntesDespuesSection from "@/components/AntesDespuesSection";
-import UniteAhoraSection from "@/components/UniteAhoraSection";
-import CasoExitoSection from "@/components/CasoExitoSection";
 import ContactSection from "@/components/ContactSection";
+import UniteAhoraSection from "@/components/UniteAhoraSection";
 
 export default function Home() {
   return (
     <main>
       <Hero />
-      <VideoSection />
-      <EntrenaSection />
+      <AsesoriaSection />
       <FeaturesSection />
+      <AntesDespuesSection />
       <PlanesSection />
       <ValoresSection />
-      <AntesDespuesSection />
       <ContactSection />
       <UniteAhoraSection />
       {/* <CasoExitoSection /> */}

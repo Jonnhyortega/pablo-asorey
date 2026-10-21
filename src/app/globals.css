@@ -63,6 +63,10 @@ html.light [data-panel] {
     color: var(--text);
   }
 
+  section[id] {
+    scroll-margin-top: 4rem;
+  }
+
   ::selection {
     background-color: var(--gold);
     color: var(--bg);

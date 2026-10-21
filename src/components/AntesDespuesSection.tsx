@@ -1,62 +1,48 @@
 import Image from 'next/image';
-import { siteConfig } from '@/config/site';
+import { ArrowRight } from 'lucide-react';
+import { getSiteContent } from '@/lib/content';
+import { Button, SectionLabel } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 
 export default function AntesDespuesSection() {
-  const { antesYDespues } = siteConfig;
+  const { antesYDespues } = getSiteContent();
 
   return (
-    <section className="bg-white py-24 px-8 w-full overflow-hidden" id="antes-despues">
-      <div className="w-full max-w-7xl mx-auto">
-        
-        <FadeIn direction="down" className="flex flex-col md:flex-row justify-between md:items-end mb-20 relative">
-          <div className="flex-1">
-            <h3 className="text-sm tracking-[5px] text-[#4a154b] font-extrabold italic mb-3 mt-8 uppercase">
-              {antesYDespues.subtitle}
-            </h3>
-            <div className="w-24 h-1 bg-[#dda124] mb-6"></div>
-            <h2 className="text-5xl md:text-7xl font-black italic leading-[1] tracking-wide text-[#2d0b3f] whitespace-pre-line">
-              {antesYDespues.title}
-            </h2>
-          </div>
-          
-          <div className="mt-8 md:mt-0 flex justify-end">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-[#dda124]/40 blur-xl group-hover:bg-[#dda124]/50 transition-colors duration-300 rounded-full scale-125"></div>
-              <a 
-                href="https://wa.me/541160218709"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative inline-block bg-[#dda124] text-white px-10 py-4 text-base font-extrabold italic tracking-[2px] rounded-full shadow-[0_10px_30px_rgba(221,161,36,0.3)] hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(221,161,36,0.5)] transition-all duration-300"
-              >
-                {antesYDespues.ctaText} &rarr;
-              </a>
+    <section id="antes-despues" className="border-t border-line bg-bg py-24 md:py-32">
+      <div className="mx-auto max-w-[1200px] px-5 md:px-8">
+        <FadeIn direction="up" className="mb-12 flex flex-col gap-8 md:mb-16 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="mb-6 flex items-center gap-4">
+              <span className="h-px w-10 bg-gold" aria-hidden />
+              <SectionLabel>{antesYDespues.subtitle}</SectionLabel>
             </div>
+            <h2 className="whitespace-pre-line font-display text-5xl uppercase leading-[0.92] text-text md:text-7xl">{antesYDespues.title}</h2>
           </div>
+          <Button variant="secondary" size="lg" href={antesYDespues.ctaHref} external className="group shrink-0 self-start rounded-brand md:self-auto">
+            {antesYDespues.ctaText}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Button>
         </FadeIn>
 
-        <div className="flex flex-col md:flex-row gap-8 items-center justify-center md:items-end">
-          <FadeIn direction="up" delay={0.2} duration={0.8} className="relative overflow-hidden shadow-[0_10px_20px_rgba(0,0,0,0.1)] w-full max-w-[500px] rounded-t-[150px] md:rounded-t-[300px] rounded-b-xl hover:scale-[1.02] transition-transform duration-500">
-            <Image 
-              src={antesYDespues.images[0]}
-              alt="Transformación Alumno 1"
-              width={500}
-              height={500}
-              className="w-full h-auto object-cover"
-            />
-          </FadeIn>
-          
-          <FadeIn direction="up" delay={0.4} duration={0.8} className="relative overflow-hidden shadow-[0_10px_20px_rgba(0,0,0,0.1)] w-full max-w-[400px] rounded-tl-[100px] rounded-tr-xl rounded-b-xl hover:scale-[1.02] transition-transform duration-500">
-            <Image 
-              src={antesYDespues.images[1]}
-              alt="Transformación Alumno 2"
-              width={400}
-              height={550}
-              className="w-full h-auto object-cover object-top"
-            />
-          </FadeIn>
+        <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+          {antesYDespues.images.map((src, i) => (
+            <FadeIn key={src} direction="up" delay={0.1 * (i + 1)} className={i === 1 ? 'md:mt-16' : ''}>
+              <figure className="relative overflow-hidden border border-line bg-surface">
+                <Image
+                  src={src}
+                  alt={antesYDespues.imageAlts[i] ?? ''}
+                  width={800}
+                  height={900}
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="h-auto w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                />
+                <figcaption className="absolute bottom-0 left-0 border-r border-t border-line bg-bg px-4 py-2 font-display text-sm text-gold">
+                  {String(i + 1).padStart(2, '0')}
+                </figcaption>
+              </figure>
+            </FadeIn>
+          ))}
         </div>
-        
       </div>
     </section>
   );
