@@ -7,3 +7,6 @@ export { Table } from "./Table";
 export { PageHeader } from "./PageHeader";
 export { SectionLabel } from "./SectionLabel";
 export { Dialog } from "./Dialog";
+export { Wordmark } from "./Wordmark";
+export { AppShell } from "./AppShell";
+export type { NavItem } from "./AppShell";

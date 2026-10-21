@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, Card, Dialog, Input, PageHeader, SectionLabel, Select, StatTile, Table, Textarea } from "@/components/ui";
+import { Home, Calendar, History, LineChart, LifeBuoy } from "lucide-react";
+import { AppShell, Badge, Button, Card, Dialog, Input, PageHeader, SectionLabel, Select, StatTile, Table, Textarea } from "@/components/ui";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const rows = [
@@ -10,12 +11,13 @@ const rows = [
   { name: "Sofía Ruiz", plan: "Presencial", status: "danger" as const, label: "Vencido" },
 ];
 
-export default function UiKit() {
+export default function UiKit({ shell }: { shell?: "bottom" | "drawer" }) {
   const [modal, setModal] = useState(false);
   const [sheet, setSheet] = useState(false);
+  const [view, setView] = useState("Inicio");
 
-  return (
-    <div data-panel className="min-h-screen px-4 py-10 md:px-10">
+  const content = (
+    <div data-panel className={shell ? "" : "min-h-screen px-4 py-10 md:px-10"}>
       <div className="mx-auto max-w-5xl space-y-12">
         <PageHeader eyebrow="Desarrollo" title="UI kit" actions={<ThemeToggle />} />
 
@@ -117,5 +119,26 @@ export default function UiKit() {
         </div>
       </Dialog>
     </div>
+  );
+
+  if (!shell) return content;
+
+  const items = [
+    { label: "Inicio", icon: Home },
+    { label: "Próximos", icon: Calendar },
+    { label: "Historial", icon: History, group: "Seguimiento" },
+    { label: "Progreso", icon: LineChart, group: "Seguimiento" },
+    { label: "Soporte", icon: LifeBuoy, group: "Seguimiento" },
+  ];
+  return (
+    <AppShell
+      title={view}
+      mobileNav={shell}
+      nav={items.map((i) => ({ ...i, active: view === i.label, onSelect: () => setView(i.label) }))}
+      sidebarFooter={<ThemeToggle />}
+    >
+      {content}
+      <p id="last-element" className="mt-10 text-sm text-muted">Último elemento</p>
+    </AppShell>
   );
 }
