@@ -13,12 +13,15 @@ export const siteConfig = {
     title: "PABLO ASOREY",
     secondarySubtitle: "ENTRENAMIENTO ONLINE",
     ctaText: "EMPEZÁ HOY",
+    ctaHref: "https://wa.me/541160218709",
+    titleLines: ["PABLO", "ASOREY"],
     image: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827835/hero_hlzyig.png",
   },
   
   // Video Section
   video: {
     url: "https://www.youtube.com/embed/ofq6oxfk_2s",
+    title: "Pablo Asorey Video",
   },
   
   // Entrena Section
@@ -27,6 +30,7 @@ export const siteConfig = {
     subtitle: "ASESORIA ONLINE",
     description: "Descubre esta modalidad en la cual podrás entrenar con un plan 100% personalizado, mejorar tus hábitos y progresar semana a semana con cambios reales y seguimiento constante.  Asesoría online para entrenar desde cualquier lugar del mundo, con un plan adaptado a tus objetivos, tu tiempo y tus materiales.",
     ctaText: "QUIERO EMPEZAR",
+    ctaHref: "https://wa.me/541160218709",
   },
   
   // Mi Historia Section
@@ -144,6 +148,7 @@ export const siteConfig = {
       "Resultados reales"
     ],
     ctaText: "QUIERO COMENZAR",
+    ctaHref: "https://wa.me/541160218709",
     image: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827320/16-removebg-preview_mhhg74.png",
   },
   
@@ -155,6 +160,12 @@ export const siteConfig = {
       instagram: "@PABLO_ASOREY",
       whatsapp: "+541160218709"
     },
+    recommendedLabel: "RECOMENDADO",
+    priceSuffix: "ARS / MENSUAL",
+    ctaText: "ELEGIR PLAN",
+    ctaHref: "https://wa.me/541160218709",
+    followLabel: "SÍGUENOS EN",
+    writeLabel: "ESCRIBIME AL",
     items: [
       {
         id: "plan-1",
@@ -192,6 +203,7 @@ export const siteConfig = {
         name: "PLAN 3 - PROMO SAVAGE",
         icon: "flame", 
         price: "$70.000",
+        logo: "https://res.cloudinary.com/do87isqjr/image/upload/v1772829694/logo-savage-removebg-preview_cpcela.png",
         features: [
           { text: "Plan de entrenamiento armado a tu medida", icon: "check" },
           { text: "Rutinas variadas semanalmente", icon: "refresh" },
@@ -225,6 +237,8 @@ export const siteConfig = {
     subtitle: "ANTES Y DESPUÉS",
     title: "TRABAJO REAL.\nRESULTADOS REALES.",
     ctaText: "CONTACTANOS",
+    ctaHref: "https://wa.me/541160218709",
+    imageAlts: ["Transformación Alumno 1", "Transformación Alumno 2"],
     images: [
       "/transformacion1.png",
       "/transformacion2.png"
@@ -254,7 +268,13 @@ export const siteConfig = {
     nameLabel: "Nombre",
     emailLabel: "Email",
     messageLabel: "Mensaje",
-    ctaText: "ENVIAR MENSAJE"
+    ctaText: "ENVIAR MENSAJE",
+    namePlaceholder: "John Doe",
+    emailPlaceholder: "john@example.com",
+    messagePlaceholder: "Dejanos tu consulta...",
+    sendingText: "ENVIANDO...",
+    successText: "¡Mensaje enviado con éxito!",
+    errorText: "Ocurrió un error. Intentá de nuevo."
   },
 
   // Newsletter
@@ -262,7 +282,11 @@ export const siteConfig = {
     title: "NEWSLETTER",
     subtitle: "Suscribite para recibir tips de entrenamiento y nutrición.",
     placeholder: "Tu dirección de email",
-    ctaText: "SUSCRIBIRME"
+    ctaText: "SUSCRIBIRME",
+    label: "COMUNIDAD",
+    loadingText: "CARGANDO",
+    successText: "¡Te suscribiste correctamente!",
+    errorText: "Hubo un error al suscribirte."
   },
 
   // Contacto (Usado principalmente en el Footer)
@@ -273,6 +297,43 @@ export const siteConfig = {
     address: "Buenos Aires, Argentina"
   },
   
+  // Navegación
+  nav: [
+    { label: "MI HISTORIA", href: "/mi-historia" },
+    { label: "COMO TRABAJO", href: "/#empresa" },
+    { label: "ANTES Y DESPUÉS", href: "/#antes-despues" },
+    { label: "NUESTROS PLANES", href: "/#planes" },
+    { label: "CONTACTO", href: "/#contacto" },
+  ],
+
+  // Footer
+  footer: {
+    exploreTitle: "EXPLORAR",
+    exploreLinks: [
+      { label: "La Empresa", href: "/#empresa" },
+      { label: "Antes y Después", href: "/#antes-despues" },
+      { label: "Nuestros Planes", href: "/#planes" },
+      { label: "Blog", href: "#blog" },
+    ],
+    contactTitle: "CONTACTO",
+    emailLabel: "Email",
+    whatsappLabel: "WhatsApp",
+    addressLabel: "Dirección",
+    socialTitle: "SÍGUENOS",
+    rights: "Todos los derechos reservados.",
+    legalLinks: [
+      { label: "Términos y Condiciones", href: "#" },
+      { label: "Política de Privacidad", href: "#" },
+    ],
+  },
+
+  // Botón flotante
+  floatingWhatsApp: {
+    href: "https://wa.me/541160218709",
+    tooltip: "¡HABLEMOS!",
+    ariaLabel: "Contactar por WhatsApp",
+  },
+
   // Redes Sociales
   social: {
     instagram: "https://www.instagram.com/pablo_asorey/",

@@ -96,9 +96,9 @@ function CoinMesh() {
   );
 }
 
-export default function Hero3DLogo() {
+export default function Hero3DLogo({ className = "h-[400px] md:h-[550px]" }: { className?: string }) {
   return (
-    <div className="w-full h-[400px] md:h-[550px] relative z-20 cursor-grab active:cursor-grabbing flex items-center justify-center">
+    <div className={`w-full ${className} relative z-20 cursor-grab active:cursor-grabbing flex items-center justify-center`}>
       <Canvas 
         camera={{ position: [0, 0, 7.5], fov: 45 }}
         dpr={[1, 2]} // Usa el pixel ratio nativo del dispositivo para más nitidez
