@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 
 
 // GET /api/routines?studentId=123
 export async function GET(request: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
@@ -39,6 +43,9 @@ export async function GET(request: Request) {
 
 // POST /api/routines
 export async function POST(request: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const { studentId, startDate, endDate, days } = body;

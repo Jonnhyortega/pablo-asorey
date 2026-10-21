@@ -2,10 +2,10 @@
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { getJwtSecretString } from '@/lib/jwt';
 
 export const dynamic = 'force-dynamic';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secreto-cambiar-en-produccion';
 
 export async function POST(request: Request) {
   try {
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     // Generamos el token JWT
     const token = jwt.sign(
       { id: user.id, userId: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
+      getJwtSecretString(),
       { expiresIn: rememberMe ? '30d' : '1d' }
     );
 

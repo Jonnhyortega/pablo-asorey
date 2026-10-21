@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import { getJwtSecret } from "@/lib/jwt";
 import { cookies } from "next/headers";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'super-secreto-cambiar-en-produccion'
-);
 
 export async function GET(request: Request) {
   try {
@@ -16,7 +14,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     const userId = payload.id as string;
 
     const student = await prisma.student.findUnique({
@@ -42,15 +40,13 @@ export async function GET(request: Request) {
     });
 
     if (!student) {
-      // DEBUG LOG
-      const allStudents = await prisma.student.findMany();
-      return NextResponse.json({ error: "Estudiante no encontrado", userId_from_token: userId, all_students: allStudents.map(s => s.userId) }, { status: 404 });
+      return NextResponse.json({ error: "Estudiante no encontrado" }, { status: 404 });
     }
 
     return NextResponse.json(student);
   } catch (error: any) {
     console.error("Error fetching me:", error);
-    return NextResponse.json({ error: "Error interno", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
 
@@ -63,7 +59,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     const userId = payload.id as string;
 
     const body = await request.json();
@@ -84,6 +80,6 @@ export async function PUT(request: Request) {
     return NextResponse.json(student);
   } catch (error: any) {
     console.error("Error updating student:", error);
-    return NextResponse.json({ error: "Error interno", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }

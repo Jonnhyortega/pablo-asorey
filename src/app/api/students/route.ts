@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-
-
+import { randomInt } from "crypto";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -28,27 +28,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // 1. Generar contraseÃ±a aleatoria (6 dÃ­gitos numÃ©ricos)
-    const generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
+    // El login busca el email en minúsculas, así que lo guardamos igual
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    // 1. Generar contraseña aleatoria (6 dígitos numéricos)
+    const generatedPassword = randomInt(100000, 1000000).toString();
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
     // 2. Crear el usuario (verificar si ya existe)
-    let user = await prisma.user.findUnique({ where: { email } });
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { student: true }
+    });
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email,
+          email: normalizedEmail,
           password: hashedPassword,
           name,
           role: "STUDENT"
-        }
+        },
+        include: { student: true }
+      });
+    } else if (user.role === "STUDENT" && !user.student) {
+      // Registro que falló a la mitad: le actualizamos la contraseña para que coincida
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword },
+        include: { student: true }
       });
     } else {
-      // Si el usuario ya existÃ­a (ej. fallÃ³ un registro a la mitad), le actualizamos la contraseÃ±a para que coincida
-      user = await prisma.user.update({
-        where: { email },
-        data: { password: hashedPassword }
-      });
+      // Nunca pisar la contraseña de una cuenta existente (incluida la del admin)
+      return NextResponse.json({ error: "Ya existe una cuenta con ese email" }, { status: 409 });
     }
 
     // 3. Crear el estudiante vinculado
@@ -56,7 +67,7 @@ export async function POST(request: Request) {
       data: {
         userId: user.id,
         name,
-        email,
+        email: normalizedEmail,
         whatsapp,
         trainingDays,
         sessionDuration,
@@ -73,7 +84,8 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json(student, { status: 201 });
+    // Formulario público: no devolver la contraseña ni los datos cargados
+    return NextResponse.json({ id: student.id }, { status: 201 });
   } catch (error) {
     console.error("Error creating student:", error);
     return NextResponse.json({ error: "Failed to create student" }, { status: 500 });
@@ -81,6 +93,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const students = await prisma.student.findMany({
       orderBy: { createdAt: "desc" }

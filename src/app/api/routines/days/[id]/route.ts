@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { processGamification, checkWeightMilestone } from "@/lib/gamification";
+import { getSession } from "@/lib/auth";
 
 function extractMaxWeight(weightStr?: any, loggedSetsStr?: any): number {
   let max = 0;
@@ -27,6 +28,26 @@ function extractMaxWeight(weightStr?: any, loggedSetsStr?: any): number {
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    // El día tiene que pertenecer al alumno logueado (o el admin)
+    const ownedDay = await prisma.routineDay.findUnique({
+      where: { id },
+      include: { exercises: { select: { id: true } }, routine: { include: { student: true } } }
+    });
+    if (!ownedDay) {
+      return NextResponse.json({ error: "Routine day not found" }, { status: 404 });
+    }
+    const owner = ownedDay.routine.student;
+    if (session.role !== "ADMIN" && owner.userId !== session.id) {
+      return NextResponse.json({ error: "Prohibido" }, { status: 403 });
+    }
+    const ownedExerciseIds = new Set(ownedDay.exercises.map(ex => ex.id));
+
     const body = await request.json();
     const { completedAt, isSkipped, exercises } = body;
 
@@ -43,12 +64,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       });
     }
 
-    const { recordsBroken, studentId, studentName } = body;
+    // studentId y nombre salen de la base, no del body
+    const { recordsBroken } = body;
+    const studentId = owner.id;
+    const studentName = owner.name;
 
     // Actualizar los ejercicios si vienen (peso, observaciones)
     if (exercises && Array.isArray(exercises)) {
       for (const ex of exercises) {
-        if (ex.id) {
+        if (ex.id && ownedExerciseIds.has(ex.id)) {
           const updatedEx = await prisma.exercise.update({
             where: { id: ex.id },
             data: {

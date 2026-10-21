@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
+import { getJwtSecret } from "@/lib/jwt";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'super-secreto-cambiar-en-produccion'
-);
 
 export async function GET(request: Request) {
   try {
@@ -14,7 +12,7 @@ export async function GET(request: Request) {
 
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     if (!payload || payload.role !== "STUDENT") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const student = await prisma.student.findUnique({

@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import { getJwtSecret } from "@/lib/jwt";
 import { cookies } from "next/headers";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'super-secreto-cambiar-en-produccion'
-);
 
 export async function GET(
   request: Request,
@@ -18,7 +16,7 @@ export async function GET(
     const cookieStore = await cookies();
     const token = cookieStore.get('auth-token')?.value;
     if (!token) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     
     // Validate if user has right to view this
     if (payload.role !== "ADMIN" && payload.id !== id && payload.studentId !== id) {
@@ -188,6 +186,6 @@ export async function GET(
     });
   } catch (error: any) {
     console.error("Error fetching student stats:", error);
-    return NextResponse.json({ error: "Error interno", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }

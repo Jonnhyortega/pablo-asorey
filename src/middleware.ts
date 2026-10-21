@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { getJwtSecret } from "@/lib/jwt";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'super-secreto-cambiar-en-produccion'
-);
 
 export async function middleware(request: NextRequest) {
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
@@ -24,7 +22,7 @@ export async function middleware(request: NextRequest) {
 
   if (token) {
     try {
-      const { payload } = await jwtVerify(token, secret);
+      const { payload } = await jwtVerify(token, getJwtSecret());
       
       if (isLoginRoute) {
         const redirectPath = payload.role === 'ADMIN' ? '/admin' : '/student';

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -54,6 +58,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     await prisma.student.delete({
