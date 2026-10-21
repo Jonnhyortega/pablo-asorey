@@ -1156,7 +1156,7 @@ export default function StudentDashboard() {
                                                     </div>
                                                   </div>
                                                   <h4
-                                                    className={`font-bold text-base transition-colors leading-tight break-words pt-0.5 ${exerciseEdits[ex.id]?.isCompleted ? "text-muted line-through" : "text-danger group-hover:text-success"}`}
+                                                    className={`font-bold text-base transition-colors leading-tight break-words pt-0.5 ${exerciseEdits[ex.id]?.isCompleted ? "text-muted line-through" : "text-text group-hover:text-gold"}`}
                                                   >
                                                     {ex.name}
                                                   </h4>
@@ -1188,13 +1188,13 @@ export default function StudentDashboard() {
                                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-muted pl-6">
                                                 <span className="text-gold break-words max-w-full">
                                                   {ex.trackingType === "TIME"
-                                                    ? "Tiempo:"
+                                                    ? "Tiempo: "
                                                     : ex.trackingType ===
                                                         "CIRCUIT"
-                                                      ? "Circuito:"
+                                                      ? "Circuito: "
                                                       : ex.trackingType ===
                                                           "HIIT"
-                                                        ? "Intervalos:"
+                                                        ? "Intervalos: "
                                                         : ex.trackingType ===
                                                             "DROP_SET"
                                                           ? "Súper Serie/Drop: "
@@ -1209,17 +1209,17 @@ export default function StudentDashboard() {
                                                     <span className="text-success break-words max-w-full font-bold">
                                                       {ex.trackingType ===
                                                       "TIME"
-                                                        ? "Intensidad:"
+                                                        ? "Intensidad: "
                                                         : ex.trackingType ===
                                                             "CIRCUIT"
                                                           ? "Detalle de Carga: "
                                                           : ex.trackingType ===
                                                               "HIIT"
-                                                            ? "Carga/Intensidad:"
+                                                            ? "Carga/Intensidad: "
                                                             : ex.trackingType ===
                                                                 "DROP_SET"
-                                                              ? "Cargas:"
-                                                              : "Peso:"}
+                                                              ? "Cargas: "
+                                                              : "Peso: "}
                                                       {ex.weight}
                                                     </span>
                                                   </>
@@ -1249,7 +1249,7 @@ export default function StudentDashboard() {
                                                     ex.videoUrl,
                                                   )
                                                 }
-                                                className="shrink-0 text-gold hover:text-gold flex items-center gap-1.5 bg-gold/10 px-2.5 py-1.5 rounded-panel text-xs font-semibold transition-colors mt-0.5"
+                                                className="shrink-0 flex items-center gap-1.5 border border-line px-2.5 py-1.5 rounded-panel text-xs text-muted transition-colors hover:border-gold hover:text-gold mt-0.5"
                                               >
                                                 <PlaySquare className="w-3.5 h-3.5" />{" "}
                                                 Ver Video
@@ -2468,7 +2468,7 @@ export default function StudentDashboard() {
                       )}
 
                       <label
-                        className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-text transition-opacity ${uploadingImage ? "opacity-100 cursor-not-allowed" : "opacity-0 group-hover:opacity-100 cursor-pointer"}`}
+                        className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white transition-opacity ${uploadingImage ? "opacity-100 cursor-not-allowed" : "opacity-0 group-hover:opacity-100 cursor-pointer"}`}
                       >
                         {uploadingImage ? (
                           <Loader2 className="w-6 h-6 animate-spin" />
@@ -2675,7 +2675,7 @@ export default function StudentDashboard() {
             >
               <button
                 onClick={() => setSelectedVideoUrl(null)}
-                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-text rounded-full z-20 transition-colors"
+                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full z-20 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>

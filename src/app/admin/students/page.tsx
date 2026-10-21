@@ -181,7 +181,7 @@ export default function AdminStudentsPage() {
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
             onClick={() => setViewingImage(null)}
           >
-            <button onClick={() => setViewingImage(null)} className="absolute top-6 right-6 text-white/70 hover:text-text bg-surface hover:bg-surface p-2 rounded-full transition-colors">
+            <button onClick={() => setViewingImage(null)} aria-label="Cerrar" className="absolute top-6 right-6 rounded-full bg-black/50 p-2 text-white/80 transition-colors hover:bg-black/80 hover:text-white">
               <X className="w-6 h-6" />
             </button>
             <motion.img 

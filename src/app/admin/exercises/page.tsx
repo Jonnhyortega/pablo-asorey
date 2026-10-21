@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Button, Dialog, Input } from "@/components/ui";
 import { Dumbbell, Search, Plus, Edit2, Trash2, X, Loader2, PlaySquare, ShieldAlert } from "lucide-react";
 
 type Exercise = {
@@ -217,137 +217,99 @@ export default function AdminExercisesPage() {
         )}
       </div>
 
-      <AnimatePresence>
-        {/* Modal de Crear/Editar */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={handleCloseModal}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-surface rounded-panel w-full max-w-lg overflow-hidden border border-line"
-            >
-              <div className="flex justify-between items-center p-6 border-b border-line">
-                <h3 className="text-xl font-bold text-text">
-                  {editingExercise ? "Editar Ejercicio" : "Nuevo Ejercicio"}
-                </h3>
-                <button onClick={handleCloseModal} className="text-muted hover:text-muted">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSave} className="p-6 space-y-4">
-                {error && (
-                  <div className="bg-danger/10 text-danger p-3 rounded-panel text-sm font-medium">
-                    {error}
-                  </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-text mb-1">Nombre del Ejercicio <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:outline-none"
-                    placeholder="Ej. Press de Banca Plano"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text mb-1">Enlace de Video (Opcional)</label>
-                  <input
-                    type="url"
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
-                    className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:outline-none"
-                    placeholder="Ej. https://youtube.com/watch?v=..."
-                  />
-                  <p className="text-xs text-muted mt-1">Este link se mostrará al alumno para guiarlo.</p>
-                </div>
-
-                <div className="pt-4 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="px-4 py-2 border border-line rounded-panel text-text font-medium hover:bg-surface-2 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="px-6 py-2 bg-gold hover:brightness-110 text-bg rounded-panel font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    Guardar
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+      {/* Modal de Crear/Editar */}
+      <Dialog
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        title={editingExercise ? "Editar Ejercicio" : "Nuevo Ejercicio"}
+        footer={
+          <>
+            <Button variant="ghost" onClick={handleCloseModal}>
+              Cancelar
+            </Button>
+            <Button type="submit" form="exercise-form" variant="primary" loading={isSaving}>
+              Guardar
+            </Button>
+          </>
+        }
+      >
+        <form id="exercise-form" onSubmit={handleSave} className="space-y-4">
+          {error && <p className="border border-danger/40 px-3 py-2 text-sm text-danger">{error}</p>}
+          <Input
+            label="Nombre del Ejercicio *"
+            type="text"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Ej. Press de Banca Plano"
+          />
+          <div>
+            <Input
+              label="Enlace de Video (Opcional)"
+              type="url"
+              value={formData.videoUrl}
+              onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+              placeholder="Ej. https://youtube.com/watch?v=..."
+            />
+            <p className="mt-1.5 text-xs text-muted">Este link se mostrará al alumno para guiarlo.</p>
           </div>
-        )}
+        </form>
+      </Dialog>
 
-        {/* Modal de Eliminar */}
-        {exerciseToDelete && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => !isDeleting && setExerciseToDelete(null)}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-surface rounded-panel w-full max-w-md overflow-hidden border border-line"
+      {/* Modal de Eliminar */}
+      <Dialog
+        open={!!exerciseToDelete}
+        onClose={() => {
+          if (isDeleting) return;
+          setExerciseToDelete(null);
+          setDeleteConfirmationText("");
+        }}
+        title="¿Eliminar ejercicio?"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              disabled={isDeleting}
+              onClick={() => {
+                setExerciseToDelete(null);
+                setDeleteConfirmationText("");
+              }}
             >
-              <div className="p-6 text-center">
-                <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4 text-danger">
-                  <ShieldAlert className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-bold text-text mb-2">¿Eliminar ejercicio?</h3>
-                <p className="text-sm text-muted mb-4">
-                  Estás a punto de eliminar <strong className="text-text">{exerciseToDelete.name}</strong> del catálogo global. Esta acción no se puede deshacer.
-                </p>
-                <div className="bg-gold/10 text-gold p-3 rounded-panel text-xs text-left mb-6 border border-gold-line">
-                  <strong>Tranquilo:</strong> Borrar esto no afectará a los alumnos que ya tienen este ejercicio en su rutina. Solo lo quitará del catálogo para futuras asignaciones.
-                </div>
-                <div className="mb-6 text-left">
-                  <label className="block text-xs font-medium text-text mb-2">
-                    Por seguridad, escribí <strong>Quiero borrar este ejercicio</strong> para confirmar:
-                  </label>
-                  <input 
-                    type="text"
-                    value={deleteConfirmationText}
-                    onChange={(e) => setDeleteConfirmationText(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface-2 border border-line rounded-panel text-sm text-text focus:ring-2 focus:ring-danger focus:border-transparent outline-none transition-all"
-                    placeholder="Quiero borrar este ejercicio"
-                  />
-                </div>
-                <div className="flex gap-3 w-full">
-                  <button 
-                    onClick={() => {
-                      setExerciseToDelete(null);
-                      setDeleteConfirmationText("");
-                    }}
-                    disabled={isDeleting}
-                    className="flex-1 py-2.5 px-4 rounded-panel border border-line font-medium text-text hover:bg-surface-2 transition-colors disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(exerciseToDelete.id)}
-                    disabled={isDeleting || deleteConfirmationText !== "Quiero borrar este ejercicio"}
-                    className="flex-1 py-2.5 px-4 rounded-panel bg-danger hover:brightness-110 text-bg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                    Sí, eliminar
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+              Cancelar
+            </Button>
+            <Button
+              variant="danger"
+              loading={isDeleting}
+              disabled={deleteConfirmationText !== "Quiero borrar este ejercicio"}
+              onClick={() => exerciseToDelete && handleDelete(exerciseToDelete.id)}
+            >
+              {!isDeleting && <Trash2 className="h-4 w-4" />}
+              Sí, eliminar
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <p className="text-sm leading-relaxed text-muted">
+            Estás a punto de eliminar <strong className="text-text">{exerciseToDelete?.name}</strong> del catálogo global. Esta acción no se puede deshacer.
+          </p>
+          <p className="border border-gold-line px-3 py-2 text-xs leading-relaxed text-muted">
+            <strong className="text-gold">Tranquilo:</strong> Borrar esto no afectará a los alumnos que ya tienen este ejercicio en su rutina. Solo lo quitará del catálogo para futuras asignaciones.
+          </p>
+          <div>
+            <p className="mb-2 text-xs text-muted">
+              Por seguridad, escribí <strong className="text-text">Quiero borrar este ejercicio</strong> para confirmar:
+            </p>
+            <Input
+              type="text"
+              aria-label="Confirmación de borrado"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              placeholder="Quiero borrar este ejercicio"
+            />
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      </Dialog>
     </div>
   );
 }

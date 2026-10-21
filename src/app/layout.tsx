@@ -50,7 +50,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning className={`${inter.variable} ${anton.variable}`}>
       <body className="flex flex-col min-h-screen font-sans">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} enableColorScheme={false}>
           <Toaster
             position="top-center"
             toastOptions={{

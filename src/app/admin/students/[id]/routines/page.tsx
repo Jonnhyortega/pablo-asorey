@@ -7,7 +7,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { useParams } from "next/navigation";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { Button, PageHeader } from "@/components/ui";
+import { Button, Dialog, Input, PageHeader, Select } from "@/components/ui";
 
 type Exercise = {
   id?: string;
@@ -647,7 +647,7 @@ export default function StudentRoutinesPage() {
                                   .map((n, idx) => (
                                     <div
                                       key={n.id}
-                                      className={`px-3 py-2 text-sm cursor-pointer ${focusedIndex[`${dayIndex}-${exIndex}`] === idx ? 'bg-surface-2 text-text' : 'hover:bg-surface-2'}`}
+                                      className={`px-3 py-2 text-sm cursor-pointer ${focusedIndex[`${dayIndex}-${exIndex}`] === idx ? 'bg-gold/10 text-gold shadow-[inset_2px_0_0_var(--gold)]' : 'hover:bg-surface-2'}`}
                                       onClick={() => {
                                         setSearchQueries(prev => ({...prev, [`${dayIndex}-${exIndex}`]: n.name}));
                                         handleExerciseChange(dayIndex, exIndex, 'name', n.name);
@@ -659,7 +659,7 @@ export default function StudentRoutinesPage() {
                                     </div>
                                   ))}
                                 <div 
-                                  className={`px-3 py-2 text-sm font-bold text-gold cursor-pointer border-t border-line ${focusedIndex[`${dayIndex}-${exIndex}`] === exerciseLibrary.filter(n => n.name.toLowerCase().includes((searchQueries[`${dayIndex}-${exIndex}`] || "").toLowerCase())).length ? 'bg-surface-2 text-text' : 'hover:bg-surface-2'}`}
+                                  className={`px-3 py-2 text-sm font-bold text-gold cursor-pointer border-t border-line ${focusedIndex[`${dayIndex}-${exIndex}`] === exerciseLibrary.filter(n => n.name.toLowerCase().includes((searchQueries[`${dayIndex}-${exIndex}`] || "").toLowerCase())).length ? 'bg-gold/10 text-gold shadow-[inset_2px_0_0_var(--gold)]' : 'hover:bg-surface-2'}`}
                                   onClick={() => {
                                     setNewExerciseModal({isOpen: true, dayIndex, exIndex});
                                     setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: false}));
@@ -930,110 +930,86 @@ export default function StudentRoutinesPage() {
         )}
       </div>
 
-      {newExerciseModal?.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0 }} 
-            animate={{ scale: 1, opacity: 1 }} 
-            className="bg-surface rounded-panel w-full max-w-md p-6"
-          >
-            <h3 className="text-xl font-bold text-text mb-4">Agregar Nuevo Ejercicio</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text mb-1">Nombre del Ejercicio <span className="text-danger">*</span></label>
-                <input 
-                  type="text" 
-                  autoFocus
-                  placeholder="Ej: Press Banca" 
-                  value={newExerciseName} 
-                  onChange={e => setNewExerciseName(e.target.value)} 
-                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text mb-1">URL del Video (Opcional)</label>
-                <input 
-                  type="text" 
-                  placeholder="https://youtube.com/..." 
-                  value={newExerciseVideoUrl} 
-                  onChange={e => setNewExerciseVideoUrl(e.target.value)} 
-                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 justify-end mt-8">
-              <button onClick={() => setNewExerciseModal(null)} className="px-4 py-2 text-muted hover:bg-surface-2 rounded-panel transition-colors font-medium">Cancelar</button>
-              <button onClick={saveNewExerciseName} disabled={savingNewItem || !newExerciseName.trim()} className="px-4 py-2 bg-gold hover:brightness-110 text-bg font-bold rounded-panel transition-colors flex items-center gap-2 disabled:opacity-50">
-                {savingNewItem ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar y Usar"}
-              </button>
-            </div>
-          </motion.div>
+      <Dialog
+        open={!!newExerciseModal?.isOpen}
+        onClose={() => setNewExerciseModal(null)}
+        title="Agregar Nuevo Ejercicio"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setNewExerciseModal(null)}>Cancelar</Button>
+            <Button variant="primary" onClick={saveNewExerciseName} loading={savingNewItem} disabled={!newExerciseName.trim()}>
+              {!savingNewItem && "Guardar y Usar"}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input
+            label="Nombre del Ejercicio *"
+            type="text"
+            autoFocus
+            placeholder="Ej: Press Banca"
+            value={newExerciseName}
+            onChange={e => setNewExerciseName(e.target.value)}
+          />
+          <Input
+            label="URL del Video (Opcional)"
+            type="text"
+            placeholder="https://youtube.com/..."
+            value={newExerciseVideoUrl}
+            onChange={e => setNewExerciseVideoUrl(e.target.value)}
+          />
         </div>
-      )}
+      </Dialog>
 
-      {newDayConfigModal?.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0 }} 
-            animate={{ scale: 1, opacity: 1 }} 
-            className="bg-surface rounded-panel w-full max-w-md p-6"
-          >
-            <h3 className="text-xl font-bold text-text mb-4 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-gold" />
-              Configurar Nuevo Día
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text mb-1">Nombre del Día</label>
-                <input 
-                  type="text"
-                  value={newDayConfigName}
-                  onChange={(e) => setNewDayConfigName(e.target.value)}
-                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none"
-                  placeholder="Ej: Piernas"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text mb-1">¿Copiar ejercicios de otro día?</label>
-                <select
-                  value={newDayConfigCopyFrom}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    setNewDayConfigCopyFrom(selectedId);
-                    if (selectedId !== "none") {
-                      const sourceDay = newDayConfigModal.routine.days.find((d: any) => d.id === selectedId);
-                      if (sourceDay) {
-                        setNewDayConfigName(sourceDay.dayName);
-                      }
+      <Dialog
+        open={!!newDayConfigModal?.isOpen}
+        onClose={() => setNewDayConfigModal(null)}
+        title="Configurar Nuevo Día"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setNewDayConfigModal(null)}>Cancelar</Button>
+            <Button variant="primary" onClick={handleConfirmNewDayConfig}>Continuar</Button>
+          </>
+        }
+      >
+        {newDayConfigModal && (
+          <div className="space-y-4">
+            <Input
+              label="Nombre del Día"
+              type="text"
+              value={newDayConfigName}
+              onChange={(e) => setNewDayConfigName(e.target.value)}
+              placeholder="Ej: Piernas"
+              autoFocus
+            />
+            <div>
+              <Select
+                label="¿Copiar ejercicios de otro día?"
+                value={newDayConfigCopyFrom}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  setNewDayConfigCopyFrom(selectedId);
+                  if (selectedId !== "none") {
+                    const sourceDay = newDayConfigModal.routine.days.find((d: any) => d.id === selectedId);
+                    if (sourceDay) {
+                      setNewDayConfigName(sourceDay.dayName);
                     }
-                  }}
-                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none"
-                >
-                  <option value="none">No, crear día vacío</option>
-                  {newDayConfigModal.routine.days.map((day: any) => (
-                    <option key={day.id} value={day.id}>Copiar desde: {day.dayName}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted mt-2">
-                  Si copias un día, se mantendrán todos los ejercicios, series y repeticiones como base para editar.
-                </p>
-              </div>
+                  }
+                }}
+              >
+                <option value="none">No, crear día vacío</option>
+                {newDayConfigModal.routine.days.map((day: any) => (
+                  <option key={day.id} value={day.id}>Copiar desde: {day.dayName}</option>
+                ))}
+              </Select>
+              <p className="mt-2 text-xs text-muted">
+                Si copias un día, se mantendrán todos los ejercicios, series y repeticiones como base para editar.
+              </p>
             </div>
-
-            <div className="flex justify-end gap-3 mt-8">
-              <button onClick={() => setNewDayConfigModal(null)} className="px-4 py-2 text-muted hover:bg-surface-2 rounded-panel transition-colors font-medium">
-                Cancelar
-              </button>
-              <button onClick={handleConfirmNewDayConfig} className="px-6 py-2 bg-gold hover:brightness-110 text-bg rounded-panel transition-colors font-medium">
-                Continuar
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+          </div>
+        )}
+      </Dialog>
 
       <ConfirmDialog 
         {...confirmDialog} 

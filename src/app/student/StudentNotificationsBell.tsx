@@ -110,7 +110,7 @@ export default function StudentNotificationsBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-panel border border-line z-[101] overflow-hidden flex flex-col max-h-[80vh]"
+            className="fixed inset-x-4 top-16 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:w-96 bg-surface rounded-panel border border-line z-[101] overflow-hidden flex flex-col max-h-[80vh]"
             onClick={handleDropdownClick}
           >
               <div className="p-4 border-b border-line flex justify-between items-center">

@@ -39,10 +39,12 @@ export function Dialog({ open, onClose, title, description, variant = "modal", f
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const focusFirst = requestAnimationFrame(() => {
-      const first = panelRef.current?.querySelector<HTMLElement>(FOCUSABLE);
-      (first ?? panelRef.current)?.focus();
-    });
+    // Respeta un autoFocus ya aplicado; si no, enfoca el primer control del contenido
+    const panel = panelRef.current;
+    if (panel && !panel.contains(document.activeElement)) {
+      const first = panel.querySelector<HTMLElement>(`[data-dialog-body] :is(${FOCUSABLE})`) ?? panel.querySelector<HTMLElement>(FOCUSABLE);
+      (first ?? panel).focus();
+    }
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -66,7 +68,6 @@ export function Dialog({ open, onClose, title, description, variant = "modal", f
     document.addEventListener("keydown", onKey);
 
     return () => {
-      cancelAnimationFrame(focusFirst);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
       trigger?.focus?.();
@@ -126,7 +127,7 @@ export function Dialog({ open, onClose, title, description, variant = "modal", f
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {children && <div className="flex-1 overflow-y-auto px-5 py-5 md:px-6">{children}</div>}
+            {children && <div data-dialog-body className="flex-1 overflow-y-auto px-5 py-5 md:px-6">{children}</div>}
             {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-line px-5 py-4 md:px-6">{footer}</div>}
           </motion.div>
         </div>
