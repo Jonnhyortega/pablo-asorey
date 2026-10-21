@@ -7,6 +7,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { useParams } from "next/navigation";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { Button, PageHeader } from "@/components/ui";
 
 type Exercise = {
   id?: string;
@@ -484,68 +485,62 @@ export default function StudentRoutinesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 gap-4 transition-colors">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/students" className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </Link>
-          <div className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl">
-            <Dumbbell className="w-8 h-8" />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Rutinas del Alumno</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Asigna y gestiona las rutinas de entrenamiento</p>
-          </div>
-        </div>
-        
-        {!isCreating && (
-          <button 
-            onClick={() => { setIsCreating(true); setEditingRoutineId(null); setFormData({ startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], days: [] }); }}
-            className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nueva Rutina
-          </button>
-        )}
-      </div>
+      <Link href="/admin/students" className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted transition-colors hover:text-text">
+        <ArrowLeft className="h-4 w-4" /> Alumnos
+      </Link>
+      <PageHeader
+        eyebrow="Asigna y gestiona las rutinas de entrenamiento"
+        title="Rutinas del Alumno"
+        actions={
+          !isCreating && (
+            <Button
+              variant="primary"
+              onClick={() => { setIsCreating(true); setEditingRoutineId(null); setFormData({ startDate: new Date().toISOString().split('T')[0], endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], days: [] }); }}
+            >
+              <Plus className="h-4 w-4" />
+              Nueva Rutina
+            </Button>
+          )
+        }
+      />
 
       {isCreating && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 space-y-6 transition-colors">
-          <div className="flex justify-between items-center border-b border-gray-100 dark:border-slate-800 pb-4">
-            <h2 className="text-xl md:text-2xl font-black text-gray-800 dark:text-gray-100 flex items-center gap-3">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-surface rounded-panel border border-line p-6 space-y-6 transition-colors">
+          <div className="flex justify-between items-center border-b border-line pb-4">
+            <h2 className="flex items-center gap-3 font-display text-2xl uppercase text-text">
               {addingSingleDayToRoutineId ? (
-                <><Plus className="w-6 h-6 text-purple-600" /> Agregando Día a Rutina</>
+                <><Plus className="w-6 h-6 text-gold" /> Agregando Día a Rutina</>
               ) : editingSingleDayId ? (
-                <><Edit className="w-6 h-6 text-purple-600" /> Editando Día</>
+                <><Edit className="w-6 h-6 text-gold" /> Editando Día</>
               ) : editingRoutineId ? (
-                <><Dumbbell className="w-6 h-6 text-purple-600" /> Editando Rutina</>
+                <><Dumbbell className="w-6 h-6 text-gold" /> Editando Rutina</>
               ) : (
-                <><Plus className="w-6 h-6 text-purple-600" /> Creador de Rutinas</>
+                <><Plus className="w-6 h-6 text-gold" /> Creador de Rutinas</>
               )}
             </h2>
-            <button onClick={handleCancelCreate} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Cancelar</button>
+            <button onClick={handleCancelCreate} className="text-muted hover:text-muted">Cancelar</button>
           </div>
 
           {(!editingSingleDayId && !addingSingleDayToRoutineId) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-purple-50 dark:bg-purple-900/10 p-6 rounded-2xl border border-purple-100 dark:border-purple-900/30">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gold/10 p-6 rounded-panel border border-gold-line">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-purple-600" /> Inicio
+                <label className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted">
+                  <Calendar className="w-4 h-4 text-gold" /> Inicio
                 </label>
-                <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 shadow-sm font-medium dark:text-gray-100" />
+                <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full px-4 py-2 bg-surface border border-line rounded-panel focus:border-gold focus:outline-none font-medium" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-purple-600" /> Fin
+                <label className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted">
+                  <Calendar className="w-4 h-4 text-gold" /> Fin
                 </label>
-                <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 shadow-sm font-medium dark:text-gray-100" />
+                <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full px-4 py-2 bg-surface border border-line rounded-panel focus:border-gold focus:outline-none font-medium" />
               </div>
             </div>
           )}
 
           <div className="space-y-6">
             {formData.days.map((day, dayIndex) => (
-              <div key={dayIndex} className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
+              <div key={dayIndex} className="bg-surface-2 p-4 rounded-panel border border-line">
                 <div className="flex justify-between items-center mb-4">
                   <input 
                     type="text" 
@@ -555,19 +550,19 @@ export default function StudentRoutinesPage() {
                       newDays[dayIndex] = { ...newDays[dayIndex], dayName: e.target.value };
                       setFormData({...formData, days: newDays});
                     }}
-                    className="px-3 py-1.5 font-bold text-gray-800 dark:text-gray-100 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="px-3 py-1.5 font-bold text-text bg-surface border border-line rounded-panel focus:border-gold focus:outline-none"
                   />
                   {(!editingSingleDayId && !addingSingleDayToRoutineId) && (
-                    <div className="flex items-center gap-1 bg-white/50 dark:bg-slate-800/50 p-1 rounded-lg">
-                      <button onClick={() => handleDuplicateDay(dayIndex)} className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-slate-700 rounded-md transition-colors" title="Duplicar día"><Copy className="w-4 h-4" /></button>
-                      <button onClick={() => handleRemoveDay(dayIndex)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-slate-700 rounded-md transition-colors" title="Eliminar día"><Trash2 className="w-4 h-4" /></button>
+                    <div className="flex items-center gap-1 bg-surface p-1 rounded-panel">
+                      <button onClick={() => handleDuplicateDay(dayIndex)} className="p-2 text-muted hover:text-gold hover:bg-gold/10 rounded-md transition-colors" title="Duplicar día"><Copy className="w-4 h-4" /></button>
+                      <button onClick={() => handleRemoveDay(dayIndex)} className="p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-md transition-colors" title="Eliminar día"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-3">
                   {day.exercises.length > 0 && (
-                    <div className="hidden md:flex gap-2 items-center px-3 pt-2 pb-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <div className="hidden md:flex gap-2 items-center px-3 pt-2 pb-1 text-xs font-semibold text-muted uppercase tracking-wider">
                       <div className="w-8"></div>
                       <div className="flex-1 min-w-[150px]">Ejercicio</div>
                       <div className="w-32 text-center">Series x Reps</div>
@@ -588,12 +583,11 @@ export default function StudentRoutinesPage() {
                         onDragOver={(e) => handleDragOver(e, dayIndex, exIndex)}
                         onDrop={(e) => handleDrop(e, dayIndex, exIndex)}
                         onDragEnd={handleDragEnd}
-                        className={`flex flex-wrap md:flex-nowrap gap-2 items-center bg-white dark:bg-slate-900 p-3 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm transition-all duration-200
-                          ${isDragging ? 'opacity-50 scale-[0.98]' : ''}
-                          ${isDragOver && !isDragging ? (draggingEx!.exIndex > exIndex ? 'border-t-2 border-t-purple-500' : 'border-b-2 border-b-purple-500') : ''}
+                        className={`flex flex-wrap md:flex-nowrap gap-2 items-center bg-surface p-3 rounded-panel border border-line transition-all duration-200 ${isDragging ? 'opacity-50 scale-[0.98]' : ''}
+                          ${isDragOver && !isDragging ? (draggingEx!.exIndex > exIndex ? 'border-t-2 border-t-gold' : 'border-b-2 border-b-gold') : ''}
                         `}
                       >
-                        <div className="cursor-grab hover:text-purple-600 dark:hover:text-purple-400 active:cursor-grabbing p-1 text-gray-400 dark:text-gray-500">
+                        <div className="cursor-grab hover:text-gold active:cursor-grabbing p-1 text-muted">
                           <GripVertical className="w-5 h-5" />
                         </div>
                       <div className="flex-1 w-full md:w-auto space-y-3">
@@ -644,16 +638,16 @@ export default function StudentRoutinesPage() {
                                 }
                               }}
                               onBlur={() => setTimeout(() => setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: false})), 200)}
-                              className="w-full text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
+                              className="w-full text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none"
                             />
                             {dropdownOpen[`${dayIndex}-${exIndex}`] && (
-                              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                              <div className="absolute z-10 w-full mt-1 bg-surface border border-line rounded-panel max-h-48 overflow-y-auto">
                                 {exerciseLibrary
                                   .filter(n => n.name.toLowerCase().includes((searchQueries[`${dayIndex}-${exIndex}`] || "").toLowerCase()))
                                   .map((n, idx) => (
                                     <div
                                       key={n.id}
-                                      className={`px-3 py-2 text-sm cursor-pointer ${focusedIndex[`${dayIndex}-${exIndex}`] === idx ? 'bg-purple-100 dark:bg-slate-600' : 'hover:bg-purple-50 dark:hover:bg-slate-700'}`}
+                                      className={`px-3 py-2 text-sm cursor-pointer ${focusedIndex[`${dayIndex}-${exIndex}`] === idx ? 'bg-surface-2 text-text' : 'hover:bg-surface-2'}`}
                                       onClick={() => {
                                         setSearchQueries(prev => ({...prev, [`${dayIndex}-${exIndex}`]: n.name}));
                                         handleExerciseChange(dayIndex, exIndex, 'name', n.name);
@@ -665,7 +659,7 @@ export default function StudentRoutinesPage() {
                                     </div>
                                   ))}
                                 <div 
-                                  className={`px-3 py-2 text-sm font-bold text-purple-600 dark:text-purple-400 cursor-pointer border-t border-gray-100 dark:border-slate-700 ${focusedIndex[`${dayIndex}-${exIndex}`] === exerciseLibrary.filter(n => n.name.toLowerCase().includes((searchQueries[`${dayIndex}-${exIndex}`] || "").toLowerCase())).length ? 'bg-purple-100 dark:bg-slate-600' : 'hover:bg-purple-50 dark:hover:bg-slate-700'}`}
+                                  className={`px-3 py-2 text-sm font-bold text-gold cursor-pointer border-t border-line ${focusedIndex[`${dayIndex}-${exIndex}`] === exerciseLibrary.filter(n => n.name.toLowerCase().includes((searchQueries[`${dayIndex}-${exIndex}`] || "").toLowerCase())).length ? 'bg-surface-2 text-text' : 'hover:bg-surface-2'}`}
                                   onClick={() => {
                                     setNewExerciseModal({isOpen: true, dayIndex, exIndex});
                                     setDropdownOpen(prev => ({...prev, [`${dayIndex}-${exIndex}`]: false}));
@@ -680,7 +674,7 @@ export default function StudentRoutinesPage() {
                           <select
                             value={ex.trackingType || "REPS"}
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'trackingType', e.target.value)}
-                            className="w-32 md:w-36 text-sm px-2 py-2 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 font-semibold border border-purple-200 dark:border-purple-800 rounded-lg focus:ring-2 focus:ring-purple-500"
+                            className="w-32 md:w-36 text-sm px-2 py-2 bg-gold/10 text-gold font-semibold border border-gold-line rounded-panel focus:border-gold focus:outline-none"
                           >
                             <option value="REPS">Repeticiones</option>
                             <option value="TIME">Por Tiempo</option>
@@ -693,19 +687,19 @@ export default function StudentRoutinesPage() {
                             placeholder={ex.trackingType === "TIME" ? "Tiempo (ej: 15 min, 20s)" : ex.trackingType === "CIRCUIT" ? "Rondas y Reps (ej: 4 vueltas x 15 reps)" : ex.trackingType === "HIIT" ? "Intervalos (ej: 20\"x10\" 16 vueltas)" : ex.trackingType === "DROP_SET" ? "Series x Drops (ej: 4 x 10+10 reps)" : "Series x Reps (ej: 4x12 o 30-20-10)"} 
                             value={ex.sets_reps} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'sets_reps', e.target.value)} 
-                            className="w-full md:w-48 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                            className="w-full md:w-48 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                           />
                           <input 
                             placeholder={ex.trackingType === "TIME" ? "Intensidad (ej: Alta, Nivel 8)" : ex.trackingType === "HIIT" ? "Carga/Intensidad (ej: Peso corporal)" : ex.trackingType === "DROP_SET" ? "Cargas (ej: 50kg + 40kg)" : "Peso (kg) (ej: 85kg)"} 
                             value={ex.weight || ""} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'weight', e.target.value)} 
-                            className="w-full md:w-32 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                            className="w-full md:w-32 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                           />
                           <input 
                             placeholder="Descanso" 
                             value={ex.rest} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'rest', e.target.value)} 
-                            className="w-full md:w-24 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                            className="w-full md:w-24 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                           />
                         </div>
                         <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
@@ -713,25 +707,25 @@ export default function StudentRoutinesPage() {
                             placeholder='Observaciones (ej: 20"x10", súper serie, etc.)' 
                             value={ex.observations || ""} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'observations', e.target.value)} 
-                            className="flex-1 text-sm px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                            className="flex-1 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                           />
                           <div className="w-full md:w-64 relative shrink-0">
-                            <PlaySquare className="w-4 h-4 absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                            <PlaySquare className="w-4 h-4 absolute left-3 top-2.5 text-muted pointer-events-none" />
                             <input 
                               placeholder="Video URL" 
                               value={ex.videoUrl} 
                               onChange={e => handleExerciseChange(dayIndex, exIndex, 'videoUrl', e.target.value)} 
-                              className="w-full text-sm pl-9 pr-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                              className="w-full text-sm pl-9 pr-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                             />
                           </div>
                         </div>
                       </div>
                       
-                      <button onClick={() => handleRemoveExercise(dayIndex, exIndex)} className="text-gray-400 hover:text-red-500 p-2 shrink-0 self-start md:self-auto"><Trash2 className="w-5 h-5" /></button>
+                      <button onClick={() => handleRemoveExercise(dayIndex, exIndex)} className="text-muted hover:text-danger p-2 shrink-0 self-start md:self-auto"><Trash2 className="w-5 h-5" /></button>
                     </div>
                     );
                   })}
-                  <button onClick={() => handleAddExercise(dayIndex)} className="text-sm font-medium text-purple-600 hover:text-purple-700 flex items-center gap-1 mt-2">
+                  <button onClick={() => handleAddExercise(dayIndex)} className="text-sm font-medium text-gold hover:text-gold flex items-center gap-1 mt-2">
                     <Plus className="w-3 h-3" /> Añadir Ejercicio
                   </button>
                 </div>
@@ -740,14 +734,14 @@ export default function StudentRoutinesPage() {
           </div>
 
           {(!editingSingleDayId && !addingSingleDayToRoutineId) && (
-            <button onClick={handleAddDay} className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:text-purple-600 hover:border-purple-300 transition-colors flex items-center justify-center gap-2 font-medium">
+            <button onClick={handleAddDay} className="w-full py-3 border-2 border-dashed border-line rounded-panel text-muted hover:text-gold hover:border-gold-line transition-colors flex items-center justify-center gap-2 font-medium">
               <Plus className="w-5 h-5" />
               Añadir Día de Entrenamiento
             </button>
           )}
 
-          <div className="flex justify-end pt-4 border-t border-gray-100">
-            <button onClick={handleSaveRoutine} disabled={saving} className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2">
+          <div className="flex justify-end pt-4 border-t border-line">
+            <button onClick={handleSaveRoutine} disabled={saving} className="px-8 py-3 bg-gold hover:brightness-110 text-bg font-bold rounded-panel transition-colors flex items-center gap-2">
               {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               {editingSingleDayId ? "Guardar Día" : addingSingleDayToRoutineId ? "Crear Día" : "Guardar Rutina"}
             </button>
@@ -757,43 +751,43 @@ export default function StudentRoutinesPage() {
       )}
 
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 px-2">Historial de Rutinas</h3>
+        <h3 className="text-lg font-bold text-text px-2">Historial de Rutinas</h3>
         {loading ? (
-          <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-purple-600 dark:text-purple-400" /></div>
+          <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-gold" /></div>
         ) : routines.filter((r: any) => r.id !== editingRoutineId).length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 p-10 rounded-2xl border border-gray-100 dark:border-slate-800 text-center transition-colors">
-            <Calendar className="w-12 h-12 text-gray-300 dark:text-slate-600 mx-auto mb-3" />
-            <p className="text-gray-500 dark:text-gray-400">No hay rutinas asignadas a este alumno.</p>
+          <div className="bg-surface p-10 rounded-panel border border-line text-center transition-colors">
+            <Calendar className="w-12 h-12 text-muted mx-auto mb-3" />
+            <p className="text-muted">No hay rutinas asignadas a este alumno.</p>
           </div>
         ) : (
           routines.filter((r: any) => r.id !== editingRoutineId).map((routine: any) => {
             const diffDays = Math.ceil((new Date(routine.endDate).getTime() - new Date(routine.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
             return (
-            <div key={routine.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden transition-colors">
+            <div key={routine.id} className="bg-surface rounded-panel border border-line overflow-hidden transition-colors">
               <div 
-                className="bg-gray-50 dark:bg-slate-800/50 p-4 border-b border-gray-100 dark:border-slate-800 flex flex-wrap gap-2 justify-between items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                className="bg-surface-2 p-4 border-b border-line flex flex-wrap gap-2 justify-between items-center cursor-pointer hover:bg-surface-2 transition-colors"
                 onClick={() => toggleRoutine(routine.id)}
               >
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <span className="font-bold text-gray-800 dark:text-gray-100">
+                  <Calendar className="w-5 h-5 text-gold" />
+                  <span className="font-bold text-text">
                     {formatDateUTC(routine.startDate)} al {formatDateUTC(routine.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-3 py-1.5 rounded-full">{diffDays} días</div>
+                  <div className="text-xs font-semibold bg-gold/10 text-gold px-3 py-1.5 rounded-full">{diffDays} días</div>
                   <button onClick={(e) => { 
                     e.stopPropagation(); 
                     setNewDayConfigName(`Día ${routine.days.length + 1}`);
                     setNewDayConfigCopyFrom("none");
                     setNewDayConfigModal({ isOpen: true, routine }); 
-                  }} className="text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/40 p-1.5 rounded-lg transition-colors" title="Agregar Nuevo Día">
+                  }} className="text-gold hover:bg-gold/10 p-1.5 rounded-panel transition-colors" title="Agregar Nuevo Día">
                     <Plus className="w-4 h-4" />
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteRoutine(routine.id); }} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 p-1.5 rounded-lg transition-colors" title="Eliminar Rutina">
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteRoutine(routine.id); }} className="text-danger hover:bg-danger/10 p-1.5 rounded-panel transition-colors" title="Eliminar Rutina">
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <div className="text-gray-400 ml-2">
+                  <div className="text-muted ml-2">
                     {expandedRoutines[routine.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </div>
                 </div>
@@ -815,19 +809,19 @@ export default function StudentRoutinesPage() {
                         }
                         return a.order - b.order;
                       }).map((day: any) => (
-                        <div key={day.id} className="border border-gray-100 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 transition-colors">
+                        <div key={day.id} className="border border-line rounded-panel overflow-hidden bg-surface transition-colors">
                           <div 
-                            className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors"
+                            className="p-4 flex items-center justify-between cursor-pointer hover:bg-surface-2 transition-colors"
                             onClick={() => toggleDay(day.id)}
                           >
-                            <h4 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                            <h4 className="font-bold text-text flex items-center gap-2">
                               {day.dayName}
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditSingleDay(routine.id, day);
                                 }}
-                                className="ml-2 p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-gray-500 hover:text-purple-600 transition-colors"
+                                className="ml-2 p-1.5 rounded-panel bg-surface-2 hover:bg-gold/10 text-muted hover:text-gold transition-colors"
                                 title="Editar Día"
                               >
                                 <Edit className="w-4 h-4" />
@@ -837,7 +831,7 @@ export default function StudentRoutinesPage() {
                                   e.stopPropagation();
                                   handleDeleteDay(day.id);
                                 }}
-                                className="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-red-100 dark:hover:bg-red-900/40 text-gray-500 hover:text-red-600 transition-colors"
+                                className="p-1.5 rounded-panel bg-surface-2 hover:bg-danger/10 text-muted hover:text-danger transition-colors"
                                 title="Eliminar Día"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -845,11 +839,11 @@ export default function StudentRoutinesPage() {
                             </h4>
                             <div className="flex items-center gap-3">
                               {day.isSkipped ? (
-                                <span className="text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-1 rounded-md">No se entrenó este día</span>
+                                <span className="text-xs font-medium bg-danger/10 text-danger px-2 py-1 rounded-md">No se entrenó este día</span>
                               ) : day.completedAt ? (
-                                <span className="text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-md">Completado: {new Date(day.completedAt).toLocaleDateString()}</span>
+                                <span className="text-xs font-medium bg-success/10 text-success px-2 py-1 rounded-md">Completado: {new Date(day.completedAt).toLocaleDateString()}</span>
                               ) : null}
-                              <div className="text-gray-400">
+                              <div className="text-muted">
                                 {expandedDays[day.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                               </div>
                             </div>
@@ -863,25 +857,25 @@ export default function StudentRoutinesPage() {
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                               >
-                                <div className="p-4 pt-0 overflow-x-auto border-t border-gray-100 dark:border-slate-800">
+                                <div className="p-4 pt-0 overflow-x-auto border-t border-line">
                                   <table className="w-full text-sm text-left mt-2">
-                                    <thead className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800/50">
+                                    <thead className="text-xs text-muted bg-surface-2">
                                       <tr>
-                                        <th className="px-3 py-2 rounded-l-lg">Ejercicio</th>
+                                        <th className="px-3 py-2 rounded-l-[6px]">Ejercicio</th>
                                         <th className="px-3 py-2">Series x Reps</th>
                                         <th className="px-3 py-2">Descanso</th>
                                         <th className="px-3 py-2">Peso Usado</th>
                                         <th className="px-3 py-2">Observaciones</th>
-                                        <th className="px-3 py-2 rounded-r-lg">Video</th>
+                                        <th className="px-3 py-2 rounded-r-[6px]">Video</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {day.exercises.map((ex: any) => (
-                                        <tr key={ex.id} className="border-b border-gray-50 dark:border-slate-800/50 last:border-0 hover:bg-purple-50/50 dark:hover:bg-slate-800/50 hover:shadow-sm transition-all duration-200">
-                                          <td className="px-3 py-2 font-medium text-gray-800 dark:text-gray-200">{ex.name}</td>
-                                          <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{ex.sets_reps}</td>
-                                          <td className="px-3 py-2 text-gray-600 dark:text-gray-400">{ex.rest}</td>
-                                          <td className="px-3 py-2 text-emerald-600 dark:text-emerald-400 font-medium">
+                                        <tr key={ex.id} className="border-b border-line last:border-0 hover:bg-gold/10 transition-all duration-200">
+                                          <td className="px-3 py-2 font-medium text-text">{ex.name}</td>
+                                          <td className="px-3 py-2 text-muted">{ex.sets_reps}</td>
+                                          <td className="px-3 py-2 text-muted">{ex.rest}</td>
+                                          <td className="px-3 py-2 text-success font-medium">
                                             {(() => {
                                               let parsedSets = [];
                                               try { if (ex.loggedSets) parsedSets = JSON.parse(ex.loggedSets); } catch(e) {}
@@ -906,14 +900,14 @@ export default function StudentRoutinesPage() {
                                               return ex.weight || "-";
                                             })()}
                                           </td>
-                                          <td className="px-3 py-2 text-gray-500 dark:text-gray-500 italic text-xs max-w-[150px] truncate" title={ex.observations}>{ex.observations || "-"}</td>
+                                          <td className="px-3 py-2 text-muted italic text-xs max-w-[150px] truncate" title={ex.observations}>{ex.observations || "-"}</td>
                                           <td className="px-3 py-2">
                                             {ex.videoUrl ? (
-                                              <a href={ex.videoUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
+                                              <a href={ex.videoUrl} target="_blank" rel="noreferrer" className="text-gold hover:underline flex items-center gap-1">
                                                 <PlaySquare className="w-3 h-3" /> Link
                                               </a>
                                             ) : (
-                                              <span className="text-gray-400">-</span>
+                                              <span className="text-muted">-</span>
                                             )}
                                           </td>
                                         </tr>
@@ -941,35 +935,35 @@ export default function StudentRoutinesPage() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }} 
             animate={{ scale: 1, opacity: 1 }} 
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-6"
+            className="bg-surface rounded-panel w-full max-w-md p-6"
           >
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Agregar Nuevo Ejercicio</h3>
+            <h3 className="text-xl font-bold text-text mb-4">Agregar Nuevo Ejercicio</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del Ejercicio <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-text mb-1">Nombre del Ejercicio <span className="text-danger">*</span></label>
                 <input 
                   type="text" 
                   autoFocus
                   placeholder="Ej: Press Banca" 
                   value={newExerciseName} 
                   onChange={e => setNewExerciseName(e.target.value)} 
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL del Video (Opcional)</label>
+                <label className="block text-sm font-medium text-text mb-1">URL del Video (Opcional)</label>
                 <input 
                   type="text" 
                   placeholder="https://youtube.com/..." 
                   value={newExerciseVideoUrl} 
                   onChange={e => setNewExerciseVideoUrl(e.target.value)} 
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100" 
+                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                 />
               </div>
             </div>
             <div className="flex gap-3 justify-end mt-8">
-              <button onClick={() => setNewExerciseModal(null)} className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors font-medium">Cancelar</button>
-              <button onClick={saveNewExerciseName} disabled={savingNewItem || !newExerciseName.trim()} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50">
+              <button onClick={() => setNewExerciseModal(null)} className="px-4 py-2 text-muted hover:bg-surface-2 rounded-panel transition-colors font-medium">Cancelar</button>
+              <button onClick={saveNewExerciseName} disabled={savingNewItem || !newExerciseName.trim()} className="px-4 py-2 bg-gold hover:brightness-110 text-bg font-bold rounded-panel transition-colors flex items-center gap-2 disabled:opacity-50">
                 {savingNewItem ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar y Usar"}
               </button>
             </div>
@@ -982,28 +976,28 @@ export default function StudentRoutinesPage() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }} 
             animate={{ scale: 1, opacity: 1 }} 
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-6"
+            className="bg-surface rounded-panel w-full max-w-md p-6"
           >
-            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
-              <Plus className="w-5 h-5 text-purple-600" />
+            <h3 className="text-xl font-bold text-text mb-4 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-gold" />
               Configurar Nuevo Día
             </h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del Día</label>
+                <label className="block text-sm font-medium text-text mb-1">Nombre del Día</label>
                 <input 
                   type="text"
                   value={newDayConfigName}
                   onChange={(e) => setNewDayConfigName(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
+                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none"
                   placeholder="Ej: Piernas"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">¿Copiar ejercicios de otro día?</label>
+                <label className="block text-sm font-medium text-text mb-1">¿Copiar ejercicios de otro día?</label>
                 <select
                   value={newDayConfigCopyFrom}
                   onChange={(e) => {
@@ -1016,24 +1010,24 @@ export default function StudentRoutinesPage() {
                       }
                     }
                   }}
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 dark:text-gray-100"
+                  className="w-full px-4 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none"
                 >
                   <option value="none">No, crear día vacío</option>
                   {newDayConfigModal.routine.days.map((day: any) => (
                     <option key={day.id} value={day.id}>Copiar desde: {day.dayName}</option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-muted mt-2">
                   Si copias un día, se mantendrán todos los ejercicios, series y repeticiones como base para editar.
                 </p>
               </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-8">
-              <button onClick={() => setNewDayConfigModal(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors font-medium">
+              <button onClick={() => setNewDayConfigModal(null)} className="px-4 py-2 text-muted hover:bg-surface-2 rounded-panel transition-colors font-medium">
                 Cancelar
               </button>
-              <button onClick={handleConfirmNewDayConfig} className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium">
+              <button onClick={handleConfirmNewDayConfig} className="px-6 py-2 bg-gold hover:brightness-110 text-bg rounded-panel transition-colors font-medium">
                 Continuar
               </button>
             </div>
