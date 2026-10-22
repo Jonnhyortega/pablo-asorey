@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { CheckCircle } from 'lucide-react';
+import { FormHoneypot, useFormGuard } from '@/components/FormHoneypot';
 import { useSiteContent } from '@/components/SiteContentProvider';
 import { Button, Input, SectionLabel, Textarea } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
@@ -11,6 +13,8 @@ export default function ContactSection() {
 
   const [contactData, setContactData] = useState({ name: '', email: '', message: '' });
   const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const guard = useFormGuard();
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,16 +23,19 @@ export default function ContactSection() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contactData),
+        body: JSON.stringify({ ...contactData, ...guard.fields() }),
       });
       if (res.ok) {
+        // El formulario queda cerrado: se reemplaza por el mensaje de confirmación.
         setContactStatus('success');
         setContactData({ name: '', email: '', message: '' });
-        setTimeout(() => setContactStatus('idle'), 5000);
       } else {
+        const data = await res.json().catch(() => null);
+        setErrorMessage(data?.message ?? '');
         setContactStatus('error');
       }
     } catch {
+      setErrorMessage('');
       setContactStatus('error');
     }
   };
@@ -69,7 +76,15 @@ export default function ContactSection() {
         </FadeIn>
 
         <FadeIn direction="up" delay={0.15}>
-          <form onSubmit={handleContactSubmit} className="space-y-6 border border-line bg-surface p-6 md:p-10">
+          {contactStatus === 'success' ? (
+            <div role="status" className="flex h-full flex-col items-center justify-center gap-4 border border-line bg-surface p-10 text-center md:p-14">
+              <CheckCircle className="h-12 w-12 text-gold" strokeWidth={1.25} />
+              <h3 className="font-display text-3xl uppercase text-text">{contactForm.successText}</h3>
+              <p className="max-w-sm text-sm leading-relaxed text-muted">Te vamos a responder a la brevedad al email que dejaste.</p>
+            </div>
+          ) : (
+          <form onSubmit={handleContactSubmit} className="relative space-y-6 border border-line bg-surface p-6 md:p-10">
+            <FormHoneypot inputRef={guard.honeypotRef} />
             <div className="grid gap-6 md:grid-cols-2">
               <Input
                 label={contactForm.nameLabel}
@@ -103,14 +118,14 @@ export default function ContactSection() {
             />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <p role="status" className="text-sm">
-                {contactStatus === 'success' && <span className="text-success">{contactForm.successText}</span>}
-                {contactStatus === 'error' && <span className="text-danger">{contactForm.errorText}</span>}
+                {contactStatus === 'error' && <span className="text-danger">{errorMessage || contactForm.errorText}</span>}
               </p>
               <Button type="submit" variant="primary" size="lg" loading={contactStatus === 'loading'} className="rounded-brand">
                 {contactStatus === 'loading' ? contactForm.sendingText : contactForm.ctaText}
               </Button>
             </div>
           </form>
+          )}
         </FadeIn>
       </div>
     </section>

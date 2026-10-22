@@ -3,10 +3,18 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { randomInt } from "crypto";
 import { requireAdmin } from "@/lib/auth";
+import { guardPublicForm } from "@/lib/form-guard";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    // Formulario público "Aplicar": a un bot detectado se le responde como si se hubiera creado.
+    const blocked = await guardPublicForm(request, body, "aplicar", () =>
+      NextResponse.json({ id: "ok" }, { status: 201 })
+    );
+    if (blocked) return blocked;
+
     const {
       name,
       email,

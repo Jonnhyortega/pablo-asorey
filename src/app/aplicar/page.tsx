@@ -6,6 +6,7 @@ import { Upload, X, CheckCircle, Loader2, Camera, Dumbbell, Clock, Activity, Tar
 import Link from "next/link";
 import { Button, Input, Select, Textarea, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/cn";
+import { FormHoneypot, useFormGuard } from "@/components/FormHoneypot";
 
 export default function StudentForm() {
   const [formData, setFormData] = useState({
@@ -46,6 +47,7 @@ export default function StudentForm() {
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const guard = useFormGuard();
   const [isUploading, setIsUploading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -118,10 +120,14 @@ export default function StudentForm() {
       const response = await fetch("/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, goals: finalGoals || "Sin especificar", photos }),
+        body: JSON.stringify({ ...formData, goals: finalGoals || "Sin especificar", photos, ...guard.fields() }),
       });
 
-      if (!response.ok) throw new Error("Error submitting form");
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setError(data?.message ?? data?.error ?? "Ocurrió un error al enviar el formulario. Intenta de nuevo.");
+        return;
+      }
 
       setSubmitSuccess(true);
     } catch (err) {
@@ -174,7 +180,8 @@ export default function StudentForm() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <form onSubmit={handleSubmit} className="space-y-14 pt-12">
+          <form onSubmit={handleSubmit} className="relative space-y-14 pt-12">
+            <FormHoneypot inputRef={guard.honeypotRef} />
             {/* Datos Personales */}
             <section className="space-y-6">
               <h2 className={sectionTitle}>

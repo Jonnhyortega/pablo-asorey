@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSiteContent } from '@/components/SiteContentProvider';
 import { SectionLabel, Wordmark } from '@/components/ui';
+import { FormHoneypot, useFormGuard } from '@/components/FormHoneypot';
 import LazyLogo3D from './LazyLogo3D';
 
 const linkClass = 'text-sm text-muted transition-colors hover:text-text';
@@ -14,6 +15,15 @@ export default function Footer() {
   const { name, tagline, footer, contact, planes, social, newsletter } = useSiteContent();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const guard = useFormGuard();
+
+  // Una vez suscripto, el formulario queda cerrado también al volver a la página.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('newsletter-subscribed') === '1') setSubscribed(true);
+    } catch {}
+  }, []);
   const whatsappUrl = `https://wa.me/${planes.contactInfo.whatsapp.replace(/\D/g, '')}`;
   const extraSocial = social as Record<string, string>;
 
@@ -24,11 +34,19 @@ export default function Footer() {
       const res = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, ...guard.fields() }),
       });
-      if (!res.ok) throw new Error();
-      toast.success(newsletter.successText);
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        toast.error(data?.message ?? newsletter.errorText);
+        return;
+      }
+      toast.success(data?.message === 'Ya estabas suscripto al newsletter' ? data.message : newsletter.successText);
       setEmail('');
+      setSubscribed(true);
+      try {
+        localStorage.setItem('newsletter-subscribed', '1');
+      } catch {}
     } catch {
       toast.error(newsletter.errorText);
     } finally {
@@ -44,7 +62,14 @@ export default function Footer() {
           <div className="md:col-span-5">
             <SectionLabel className="mb-4">{newsletter.title}</SectionLabel>
             <p className="max-w-sm text-sm leading-relaxed text-muted">{newsletter.subtitle}</p>
-            <form onSubmit={handleNewsletter} className="mt-6 flex max-w-sm border-b border-line focus-within:border-gold">
+            {subscribed ? (
+              <p role="status" className="mt-6 flex max-w-sm items-center gap-3 border-b border-line py-3 text-sm text-text">
+                <CheckCircle className="h-5 w-5 shrink-0 text-gold" strokeWidth={1.5} />
+                {newsletter.successText}
+              </p>
+            ) : (
+            <form onSubmit={handleNewsletter} className="relative mt-6 flex max-w-sm border-b border-line focus-within:border-gold">
+              <FormHoneypot inputRef={guard.honeypotRef} />
               <label htmlFor="footer-newsletter" className="sr-only">
                 {newsletter.placeholder}
               </label>
@@ -66,6 +91,7 @@ export default function Footer() {
                 <ArrowRight className="h-5 w-5" />
               </button>
             </form>
+            )}
             <p className="mt-8 max-w-sm text-sm leading-relaxed text-muted/80">{tagline}</p>
           </div>
 
