@@ -15,7 +15,7 @@ export const siteConfig = {
     ctaText: "EMPEZÁ HOY",
     ctaHref: "https://wa.me/5491123957479",
     titleLines: ["PABLO", "ASOREY"],
-    image: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827835/hero_hlzyig.png",
+    image: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827320/16-removebg-preview_mhhg74.png",
   },
   
   // Video Section
