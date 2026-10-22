@@ -1,8 +1,9 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { getJwtSecretString } from '@/lib/jwt';
+import { clearLoginFailures, loginBlocked, recordLoginFailure } from '@/lib/form-guard';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,12 +21,18 @@ export async function POST(request: Request) {
     }
 
     // Buscamos al usuario en la base de datos (normalizando el email)
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    // Límite de intentos fallidos (por cuenta e IP, y por IP)
+    const blocked = await loginBlocked(request, normalizedEmail);
+    if (blocked) return blocked;
+
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail }
     });
 
     if (!user) {
+      await recordLoginFailure(request, normalizedEmail);
       return NextResponse.json(
         { message: 'Credenciales inválidas' },
         { status: 401 }
@@ -36,11 +43,14 @@ export async function POST(request: Request) {
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
+      await recordLoginFailure(request, normalizedEmail);
       return NextResponse.json(
         { message: 'Credenciales inválidas' },
         { status: 401 }
       );
     }
+
+    await clearLoginFailures(request, normalizedEmail);
 
     // Generamos el token JWT
     const token = jwt.sign(

@@ -189,11 +189,12 @@ model Plan {
   updatedAt     DateTime  @updatedAt
 }
 
-// Registro de envíos de formularios públicos para limitar abusos por IP.
-// Guarda un hash de la IP (nunca la IP en claro) y se purga a las 24 hs.
+// Registro de envíos de formularios públicos e intentos fallidos de login,
+// para limitar abusos. Guarda un hash (nunca la IP ni el email en claro) y se
+// purga a las 24 hs.
 model FormSubmission {
   id        String   @id @default(cuid())
-  form      String   // newsletter, contact, aplicar
+  form      String   // newsletter, contact, aplicar, login-account, login-ip
   ipHash    String
   createdAt DateTime @default(now())
 

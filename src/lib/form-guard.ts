@@ -16,13 +16,21 @@ const LIMITS: Record<PublicForm, { max: number; windowMinutes: number; minSecond
   aplicar: { max: 3, windowMinutes: 60, minSeconds: 10 },
 };
 
-function clientIpHash(request: Request): string {
-  const ip =
+function clientIp(request: Request): string {
+  return (
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     request.headers.get("x-real-ip") ||
-    "unknown";
-  // Hash con el secreto del sitio: no se guarda la IP real.
-  return createHash("sha256").update(`${ip}:${process.env.JWT_SECRET ?? ""}`).digest("hex");
+    "unknown"
+  );
+}
+
+// Hash con el secreto del sitio: no se guarda la IP (ni el email) en claro.
+function secretHash(value: string): string {
+  return createHash("sha256").update(`${value}:${process.env.JWT_SECRET ?? ""}`).digest("hex");
+}
+
+function clientIpHash(request: Request): string {
+  return secretHash(clientIp(request));
 }
 
 // Devuelve una respuesta si el envío debe cortarse, o null si puede seguir.
@@ -57,4 +65,51 @@ export async function guardPublicForm(
   // Limpieza: los registros solo sirven para la ventana del límite.
   await prisma.formSubmission.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 24 * 60 * 60_000) } } });
   return null;
+}
+
+// --- Login: límite de intentos fallidos ---
+// Se cuentan solo los fallidos, con dos claves:
+// - IP + email: 5 fallidos en 15 min. Frena a quien prueba contraseñas sobre una
+//   cuenta, sin bloquear al dueño real que entra desde otro lugar.
+// - IP: 20 fallidos en 15 min. Frena a quien prueba muchas cuentas distintas.
+const LOGIN_WINDOW_MINUTES = 15;
+const LOGIN_MAX_PER_ACCOUNT = 5;
+const LOGIN_MAX_PER_IP = 20;
+
+function loginKeys(request: Request, email: string) {
+  const ip = clientIp(request);
+  return { account: secretHash(`${ip}|${email}`), ip: secretHash(ip) };
+}
+
+export async function loginBlocked(request: Request, email: string): Promise<NextResponse | null> {
+  const keys = loginKeys(request, email);
+  const since = new Date(Date.now() - LOGIN_WINDOW_MINUTES * 60_000);
+  const [account, ip] = await Promise.all([
+    prisma.formSubmission.count({ where: { form: "login-account", ipHash: keys.account, createdAt: { gte: since } } }),
+    prisma.formSubmission.count({ where: { form: "login-ip", ipHash: keys.ip, createdAt: { gte: since } } }),
+  ]);
+  if (account >= LOGIN_MAX_PER_ACCOUNT || ip >= LOGIN_MAX_PER_IP) {
+    return NextResponse.json(
+      { message: `Demasiados intentos fallidos. Esperá ${LOGIN_WINDOW_MINUTES} minutos y volvé a intentar.` },
+      { status: 429 },
+    );
+  }
+  return null;
+}
+
+export async function recordLoginFailure(request: Request, email: string): Promise<void> {
+  const keys = loginKeys(request, email);
+  await prisma.formSubmission.createMany({
+    data: [
+      { form: "login-account", ipHash: keys.account },
+      { form: "login-ip", ipHash: keys.ip },
+    ],
+  });
+  await prisma.formSubmission.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 24 * 60 * 60_000) } } });
+}
+
+// Al entrar bien se perdonan los fallidos de esa cuenta desde esa IP.
+export async function clearLoginFailures(request: Request, email: string): Promise<void> {
+  const keys = loginKeys(request, email);
+  await prisma.formSubmission.deleteMany({ where: { form: "login-account", ipHash: keys.account } });
 }
