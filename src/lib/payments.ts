@@ -129,15 +129,21 @@ export async function getPaymentSettings(): Promise<PaymentSettingsValues> {
   };
 }
 
-// Bloqueo por deuda: solo si el admin lo activó, el alumno tiene vencimiento
+// Bloqueo por deuda por alumno: DEFAULT sigue la opción general, ON/OFF la fuerzan.
+export const DEBT_LOCK_MODES = ["DEFAULT", "ON", "OFF"] as const;
+export type DebtLockMode = (typeof DEBT_LOCK_MODES)[number];
+
+// Bloqueo por deuda: solo si el admin lo activó (en general o para ese alumno), el alumno tiene vencimiento
 // cargado, pasaron más de debtLockDays días desde que venció y no informó el pago
 // (mientras está en verificación se le da el beneficio de la duda).
 export function isPaymentLocked(
-  student: { paymentStatus: string; paymentDate: Date | null },
+  student: { paymentStatus: string; paymentDate: Date | null; debtLockMode?: string },
   settings: PaymentSettingsValues,
   now = new Date(),
 ): boolean {
-  if (!settings.debtLockEnabled || !student.paymentDate || student.paymentStatus === VERIFYING) return false;
+  const enabled =
+    student.debtLockMode === "ON" ? true : student.debtLockMode === "OFF" ? false : settings.debtLockEnabled;
+  if (!enabled || !student.paymentDate || student.paymentStatus === VERIFYING) return false;
   const lockFrom = new Date(student.paymentDate);
   lockFrom.setHours(23, 59, 59, 999);
   lockFrom.setDate(lockFrom.getDate() + settings.debtLockDays);

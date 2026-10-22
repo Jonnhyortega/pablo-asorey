@@ -26,7 +26,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       photos,
       paymentStatus,
       paymentDate,
-      planId
+      planId,
+      debtLockMode
     } = body;
 
     const student = await prisma.student.update({
@@ -49,7 +50,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         paymentStatus,
         paymentDate: paymentDate ? new Date(paymentDate) : null,
         // undefined = no se toca; "" o null = sin plan
-        planId: planId === undefined ? undefined : planId || null
+        planId: planId === undefined ? undefined : planId || null,
+        debtLockMode: ["DEFAULT", "ON", "OFF"].includes(debtLockMode) ? debtLockMode : undefined
       },
       include: { plan: { select: { id: true, name: true, price: true } } }
     });

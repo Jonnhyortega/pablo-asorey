@@ -27,6 +27,7 @@ type Student = {
   paymentDate: string | null;
   paymentStatus: string;
   planId: string | null;
+  debtLockMode: "DEFAULT" | "ON" | "OFF";
   plan: { id: string; name: string; price: number } | null;
   generatedPassword: string | null;
   profilePicture: string | null;
@@ -564,6 +565,11 @@ function StudentCard({ student, onEdit, onDelete, onViewImage, onPaymentResolved
                     <p className="mb-1 text-sm text-text">
                       {student.plan ? `${student.plan.name} · ${formatPlanPrice(student.plan.price)}/mes` : <span className="italic text-muted">Sin plan asignado</span>}
                     </p>
+                    {student.debtLockMode !== "DEFAULT" && (
+                      <p className="mb-1 text-xs text-muted">
+                        Bloqueo por deuda: {student.debtLockMode === "ON" ? "activado para este alumno" : "desactivado para este alumno"}
+                      </p>
+                    )}
                     {student.paymentDate ? (
                       <p className="text-sm text-muted font-medium">Vence: {new Date(student.paymentDate).toLocaleDateString("es-AR", { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     ) : (
@@ -739,6 +745,20 @@ function EditStudentModal({ student, onClose, onSave }: { student: Student; onCl
                   ))}
                 </select>
                 <span className="text-[10px] text-muted mt-1 block">El alumno ve el precio de su plan como monto a pagar.</span>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="edit-student-debt-lock" className="text-[11px] uppercase tracking-[0.2em] text-muted">Bloqueo por deuda</label>
+                <select
+                  id="edit-student-debt-lock"
+                  value={formData.debtLockMode ?? "DEFAULT"}
+                  onChange={(e) => setFormData({ ...formData, debtLockMode: e.target.value as Student["debtLockMode"] })}
+                  className="w-full rounded-panel border border-line bg-bg px-3.5 py-2.5 text-sm text-text focus:border-gold focus:outline-none"
+                >
+                  <option value="DEFAULT">Según la configuración general</option>
+                  <option value="ON">Bloquear siempre si debe</option>
+                  <option value="OFF">Nunca bloquear a este alumno</option>
+                </select>
+                <span className="text-[10px] text-muted mt-1 block">Los días de tolerancia son los de Configuración → Cobros.</span>
               </div>
             </div>
 

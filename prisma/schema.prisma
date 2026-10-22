@@ -57,6 +57,8 @@ model Student {
   photos           String   // JSON string of photo URLs
   paymentDate      DateTime?
   paymentStatus    String   @default("UP_TO_DATE") // UP_TO_DATE, PENDING, OVERDUE
+  // Bloqueo por deuda: DEFAULT sigue la opción general de Configuración, ON/OFF la fuerzan para este alumno
+  debtLockMode     String   @default("DEFAULT")
   planId           String?
   plan             Plan?    @relation(fields: [planId], references: [id], onDelete: SetNull)
   generatedPassword String?

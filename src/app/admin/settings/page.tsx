@@ -94,7 +94,7 @@ export default function SettingsPage() {
                       <Lock className="h-4 w-4 text-gold" strokeWidth={1.5} /> Bloquear la rutina a alumnos con deuda
                     </span>
                     <span className="mt-1 block text-sm text-muted">
-                      Desactivado por defecto: solo se aplica si lo activás vos. El alumno atrasado sigue viendo su historial, pero no sus entrenamientos pendientes, hasta que pague. Si informó el pago, no se bloquea mientras lo revisás.
+                      Desactivado por defecto: solo se aplica si lo activás vos. El alumno atrasado sigue viendo su historial, pero no sus entrenamientos pendientes, hasta que pague. Si informó el pago, no se bloquea mientras lo revisás. Podés hacer excepciones por alumno desde su ficha (Editar → Bloqueo por deuda).
                     </span>
                   </span>
                 </label>
