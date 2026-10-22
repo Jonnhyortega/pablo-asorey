@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { jwtVerify } from "jose";
 import { getJwtSecret } from "@/lib/jwt";
 import { cookies } from "next/headers";
+import { getPaymentSettings, isPaymentLocked } from "@/lib/payments";
 
 
 export async function GET(request: Request) {
@@ -45,7 +46,25 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Estudiante no encontrado" }, { status: 404 });
     }
 
-    return NextResponse.json(student);
+    const settings = await getPaymentSettings();
+    const locked = isPaymentLocked(student, settings);
+    // Con bloqueo por deuda no se envían los días pendientes: el historial sigue visible.
+    const routines = locked
+      ? student.routines.map((routine) => ({
+          ...routine,
+          days: routine.days.filter((day) => day.completedAt || day.isSkipped),
+        }))
+      : student.routines;
+
+    return NextResponse.json({
+      ...student,
+      routines,
+      payment: {
+        alias: settings.paymentAlias,
+        amount: settings.paymentAmount,
+        locked,
+      },
+    });
   } catch (error: any) {
     console.error("Error fetching me:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });

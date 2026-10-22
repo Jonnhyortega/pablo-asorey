@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/content";
 import { validateSiteSettings } from "@/lib/site-settings";
+import { getPaymentSettings } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,8 @@ export async function GET() {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  return NextResponse.json(await getSiteSettings());
+  const [site, payment] = await Promise.all([getSiteSettings(), getPaymentSettings()]);
+  return NextResponse.json({ ...site, ...payment });
 }
 
 export async function PUT(request: Request) {

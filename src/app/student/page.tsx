@@ -34,6 +34,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AppShell, Badge, Button, Card, Dialog, StatTile, type NavItem } from "@/components/ui";
 import { chartTheme, tooltipStyle } from "@/lib/chart-theme";
 import StudentNotificationsBell from "./StudentNotificationsBell";
+import { PaymentDetails, PaymentLockNotice } from "./PaymentDetails";
 import {
   LineChart,
   Line,
@@ -780,6 +781,13 @@ export default function StudentDashboard() {
     </div>
   );
 
+  // Debe la cuota: sin fecha cargada o vencida, y sin un aviso de pago en revisión.
+  // Con bloqueo, el aviso de arriba ya muestra alias y "Ya pagué": la tarjeta de cuota no los repite.
+  const owesPayment =
+    !student.payment?.locked &&
+    student.paymentStatus !== "VERIFYING" &&
+    (!student.paymentDate || new Date(student.paymentDate).setHours(23, 59, 59, 999) < new Date().getTime());
+
   return (
     <AppShell
       nav={studentNav}
@@ -817,8 +825,16 @@ export default function StudentDashboard() {
           <div className="mx-auto w-full max-w-5xl space-y-8">
             {activeView === "dashboard" ? (
               <>
-                {/* Próximo entrenamiento */}
-                {(() => {
+                {/* Próximo entrenamiento (o aviso de bloqueo por deuda) */}
+                {student.payment?.locked ? (
+                  <PaymentLockNotice
+                    dueDate={student.paymentDate ? formatDateUTC(student.paymentDate) : null}
+                    alias={student.payment?.alias ?? ""}
+                    amount={student.payment?.amount ?? ""}
+                    reporting={saving}
+                    onReport={handlePaymentReport}
+                  />
+                ) : (() => {
                   const nextDay = pendingDays[0] ?? null;
                   return (
                     <Card className="relative overflow-hidden border-gold-line">
@@ -905,14 +921,11 @@ export default function StudentDashboard() {
                       )}
                     </div>
 
-                    {student.paymentStatus !== "VERIFYING" &&
-                      (!student.paymentDate ||
-                        new Date(student.paymentDate).setHours(
-                          23,
-                          59,
-                          59,
-                          999,
-                        ) < new Date().getTime()) && (
+                    {owesPayment && (
+                      <PaymentDetails alias={student.payment?.alias ?? ""} amount={student.payment?.amount ?? ""} />
+                    )}
+
+                    {owesPayment && (
                         <button
                           onClick={handlePaymentReport}
                           disabled={saving}
@@ -1118,7 +1131,15 @@ export default function StudentDashboard() {
                         exit={{ height: 0, opacity: 0 }}
                         className="space-y-4 overflow-hidden"
                       >
-                        {pendingDays.length === 0 ? (
+                        {student.payment?.locked ? (
+                          <PaymentLockNotice
+                    dueDate={student.paymentDate ? formatDateUTC(student.paymentDate) : null}
+                    alias={student.payment?.alias ?? ""}
+                    amount={student.payment?.amount ?? ""}
+                    reporting={saving}
+                    onReport={handlePaymentReport}
+                  />
+                        ) : pendingDays.length === 0 ? (
                           <div className="bg-surface border border-line rounded-panel p-8 text-center text-muted transition-colors">
                             <CheckCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                             <p>No tienes rutinas pendientes. ¡Buen trabajo!</p>

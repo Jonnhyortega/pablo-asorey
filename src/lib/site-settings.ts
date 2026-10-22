@@ -82,9 +82,26 @@ function isHttpUrl(value: string): boolean {
   }
 }
 
-export type SiteSettingsErrors = Partial<Record<keyof SiteSettingsValues, string>>;
+// Cobros: lo que ve el alumno para pagar y el bloqueo opcional por deuda.
+export type PaymentSettingsValues = {
+  paymentAlias: string; // alias o CBU para transferir; vacío = no se muestra
+  paymentAmount: string; // texto libre, ej: "ARS 45.000"; vacío = no se muestra
+  debtLockEnabled: boolean; // solo lo activa el admin
+  debtLockDays: number; // días de atraso tolerados antes de bloquear
+};
 
-export function validateSiteSettings(input: unknown): { data: SiteSettingsValues } | { errors: SiteSettingsErrors } {
+export const defaultPaymentSettings: PaymentSettingsValues = {
+  paymentAlias: "",
+  paymentAmount: "",
+  debtLockEnabled: false,
+  debtLockDays: 7,
+};
+
+export type AdminSettingsValues = SiteSettingsValues & PaymentSettingsValues;
+
+export type SiteSettingsErrors = Partial<Record<keyof AdminSettingsValues, string>>;
+
+export function validateSiteSettings(input: unknown): { data: AdminSettingsValues } | { errors: SiteSettingsErrors } {
   const raw = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
   const str = (key: keyof SiteSettingsValues) => (typeof raw[key] === "string" ? (raw[key] as string).trim() : "");
   const data: SiteSettingsValues = {
@@ -105,5 +122,20 @@ export function validateSiteSettings(input: unknown): { data: SiteSettingsValues
   if (!isHttpUrl(data.youtube)) errors.youtube = "Debe ser un link que empiece con https://";
   if (data.tagline.length < 10 || data.tagline.length > 300) errors.tagline = "Entre 10 y 300 caracteres";
 
-  return Object.keys(errors).length ? { errors } : { data };
+  const payment: PaymentSettingsValues = {
+    paymentAlias: typeof raw.paymentAlias === "string" ? raw.paymentAlias.trim() : "",
+    paymentAmount: typeof raw.paymentAmount === "string" ? raw.paymentAmount.trim() : "",
+    debtLockEnabled: raw.debtLockEnabled === true,
+    debtLockDays: Number(raw.debtLockDays),
+  };
+  if (payment.paymentAlias.length > 60) errors.paymentAlias = "Máximo 60 caracteres";
+  if (payment.paymentAmount.length > 40) errors.paymentAmount = "Máximo 40 caracteres";
+  if (!Number.isInteger(payment.debtLockDays) || payment.debtLockDays < 1 || payment.debtLockDays > 60) {
+    errors.debtLockDays = "Entre 1 y 60 días";
+  }
+  if (payment.debtLockEnabled && !payment.paymentAlias) {
+    errors.paymentAlias = "Cargá el alias antes de activar el bloqueo, así el alumno sabe dónde pagar";
+  }
+
+  return Object.keys(errors).length ? { errors } : { data: { ...data, ...payment } };
 }

@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { defaultPaymentSettings, type PaymentSettingsValues } from "@/lib/site-settings";
 
 // Flujo de "Ya pagué": el alumno informa (VERIFYING), puede cancelarlo,
 // y el profe lo acepta (renueva un mes) o lo rechaza (vuelve al estado anterior).
@@ -116,4 +117,30 @@ export async function rejectPayment(studentId: string): Promise<PaymentResult> {
   });
   await closePaymentRequests(studentId);
   return { ok: true };
+}
+
+export async function getPaymentSettings(): Promise<PaymentSettingsValues> {
+  const row = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  if (!row) return defaultPaymentSettings;
+  return {
+    paymentAlias: row.paymentAlias?.trim() ?? "",
+    paymentAmount: row.paymentAmount?.trim() ?? "",
+    debtLockEnabled: row.debtLockEnabled,
+    debtLockDays: row.debtLockDays,
+  };
+}
+
+// Bloqueo por deuda: solo si el admin lo activó, el alumno tiene vencimiento
+// cargado, pasaron más de debtLockDays días desde que venció y no informó el pago
+// (mientras está en verificación se le da el beneficio de la duda).
+export function isPaymentLocked(
+  student: { paymentStatus: string; paymentDate: Date | null },
+  settings: PaymentSettingsValues,
+  now = new Date(),
+): boolean {
+  if (!settings.debtLockEnabled || !student.paymentDate || student.paymentStatus === VERIFYING) return false;
+  const lockFrom = new Date(student.paymentDate);
+  lockFrom.setHours(23, 59, 59, 999);
+  lockFrom.setDate(lockFrom.getDate() + settings.debtLockDays);
+  return now > lockFrom;
 }

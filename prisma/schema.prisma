@@ -161,5 +161,10 @@ model SiteSettings {
   instagram String?
   youtube   String?
   tagline   String?
+  // Cobros: datos que ve el alumno para pagar y bloqueo opcional por deuda.
+  paymentAlias    String?
+  paymentAmount   String?
+  debtLockEnabled Boolean  @default(false)
+  debtLockDays    Int      @default(7)
   updatedAt DateTime @updatedAt
 }

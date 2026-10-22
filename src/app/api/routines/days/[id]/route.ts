@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { processGamification, checkWeightMilestone } from "@/lib/gamification";
 import { getSession } from "@/lib/auth";
+import { getPaymentSettings, isPaymentLocked } from "@/lib/payments";
 
 function extractMaxWeight(weightStr?: any, loggedSetsStr?: any): number {
   let max = 0;
@@ -45,6 +46,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const owner = ownedDay.routine.student;
     if (session.role !== "ADMIN" && owner.userId !== session.id) {
       return NextResponse.json({ error: "Prohibido" }, { status: 403 });
+    }
+    if (session.role !== "ADMIN" && isPaymentLocked(owner, await getPaymentSettings())) {
+      return NextResponse.json({ error: "Regularizá tu cuota para seguir entrenando" }, { status: 403 });
     }
     const ownedExerciseIds = new Set(ownedDay.exercises.map(ex => ex.id));
 
