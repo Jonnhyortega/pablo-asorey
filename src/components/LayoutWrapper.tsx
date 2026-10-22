@@ -13,7 +13,8 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const isLoginPath = path.startsWith("/login");
   const isAplicarPath = path.startsWith("/aplicar");
 
-  if (isAdminPath || path.startsWith("/ui-kit")) {
+  // Los paneles traen su propio <main> desde AppShell
+  if (isAdminPath || isStudentPath || path.startsWith("/ui-kit")) {
     return <>{children}</>;
   }
 

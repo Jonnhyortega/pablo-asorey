@@ -1134,7 +1134,7 @@ export default function StudentDashboard() {
                                     exit={{ height: 0 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="p-5 pt-0 border-t border-line space-y-6 mt-4 transition-colors">
+                                    <div className="px-3 pb-3 sm:px-5 sm:pb-5 pt-0 border-t border-line space-y-6 mt-4 transition-colors">
                                       {day.exercises.map((ex: any) => (
 <div
                                           key={ex.id}
@@ -1257,10 +1257,10 @@ export default function StudentDashboard() {
                                                     ex.videoUrl,
                                                   )
                                                 }
-                                                className="shrink-0 flex items-center gap-1.5 border border-line px-2.5 py-1.5 rounded-panel text-xs text-muted transition-colors hover:border-gold hover:text-gold mt-0.5"
+                                                aria-label="Ver Video" className="shrink-0 flex h-9 min-w-9 items-center justify-center gap-1.5 border border-line px-2.5 rounded-panel text-xs text-muted transition-colors hover:border-gold hover:text-gold"
                                               >
-                                                <PlaySquare className="w-3.5 h-3.5" />{" "}
-                                                Ver Video
+                                                <PlaySquare className="w-3.5 h-3.5" />
+                                                <span className="hidden sm:inline">Ver Video</span>
                                               </button>
                                             )}
                                           </div>
@@ -1964,12 +1964,12 @@ export default function StudentDashboard() {
                               </div>
                               <div className="w-full flex justify-between px-4 mt-4 text-xs font-medium text-muted">
                                 <div className="flex items-center gap-1.5">
-                                  <div className="w-3 h-3 rounded-full bg-success"></div>
+                                  <div className="w-3 h-3 rounded-full bg-gold"></div>
                                   Completados (
                                   {adherenceStats.adherence.completed})
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                  <div className="w-3 h-3 rounded-full bg-danger"></div>
+                                  <div className="w-3 h-3 rounded-full bg-line"></div>
                                   Omitidos ({adherenceStats.adherence.skipped})
                                 </div>
                               </div>
@@ -2111,7 +2111,7 @@ export default function StudentDashboard() {
                                   onChange={(e) =>
                                     setActiveStatExercise(e.target.value)
                                   }
-                                  className="w-full appearance-none bg-surface-2 border border-line rounded-panel px-4 py-3 pr-10 text-text focus:ring-2 focus:ring-gold outline-none transition-colors"
+                                  className="w-full appearance-none bg-surface-2 border border-line rounded-panel px-4 py-3 pr-10 text-text focus:border-gold outline-none transition-colors"
                                 >
                                   {Object.keys(stats).map((exName) => (
                                     <option key={exName} value={exName}>
@@ -2395,7 +2395,7 @@ export default function StudentDashboard() {
                   type="date"
                   value={completionDate}
                   onChange={(e) => setCompletionDate(e.target.value)}
-                  className="w-full bg-surface-2 border border-line rounded-panel px-4 py-3 text-text focus:ring-2 focus:ring-gold outline-none transition-colors"
+                  className="w-full min-w-0 bg-bg border border-line rounded-panel px-3 py-3 text-text focus:border-gold outline-none transition-colors"
                 />
               </div>
 
@@ -2518,7 +2518,7 @@ export default function StudentDashboard() {
                           weight: e.target.value,
                         })
                       }
-                      className="w-full bg-surface-2 border border-line rounded-panel px-4 py-3 text-text focus:ring-2 focus:ring-gold outline-none transition-colors"
+                      className="w-full min-w-0 bg-bg border border-line rounded-panel px-3 py-3 text-text focus:border-gold outline-none transition-colors"
                     />
                   </div>
                   <div>
@@ -2534,7 +2534,7 @@ export default function StudentDashboard() {
                           birthDate: e.target.value,
                         })
                       }
-                      className="w-full bg-surface-2 border border-line rounded-panel px-4 py-3 text-text focus:ring-2 focus:ring-gold outline-none transition-colors color-scheme-dark"
+                      className="w-full min-w-0 bg-bg border border-line rounded-panel px-3 py-3 text-text focus:border-gold outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -2568,8 +2568,8 @@ export default function StudentDashboard() {
                           }}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 border ${
                             isSelected
-                              ? "bg-gold border-gold text-bg"
-                              : "bg-surface border-line text-muted"
+                              ? "bg-gold/10 border-gold text-gold"
+                              : "bg-surface border-line text-muted hover:text-text"
                           }`}
                         >
                           {goal}

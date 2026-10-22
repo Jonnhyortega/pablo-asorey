@@ -167,7 +167,7 @@ export function AppShell({ brand, nav, title, headerActions, sidebarTop, sidebar
           <ul className="flex">
             {nav.slice(0, 5).map((item) => {
               const Icon = item.icon;
-              const cls = cn("flex h-16 w-full flex-col items-center justify-center gap-1 text-[10px] uppercase tracking-[0.12em] transition-colors", item.active ? "text-gold" : "text-muted");
+              const cls = cn("flex h-16 w-full flex-col items-center justify-center gap-1 text-[10px] font-medium tracking-wide transition-colors", item.active ? "text-gold" : "text-muted");
               const inner = (
                 <>
                   <Icon className="h-5 w-5" strokeWidth={1.5} />
