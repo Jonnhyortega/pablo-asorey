@@ -116,7 +116,7 @@ export default function AdminStudentsPage() {
         }
       />
 
-      <div className="bg-surface rounded-panel border border-line overflow-hidden transition-colors">
+      <div>
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="w-10 h-10 animate-spin text-gold" />
@@ -128,7 +128,7 @@ export default function AdminStudentsPage() {
             <p className="text-muted mt-1">Todavía no hay registros o la búsqueda no arrojó resultados.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4 p-4 sm:p-6">
+          <div className="flex flex-col gap-3">
             {filteredStudents.map((student) => (
               <StudentCard 
                 key={student.id} 
@@ -199,7 +199,7 @@ export default function AdminStudentsPage() {
 }
 
 function StudentActions({ studentId, onEdit, onDelete, labeled = false }: { studentId: string; onEdit: () => void; onDelete: () => void; labeled?: boolean }) {
-  const base = `flex h-10 items-center justify-center gap-2 rounded-panel border border-line text-muted transition-colors ${labeled ? "flex-1 px-3 text-xs uppercase tracking-[0.12em]" : "w-10"}`;
+  const base = `flex h-10 items-center justify-center gap-2 rounded-panel border border-line text-muted transition-colors ${labeled ? "min-w-0 flex-1 px-2 text-sm" : "w-10"}`;
   return (
     <>
       <Link href={`/admin/students/${studentId}/routines`} className={`${base} hover:border-gold hover:text-gold`} title="Cargar Rutina">
@@ -398,7 +398,7 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                                 stroke="none"
                               >
                                 <Cell fill="var(--gold)" />
-                                <Cell fill="var(--danger)" />
+                                <Cell fill="var(--line)" />
                               </Pie>
                               <Tooltip 
                                 contentStyle={{ borderRadius: '8px', border: '1px solid var(--line)', backgroundColor: 'var(--surface)', fontSize: '12px' }}
@@ -411,8 +411,8 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                           </div>
                         </div>
                         <div className="w-full flex justify-between px-2 mt-2 text-[10px] font-medium text-muted">
-                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-success"></div>Completados ({adherenceStats.adherence.completed})</div>
-                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-danger"></div>Omitidos ({adherenceStats.adherence.skipped})</div>
+                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-gold"></div>Completados ({adherenceStats.adherence.completed})</div>
+                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-line"></div>Omitidos ({adherenceStats.adherence.skipped})</div>
                         </div>
                       </div>
 
@@ -444,11 +444,14 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                                   itemStyle={{ color: 'var(--danger)', fontWeight: 'bold' }}
                                   cursor={{ fill: 'transparent' }}
                                 />
-                                <Bar 
-                                  dataKey="count" 
-                                  fill="var(--danger)" 
-                                  radius={[2, 2, 0, 0]} 
-                                />
+                                <Bar dataKey="count" fill="var(--muted)" radius={[2, 2, 0, 0]}>
+                                  {adherenceStats.missedDaysOfWeek.map((d) => (
+                                    <Cell
+                                      key={d.name}
+                                      fill={d.count > 0 && d.count === Math.max(...adherenceStats.missedDaysOfWeek!.map((x) => x.count)) ? "var(--danger)" : "var(--muted)"}
+                                    />
+                                  ))}
+                                </Bar>
                               </BarChart>
                             </ResponsiveContainer>
                           </div>

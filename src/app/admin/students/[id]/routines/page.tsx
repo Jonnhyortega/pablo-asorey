@@ -562,7 +562,7 @@ export default function StudentRoutinesPage() {
 
                 <div className="space-y-3">
                   {day.exercises.length > 0 && (
-                    <div className="hidden md:flex gap-2 items-center px-3 pt-2 pb-1 text-xs font-semibold text-muted uppercase tracking-wider">
+                    <div className="hidden 2xl:flex gap-2 items-center px-3 pt-2 pb-1 text-xs font-semibold text-muted uppercase tracking-wider">
                       <div className="w-8"></div>
                       <div className="flex-1 min-w-[150px]">Ejercicio</div>
                       <div className="w-32 text-center">Series x Reps</div>
@@ -583,7 +583,7 @@ export default function StudentRoutinesPage() {
                         onDragOver={(e) => handleDragOver(e, dayIndex, exIndex)}
                         onDrop={(e) => handleDrop(e, dayIndex, exIndex)}
                         onDragEnd={handleDragEnd}
-                        className={`flex flex-wrap md:flex-nowrap gap-2 items-center bg-surface p-3 rounded-panel border border-line transition-all duration-200 ${isDragging ? 'opacity-50 scale-[0.98]' : ''}
+                        className={`flex flex-wrap 2xl:flex-nowrap gap-2 items-center bg-surface p-3 rounded-panel border border-line transition-all duration-200 ${isDragging ? 'opacity-50 scale-[0.98]' : ''}
                           ${isDragOver && !isDragging ? (draggingEx!.exIndex > exIndex ? 'border-t-2 border-t-gold' : 'border-b-2 border-b-gold') : ''}
                         `}
                       >
@@ -591,7 +591,7 @@ export default function StudentRoutinesPage() {
                           <GripVertical className="w-5 h-5" />
                         </div>
                       <div className="flex-1 w-full md:w-auto space-y-3">
-                        <div className="flex flex-wrap md:flex-nowrap gap-2 items-start">
+                        <div className="flex flex-wrap 2xl:flex-nowrap gap-2 items-start">
                           <div className="flex-1 min-w-[200px] relative">
                             <input
                               type="text"
@@ -674,7 +674,7 @@ export default function StudentRoutinesPage() {
                           <select
                             value={ex.trackingType || "REPS"}
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'trackingType', e.target.value)}
-                            className="w-32 md:w-36 text-sm px-2 py-2 bg-gold/10 text-gold font-semibold border border-gold-line rounded-panel focus:border-gold focus:outline-none"
+                            className="w-32 2xl:w-36 text-sm px-2 py-2 bg-gold/10 text-gold font-semibold border border-gold-line rounded-panel focus:border-gold focus:outline-none"
                           >
                             <option value="REPS">Repeticiones</option>
                             <option value="TIME">Por Tiempo</option>
@@ -687,22 +687,22 @@ export default function StudentRoutinesPage() {
                             placeholder={ex.trackingType === "TIME" ? "Tiempo (ej: 15 min, 20s)" : ex.trackingType === "CIRCUIT" ? "Rondas y Reps (ej: 4 vueltas x 15 reps)" : ex.trackingType === "HIIT" ? "Intervalos (ej: 20\"x10\" 16 vueltas)" : ex.trackingType === "DROP_SET" ? "Series x Drops (ej: 4 x 10+10 reps)" : "Series x Reps (ej: 4x12 o 30-20-10)"} 
                             value={ex.sets_reps} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'sets_reps', e.target.value)} 
-                            className="w-full md:w-48 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
+                            className="min-w-[8rem] flex-1 2xl:flex-none 2xl:w-48 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                           />
                           <input 
                             placeholder={ex.trackingType === "TIME" ? "Intensidad (ej: Alta, Nivel 8)" : ex.trackingType === "HIIT" ? "Carga/Intensidad (ej: Peso corporal)" : ex.trackingType === "DROP_SET" ? "Cargas (ej: 50kg + 40kg)" : "Peso (kg) (ej: 85kg)"} 
                             value={ex.weight || ""} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'weight', e.target.value)} 
-                            className="w-full md:w-32 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
+                            className="min-w-[8rem] flex-1 2xl:flex-none 2xl:w-32 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                           />
                           <input 
                             placeholder="Descanso" 
                             value={ex.rest} 
                             onChange={e => handleExerciseChange(dayIndex, exIndex, 'rest', e.target.value)} 
-                            className="w-full md:w-24 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
+                            className="min-w-[6rem] flex-1 2xl:flex-none 2xl:w-24 text-sm px-3 py-2 bg-surface-2 border border-line rounded-panel focus:border-gold focus:outline-none" 
                           />
                         </div>
-                        <div className="flex flex-wrap md:flex-nowrap gap-2 items-center">
+                        <div className="flex flex-wrap 2xl:flex-nowrap gap-2 items-center">
                           <input 
                             placeholder='Observaciones (ej: 20"x10", súper serie, etc.)' 
                             value={ex.observations || ""} 

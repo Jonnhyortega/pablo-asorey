@@ -14,7 +14,7 @@ export function StatTile({ label, value, suffix, tone = "default", progress, cla
 
   return (
     <div className={cn("bg-surface border border-line rounded-panel p-4 md:p-5 min-w-0", className)}>
-      <p className="text-[11px] uppercase tracking-[0.2em] text-muted truncate">{label}</p>
+      <p className="text-[11px] uppercase leading-snug tracking-[0.12em] text-muted">{label}</p>
       <p className="mt-2 flex items-baseline gap-2 min-w-0">
         <span className={cn("font-display text-3xl md:text-4xl leading-none tabular-nums", tone === "gold" ? "text-gold" : "text-text")}>
           {value}

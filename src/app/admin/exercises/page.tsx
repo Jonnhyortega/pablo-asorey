@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button, Dialog, Input } from "@/components/ui";
+import { Button, Dialog, Input, PageHeader } from "@/components/ui";
 import { Dumbbell, Search, Plus, Edit2, Trash2, X, Loader2, PlaySquare, ShieldAlert } from "lucide-react";
 
 type Exercise = {
@@ -113,40 +113,30 @@ export default function AdminExercisesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-surface p-4 sm:p-6 rounded-panel border border-line gap-4 transition-colors">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gold/10 text-gold rounded-panel">
-            <Dumbbell className="w-8 h-8" />
-          </div>
-          <div>
-            <h1 className="font-display text-3xl uppercase leading-none text-text">Biblioteca de Ejercicios</h1>
-            <p className="text-muted text-xs sm:text-sm">Catálogo global de ejercicios y videos</p>
-          </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-72">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-muted" />
+    <div className="mx-auto max-w-6xl">
+      <PageHeader
+        eyebrow="Catálogo global de ejercicios y videos"
+        title="Biblioteca de Ejercicios"
+        actions={
+          <>
+            <div className="relative w-full sm:w-72">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <Input
+                type="text"
+                aria-label="Buscar ejercicio"
+                className="pl-9"
+                placeholder="Buscar ejercicio..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-line rounded-panel leading-5 bg-surface-2 text-text placeholder-muted focus:outline-none focus:outline-none focus:border-gold sm:text-sm transition-all"
-              placeholder="Buscar ejercicio..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <button
-            onClick={() => handleOpenModal()}
-            className="w-full sm:w-auto px-4 py-2 bg-gold hover:brightness-110 text-bg font-medium rounded-panel transition-colors flex items-center justify-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nuevo Ejercicio
-          </button>
-        </div>
-      </div>
+            <Button variant="primary" onClick={() => handleOpenModal()} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4" />
+              Nuevo Ejercicio
+            </Button>
+          </>
+        }
+      />
 
       <div className="bg-surface rounded-panel border border-line overflow-hidden transition-colors">
         {loading ? (
@@ -164,7 +154,7 @@ export default function AdminExercisesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-muted">
-              <thead className="bg-surface-2 text-text font-semibold border-b border-line transition-colors">
+              <thead className="border-b border-line text-[11px] font-medium uppercase tracking-[0.2em] text-muted">
                 <tr>
                   <th className="px-6 py-4">Nombre del Ejercicio</th>
                   <th className="px-6 py-4">Video de Referencia</th>
@@ -183,7 +173,7 @@ export default function AdminExercisesPage() {
                           href={ex.videoUrl} 
                           target="_blank" 
                           rel="noreferrer" 
-                          className="text-gold hover:underline flex items-center gap-1.5 w-max"
+                          className="flex w-max items-center gap-1.5 text-muted transition-colors hover:text-gold"
                         >
                           <PlaySquare className="w-4 h-4" /> Ver Video
                         </a>
@@ -192,17 +182,17 @@ export default function AdminExercisesPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
                         <button 
                           onClick={() => handleOpenModal(ex)} 
-                          className="p-2 text-gold bg-gold/10 hover:brightness-110 rounded-panel transition-colors" 
+                          className="flex h-9 w-9 items-center justify-center rounded-panel border border-line text-muted transition-colors hover:border-gold hover:text-gold" 
                           title="Editar Ejercicio"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => setExerciseToDelete(ex)} 
-                          className="p-2 text-danger bg-danger/10 hover:brightness-110 rounded-panel transition-colors" 
+                          className="flex h-9 w-9 items-center justify-center rounded-panel border border-line text-muted transition-colors hover:border-danger hover:text-danger" 
                           title="Eliminar Ejercicio"
                         >
                           <Trash2 className="w-4 h-4" />
