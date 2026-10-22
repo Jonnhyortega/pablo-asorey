@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, Search, Calendar, Target, Activity, Dumbbell, ShieldAlert, Clock, Loader2, X, Edit2, Trash2, Key, Wallet, ArrowRight, ChevronDown, Check } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatPlanPrice, type PlanRecord } from "@/lib/plans";
 import Link from "next/link";
 import { Badge, Button, Dialog, Input, PageHeader } from "@/components/ui";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
@@ -25,6 +26,8 @@ type Student = {
   photos: string; // JSON string
   paymentDate: string | null;
   paymentStatus: string;
+  planId: string | null;
+  plan: { id: string; name: string; price: number } | null;
   generatedPassword: string | null;
   profilePicture: string | null;
   createdAt: string;
@@ -558,6 +561,9 @@ function StudentCard({ student, onEdit, onDelete, onViewImage, onPaymentResolved
                         {student.paymentStatus === 'VERIFYING' ? 'En Verificación' : !student.paymentDate ? 'Pendiente' : (new Date(student.paymentDate).setHours(23,59,59,999) < new Date().getTime() ? 'Deuda' : 'Al Día')}
                       </span>
                     </div>
+                    <p className="mb-1 text-sm text-text">
+                      {student.plan ? `${student.plan.name} · ${formatPlanPrice(student.plan.price)}/mes` : <span className="italic text-muted">Sin plan asignado</span>}
+                    </p>
                     {student.paymentDate ? (
                       <p className="text-sm text-muted font-medium">Vence: {new Date(student.paymentDate).toLocaleDateString("es-AR", { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     ) : (
@@ -610,6 +616,17 @@ function StudentCard({ student, onEdit, onDelete, onViewImage, onPaymentResolved
 function EditStudentModal({ student, onClose, onSave }: { student: Student; onClose: () => void; onSave: (s: Student) => void }) {
   const [formData, setFormData] = useState({ ...student });
   const [saving, setSaving] = useState(false);
+  const [plans, setPlans] = useState<PlanRecord[]>([]);
+
+  useEffect(() => {
+    fetch("/api/plans")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => Array.isArray(data) && setPlans(data))
+      .catch(() => setPlans([]));
+  }, []);
+
+  // Planes archivados solo aparecen si son el plan actual del alumno.
+  const selectablePlans = plans.filter((p) => p.active || p.id === student.planId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -705,6 +722,23 @@ function EditStudentModal({ student, onClose, onSave }: { student: Student; onCl
                   className="w-full rounded-panel border border-line bg-bg px-3.5 py-2.5 text-sm text-text focus:border-gold focus:outline-none" 
                 />
                 <span className="text-[10px] text-muted mt-1 block">El vencimiento se calcula automáticamente a 31 días.</span>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="edit-student-plan" className="text-[11px] uppercase tracking-[0.2em] text-muted">Plan</label>
+                <select
+                  id="edit-student-plan"
+                  value={formData.planId ?? ""}
+                  onChange={(e) => setFormData({ ...formData, planId: e.target.value || null })}
+                  className="w-full rounded-panel border border-line bg-bg px-3.5 py-2.5 text-sm text-text focus:border-gold focus:outline-none"
+                >
+                  <option value="">Sin plan</option>
+                  {selectablePlans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} · {formatPlanPrice(p.price)}{p.active ? "" : " (archivado)"}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-muted mt-1 block">El alumno ve el precio de su plan como monto a pagar.</span>
               </div>
             </div>
 

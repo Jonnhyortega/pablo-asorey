@@ -57,6 +57,8 @@ model Student {
   photos           String   // JSON string of photo URLs
   paymentDate      DateTime?
   paymentStatus    String   @default("UP_TO_DATE") // UP_TO_DATE, PENDING, OVERDUE
+  planId           String?
+  plan             Plan?    @relation(fields: [planId], references: [id], onDelete: SetNull)
   generatedPassword String?
   profilePicture   String?
   routines         Routine[]
@@ -163,8 +165,26 @@ model SiteSettings {
   tagline   String?
   // Cobros: datos que ve el alumno para pagar y bloqueo opcional por deuda.
   paymentAlias    String?
-  paymentAmount   String?
+  paymentAmount   String?  // En desuso: el monto sale del plan de cada alumno
   debtLockEnabled Boolean  @default(false)
   debtLockDays    Int      @default(7)
   updatedAt DateTime @updatedAt
+}
+
+// Catálogo de planes (servicios) con su precio mensual. Alimenta la sección de
+// planes de la landing y el monto que ve cada alumno según su plan.
+model Plan {
+  id            String    @id @default(cuid())
+  name          String
+  price         Int       // ARS por mes
+  icon          String    @default("dumbbell")
+  logo          String?
+  features      Json      @default("[]") // [{ text, icon }]
+  highlight     Boolean   @default(false)
+  showOnLanding Boolean   @default(true)
+  active        Boolean   @default(true) // archivado = false: no se ofrece ni se asigna
+  order         Int       @default(0)
+  students      Student[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }

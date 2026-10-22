@@ -98,7 +98,8 @@ export async function GET() {
 
   try {
     const students = await prisma.student.findMany({
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      include: { plan: { select: { id: true, name: true, price: true } } }
     });
     return NextResponse.json(students);
   } catch (error) {

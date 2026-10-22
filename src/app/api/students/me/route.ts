@@ -4,6 +4,7 @@ import { jwtVerify } from "jose";
 import { getJwtSecret } from "@/lib/jwt";
 import { cookies } from "next/headers";
 import { getPaymentSettings, isPaymentLocked } from "@/lib/payments";
+import { formatPlanPrice } from "@/lib/plans";
 
 
 export async function GET(request: Request) {
@@ -38,7 +39,8 @@ export async function GET(request: Request) {
             startDate: 'desc'
           }
         },
-        badges: true
+        badges: true,
+        plan: { select: { name: true, price: true } }
       }
     });
 
@@ -61,7 +63,8 @@ export async function GET(request: Request) {
       routines,
       payment: {
         alias: settings.paymentAlias,
-        amount: settings.paymentAmount,
+        amount: student.plan ? formatPlanPrice(student.plan.price) : "",
+        planName: student.plan?.name ?? "",
         locked,
       },
     });

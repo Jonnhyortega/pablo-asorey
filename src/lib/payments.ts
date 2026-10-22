@@ -124,7 +124,6 @@ export async function getPaymentSettings(): Promise<PaymentSettingsValues> {
   if (!row) return defaultPaymentSettings;
   return {
     paymentAlias: row.paymentAlias?.trim() ?? "",
-    paymentAmount: row.paymentAmount?.trim() ?? "",
     debtLockEnabled: row.debtLockEnabled,
     debtLockDays: row.debtLockDays,
   };

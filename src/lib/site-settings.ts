@@ -83,16 +83,15 @@ function isHttpUrl(value: string): boolean {
 }
 
 // Cobros: lo que ve el alumno para pagar y el bloqueo opcional por deuda.
+// El monto no va acá: sale del plan asignado a cada alumno (ver lib/plans).
 export type PaymentSettingsValues = {
   paymentAlias: string; // alias o CBU para transferir; vacío = no se muestra
-  paymentAmount: string; // texto libre, ej: "ARS 45.000"; vacío = no se muestra
   debtLockEnabled: boolean; // solo lo activa el admin
   debtLockDays: number; // días de atraso tolerados antes de bloquear
 };
 
 export const defaultPaymentSettings: PaymentSettingsValues = {
   paymentAlias: "",
-  paymentAmount: "",
   debtLockEnabled: false,
   debtLockDays: 7,
 };
@@ -124,12 +123,10 @@ export function validateSiteSettings(input: unknown): { data: AdminSettingsValue
 
   const payment: PaymentSettingsValues = {
     paymentAlias: typeof raw.paymentAlias === "string" ? raw.paymentAlias.trim() : "",
-    paymentAmount: typeof raw.paymentAmount === "string" ? raw.paymentAmount.trim() : "",
     debtLockEnabled: raw.debtLockEnabled === true,
     debtLockDays: Number(raw.debtLockDays),
   };
   if (payment.paymentAlias.length > 60) errors.paymentAlias = "Máximo 60 caracteres";
-  if (payment.paymentAmount.length > 40) errors.paymentAmount = "Máximo 40 caracteres";
   if (!Number.isInteger(payment.debtLockDays) || payment.debtLockDays < 1 || payment.debtLockDays > 60) {
     errors.debtLockDays = "Entre 1 y 60 días";
   }

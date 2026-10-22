@@ -76,10 +76,9 @@ export default function SettingsPage() {
 
             <section className="space-y-5">
               <h3 className="border-b border-line pb-3 font-display text-xl uppercase text-text">Cobros</h3>
-              <p className="text-sm text-muted">El alias y el monto se les muestran a los alumnos en su app, junto al estado de su cuota, con un botón para copiar el alias.</p>
+              <p className="text-sm text-muted">El alias se les muestra a los alumnos en su app, junto al estado de su cuota y al precio de su plan, con un botón para copiarlo. Los precios se cargan en Planes.</p>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <Input label="Alias o CBU para transferir" type="text" placeholder="ej: pablo.asorey.mp" value={formData.paymentAlias} error={errors.paymentAlias} onChange={(e) => update("paymentAlias", e.target.value)} />
-                <Input label="Monto de la cuota (opcional)" type="text" placeholder="ej: ARS 45.000" value={formData.paymentAmount} error={errors.paymentAmount} onChange={(e) => update("paymentAmount", e.target.value)} />
               </div>
 
               <div className="rounded-panel border border-line bg-surface-2 p-4">

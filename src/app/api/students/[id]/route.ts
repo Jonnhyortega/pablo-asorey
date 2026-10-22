@@ -25,7 +25,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       gym,
       photos,
       paymentStatus,
-      paymentDate
+      paymentDate,
+      planId
     } = body;
 
     const student = await prisma.student.update({
@@ -46,8 +47,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         gym,
         photos: typeof photos === "string" ? photos : JSON.stringify(photos || []),
         paymentStatus,
-        paymentDate: paymentDate ? new Date(paymentDate) : null
-      }
+        paymentDate: paymentDate ? new Date(paymentDate) : null,
+        // undefined = no se toca; "" o null = sin plan
+        planId: planId === undefined ? undefined : planId || null
+      },
+      include: { plan: { select: { id: true, name: true, price: true } } }
     });
 
     return NextResponse.json(student);

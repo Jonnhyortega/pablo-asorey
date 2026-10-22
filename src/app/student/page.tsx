@@ -831,6 +831,7 @@ export default function StudentDashboard() {
                     dueDate={student.paymentDate ? formatDateUTC(student.paymentDate) : null}
                     alias={student.payment?.alias ?? ""}
                     amount={student.payment?.amount ?? ""}
+                    planName={student.payment?.planName ?? ""}
                     reporting={saving}
                     onReport={handlePaymentReport}
                   />
@@ -922,7 +923,7 @@ export default function StudentDashboard() {
                     </div>
 
                     {owesPayment && (
-                      <PaymentDetails alias={student.payment?.alias ?? ""} amount={student.payment?.amount ?? ""} />
+                      <PaymentDetails alias={student.payment?.alias ?? ""} amount={student.payment?.amount ?? ""} planName={student.payment?.planName ?? ""} />
                     )}
 
                     {owesPayment && (
@@ -1136,6 +1137,7 @@ export default function StudentDashboard() {
                     dueDate={student.paymentDate ? formatDateUTC(student.paymentDate) : null}
                     alias={student.payment?.alias ?? ""}
                     amount={student.payment?.amount ?? ""}
+                    planName={student.payment?.planName ?? ""}
                     reporting={saving}
                     onReport={handlePaymentReport}
                   />

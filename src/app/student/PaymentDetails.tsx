@@ -5,8 +5,8 @@ import { Check, Copy, DollarSign, Loader2, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import { Card } from "@/components/ui";
 
-// Alias y monto que el profe cargó en Configuración, para que el alumno pague sin preguntar.
-export function PaymentDetails({ alias, amount }: { alias: string; amount: string }) {
+// Alias (de Configuración) y precio de su plan, para que el alumno pague sin preguntar.
+export function PaymentDetails({ alias, amount, planName = "" }: { alias: string; amount: string; planName?: string }) {
   const [copied, setCopied] = useState(false);
   if (!alias && !amount) return null;
 
@@ -25,8 +25,11 @@ export function PaymentDetails({ alias, amount }: { alias: string; amount: strin
     <div className="mt-4 space-y-3 rounded-panel border border-line bg-surface-2 p-3">
       {amount && (
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-muted">Monto</span>
-          <span className="font-display text-xl leading-none text-text">{amount}</span>
+          <span className="min-w-0">
+            <span className="block text-[11px] uppercase tracking-[0.2em] text-muted">Monto</span>
+            {planName && <span className="block truncate text-xs text-muted">{planName}</span>}
+          </span>
+          <span className="shrink-0 font-display text-xl leading-none text-text">{amount}</span>
         </div>
       )}
       {alias && (
@@ -54,12 +57,14 @@ export function PaymentLockNotice({
   dueDate,
   alias,
   amount,
+  planName,
   reporting,
   onReport,
 }: {
   dueDate: string | null;
   alias: string;
   amount: string;
+  planName: string;
   reporting: boolean;
   onReport: () => void;
 }) {
@@ -77,7 +82,7 @@ export function PaymentLockNotice({
         Transferí y tocá «Ya pagué»: tu rutina vuelve a aparecer en cuanto avisás, y tu profe confirma el pago.
       </p>
       <div className="max-w-md">
-        <PaymentDetails alias={alias} amount={amount} />
+        <PaymentDetails alias={alias} amount={amount} planName={planName} />
       </div>
       <button
         onClick={onReport}
