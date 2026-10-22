@@ -66,7 +66,8 @@ export default function StudentNotificationsBell() {
   const getIconForType = (type: string) => {
     switch (type) {
       case 'RECORD': return <Trophy size={20} />;
-      case 'PAYMENT_CONFIRMED': return <DollarSign size={20} />;
+      case 'PAYMENT_CONFIRMED':
+      case 'PAYMENT_REJECTED': return <DollarSign size={20} />;
       case 'NEW_ROUTINE': return <ClipboardList size={20} />;
       case 'DAY_COMPLETED': return <CalendarCheck size={20} />;
       default: return <Info size={20} />;
@@ -77,6 +78,7 @@ export default function StudentNotificationsBell() {
     switch (type) {
       case 'RECORD': return 'bg-gold/10 text-gold';
       case 'PAYMENT_CONFIRMED': return 'bg-success/10 text-success';
+      case 'PAYMENT_REJECTED': return 'bg-danger/10 text-danger';
       case 'NEW_ROUTINE': return 'bg-gold/10 text-gold';
       case 'DAY_COMPLETED': return 'bg-gold/10 text-gold';
       default: return 'bg-surface-2 text-muted';

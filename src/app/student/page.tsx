@@ -637,6 +637,27 @@ export default function StudentDashboard() {
     }
   };
 
+  const handleCancelPaymentReport = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/students/me/payment-request", {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("Aviso de pago cancelado.");
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? "No se pudo cancelar el aviso");
+      }
+      fetchMe();
+    } catch (err) {
+      console.error(err);
+      toast.error("Ocurrió un error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div data-panel className="min-h-screen bg-bg flex items-center justify-center">
@@ -907,9 +928,19 @@ export default function StudentDashboard() {
                       )}
 
                     {student.paymentStatus === "VERIFYING" && (
-                      <p className="mt-3 text-xs font-semibold text-gold bg-gold/10 py-2 px-3 rounded-panel text-center">
-                        El profe está revisando tu pago
-                      </p>
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs font-semibold text-gold bg-gold/10 py-2 px-3 rounded-panel text-center">
+                          El profe está revisando tu pago
+                        </p>
+                        <button
+                          onClick={handleCancelPaymentReport}
+                          disabled={saving}
+                          className="flex w-full items-center justify-center gap-2 py-1.5 text-xs text-muted underline-offset-4 transition-colors hover:text-text hover:underline disabled:opacity-50"
+                        >
+                          {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          ¿Lo tocaste sin querer? Cancelar aviso
+                        </button>
+                      </div>
                     )}
                   </div>
 

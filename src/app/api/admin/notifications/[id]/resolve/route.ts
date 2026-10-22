@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { approvePayment, rejectPayment } from "@/lib/payments";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const denied = await requireAdmin();
@@ -17,42 +18,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
-    // Si es notificación de pago y tiene studentId asociado
+    // Los avisos de pago se aceptan o rechazan; el resto solo se marca como leído.
     if (notification.type === "PAYMENT_REQUEST" && notification.studentId) {
-      const student = await prisma.student.findUnique({ where: { id: notification.studentId } });
-      
-      if (student) {
-        // Logica para sumar 1 mes o setear a hoy + 30 dias si no tenia fecha valida
-        const now = new Date();
-        let newPaymentDate = new Date();
-        
-        if (student.paymentDate && student.paymentDate > now) {
-          // Si estaba pago por adelantado o al dia
-          newPaymentDate = new Date(student.paymentDate);
-          newPaymentDate.setMonth(newPaymentDate.getMonth() + 1);
-        } else {
-          // Si estaba vencido, cuenta 1 mes desde hoy
-          newPaymentDate.setMonth(newPaymentDate.getMonth() + 1);
-        }
+      const body = await request.json().catch(() => null);
+      const action = body?.action;
+      if (action !== "approve" && action !== "reject") {
+        return NextResponse.json({ error: "Indicá si aceptás o rechazás el pago" }, { status: 400 });
+      }
 
-        // Actualizamos al estudiante
-        await prisma.student.update({
-          where: { id: student.id },
-          data: {
-            paymentStatus: "UP_TO_DATE",
-            paymentDate: newPaymentDate
-          }
-        });
-
-        // Notificar al estudiante que su pago fue confirmado
-        await prisma.studentNotification.create({
-          data: {
-            type: "PAYMENT_CONFIRMED",
-            title: "Pago Confirmado",
-            message: "Tu pago mensual ha sido verificado por el administrador. ¡Gracias!",
-            studentId: student.id
-          }
-        });
+      const result = action === "approve"
+        ? await approvePayment(notification.studentId)
+        : await rejectPayment(notification.studentId);
+      if (!result.ok) {
+        // Ya resuelto por otro lado: cerramos el aviso igual para que no quede colgado.
+        await prisma.adminNotification.update({ where: { id }, data: { read: true } });
+        return NextResponse.json({ error: result.error }, { status: result.status });
       }
     }
 

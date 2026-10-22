@@ -1,47 +1,33 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
-import { getJwtSecret } from "@/lib/jwt";
+import { getSession } from "@/lib/auth";
+import { cancelPaymentReport, reportPayment, type PaymentResult } from "@/lib/payments";
 
-
-export async function POST(request: Request) {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('auth-token')?.value;
-
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const { payload } = await jwtVerify(token, getJwtSecret());
-    if (!payload || payload.role !== "STUDENT") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const student = await prisma.student.findUnique({
-      where: { userId: payload.id as string }
-    });
-
-    if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    }
-
-    // Cambiar estado a VERIFYING
-    await prisma.student.update({
-      where: { id: student.id },
-      data: { paymentStatus: "VERIFYING" }
-    });
-
-    // Crear notificación para el Admin
-    await prisma.adminNotification.create({
-      data: {
-        type: "PAYMENT_REQUEST",
-        title: "Pago Reportado",
-        message: `El alumno ${student.name} ha reportado que realizó el pago de su cuota.`,
-        studentId: student.id
-      }
-    });
-
-    return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error) {
-    console.error("Error creating payment request:", error);
-    return NextResponse.json({ error: "Failed to create payment request" }, { status: 500 });
+async function withStudent(action: (studentId: string) => Promise<PaymentResult>) {
+  const session = await getSession();
+  if (!session || session.role !== "STUDENT") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  try {
+    const student = await prisma.student.findUnique({ where: { userId: session.id }, select: { id: true } });
+    if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
+
+    const result = await action(student.id);
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error en aviso de pago:", error);
+    return NextResponse.json({ error: "Failed to update payment request" }, { status: 500 });
+  }
+}
+
+// El alumno informa que pagó.
+export async function POST() {
+  return withStudent(reportPayment);
+}
+
+// El alumno deshace el aviso (por ejemplo, si tocó "Ya pagué" sin querer).
+export async function DELETE() {
+  return withStudent(cancelPaymentReport);
 }

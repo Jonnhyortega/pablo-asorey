@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Bell, Check, DollarSign, Info } from "lucide-react";
+import { Bell, Check, DollarSign, Info, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 
@@ -45,17 +45,23 @@ export default function AdminNotificationsBell() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const handleResolve = async (id: string, e: React.MouseEvent) => {
+  // action solo aplica a avisos de pago: "approve" renueva el mes, "reject" lo devuelve al alumno.
+  const handleResolve = async (id: string, e: React.MouseEvent, action?: "approve" | "reject") => {
     e.stopPropagation();
     // Actualización optimista con animación
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     try {
-      const res = await fetch(`/api/admin/notifications/${id}/resolve`, { method: "PUT" });
+      const res = await fetch(`/api/admin/notifications/${id}/resolve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(action ? { action } : {}),
+      });
       if (res.ok) {
-        toast.success("Notificación aprobada y resuelta.");
+        toast.success(action === "approve" ? "Pago aceptado: se renovó el mes del alumno." : action === "reject" ? "Pago rechazado: se le avisó al alumno." : "Notificación marcada como leída.");
         fetchNotifications();
       } else {
-        toast.error("Error al resolver notificación");
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? "Error al resolver notificación");
         fetchNotifications(); // Revertir
       }
     } catch (error) {
@@ -139,7 +145,7 @@ export default function AdminNotificationsBell() {
                                 {new Date(notif.createdAt).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </p>
                             </div>
-                            {!notif.read && (
+                            {!notif.read && notif.type !== 'PAYMENT_REQUEST' && (
                               <motion.div 
                                 initial={{ scale: 1 }}
                                 exit={{ scale: 0, opacity: 0 }}
@@ -148,13 +154,30 @@ export default function AdminNotificationsBell() {
                                 <button 
                                   onClick={(e) => handleResolve(notif.id, e)}
                                   className="p-1.5 bg-gold hover:brightness-110 text-bg rounded-panel transition-colors"
-                                  title="Marcar como resuelto"
+                                  title="Marcar como leída"
+                                  aria-label="Marcar como leída"
                                 >
                                   <Check size={16} strokeWidth={3} />
                                 </button>
                               </motion.div>
                             )}
                           </div>
+                          {!notif.read && notif.type === 'PAYMENT_REQUEST' && (
+                            <div className="mt-3 flex gap-2 pl-[52px]">
+                              <button
+                                onClick={(e) => handleResolve(notif.id, e, "approve")}
+                                className="flex flex-1 items-center justify-center gap-1.5 rounded-panel bg-gold py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-bg transition hover:brightness-110"
+                              >
+                                <Check size={14} strokeWidth={3} /> Aceptar
+                              </button>
+                              <button
+                                onClick={(e) => handleResolve(notif.id, e, "reject")}
+                                className="flex flex-1 items-center justify-center gap-1.5 rounded-panel border border-line py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-muted transition-colors hover:border-danger hover:text-danger"
+                              >
+                                <X size={14} strokeWidth={3} /> Rechazar
+                              </button>
+                            </div>
+                          )}
                         </motion.div>
                       ))}
                     </AnimatePresence>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GraduationCap, Search, Calendar, Target, Activity, Dumbbell, ShieldAlert, Clock, Loader2, X, Edit2, Trash2, Key, Wallet, ArrowRight, ChevronDown } from "lucide-react";
+import { GraduationCap, Search, Calendar, Target, Activity, Dumbbell, ShieldAlert, Clock, Loader2, X, Edit2, Trash2, Key, Wallet, ArrowRight, ChevronDown, Check } from "lucide-react";
+import toast from "react-hot-toast";
 import Link from "next/link";
 import { Badge, Button, Dialog, Input, PageHeader } from "@/components/ui";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
@@ -136,6 +137,7 @@ export default function AdminStudentsPage() {
                 onEdit={() => setEditingStudent(student)} 
                 onDelete={() => setStudentToDelete(student)} 
                 onViewImage={setViewingImage}
+                onPaymentResolved={fetchStudents}
               />
             ))}
           </div>
@@ -218,7 +220,7 @@ function StudentActions({ studentId, onEdit, onDelete, labeled = false }: { stud
   );
 }
 
-function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Student; onEdit: () => void; onDelete: () => void; onViewImage: (url: string) => void }) {
+function StudentCard({ student, onEdit, onDelete, onViewImage, onPaymentResolved }: { student: Student; onEdit: () => void; onDelete: () => void; onViewImage: (url: string) => void; onPaymentResolved: () => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const [stats, setStats] = useState<Record<string, {date: string, maxWeight: number}[]> | null>(null);
@@ -255,6 +257,30 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
       return [];
     }
   })();
+
+  const [resolvingPayment, setResolvingPayment] = useState<"approve" | "reject" | null>(null);
+
+  const resolvePayment = async (action: "approve" | "reject") => {
+    setResolvingPayment(action);
+    try {
+      const res = await fetch(`/api/students/${student.id}/payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        toast.success(action === "approve" ? "Pago aceptado: se renovó el mes." : "Pago rechazado: se le avisó al alumno.");
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error ?? "No se pudo resolver el pago");
+      }
+      onPaymentResolved();
+    } catch {
+      toast.error("Error inesperado");
+    } finally {
+      setResolvingPayment(null);
+    }
+  };
 
   const isVerifying = student.paymentStatus === 'VERIFYING';
   const isPending = !student.paymentDate;
@@ -536,6 +562,19 @@ function StudentCard({ student, onEdit, onDelete, onViewImage }: { student: Stud
                       <p className="text-sm text-muted font-medium">Vence: {new Date(student.paymentDate).toLocaleDateString("es-AR", { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     ) : (
                       <p className="text-sm text-muted italic">No hay fecha registrada</p>
+                    )}
+                    {isVerifying && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs text-muted">El alumno informó que pagó. ¿Lo recibiste?</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="primary" className="flex-1" loading={resolvingPayment === "approve"} disabled={resolvingPayment !== null} onClick={() => resolvePayment("approve")}>
+                            <Check className="h-4 w-4" /> Aceptar
+                          </Button>
+                          <Button size="sm" variant="secondary" className="flex-1" loading={resolvingPayment === "reject"} disabled={resolvingPayment !== null} onClick={() => resolvePayment("reject")}>
+                            <X className="h-4 w-4" /> Rechazar
+                          </Button>
+                        </div>
+                      </div>
                     )}
                   </div>
                   
