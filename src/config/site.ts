@@ -13,7 +13,7 @@ export const siteConfig = {
     title: "PABLO ASOREY",
     secondarySubtitle: "ENTRENAMIENTO ONLINE",
     ctaText: "EMPEZÁ HOY",
-    ctaHref: "https://wa.me/541160218709",
+    ctaHref: "https://wa.me/5491123957479",
     titleLines: ["PABLO", "ASOREY"],
     image: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827835/hero_hlzyig.png",
   },
@@ -30,7 +30,7 @@ export const siteConfig = {
     subtitle: "ASESORIA ONLINE",
     description: "Descubre esta modalidad en la cual podrás entrenar con un plan 100% personalizado, mejorar tus hábitos y progresar semana a semana con cambios reales y seguimiento constante.  Asesoría online para entrenar desde cualquier lugar del mundo, con un plan adaptado a tus objetivos, tu tiempo y tus materiales.",
     ctaText: "QUIERO EMPEZAR",
-    ctaHref: "https://wa.me/541160218709",
+    ctaHref: "https://wa.me/5491123957479",
   },
   
   // Mi Historia Section
@@ -38,7 +38,7 @@ export const siteConfig = {
     heroTitle: "MI HISTORIA",
     heroSubtitle: "Transformando pasión en resultados reales",
     ctaText: "QUIERO CREAR MI HISTORIA",
-    ctaHref: "https://wa.me/541160218709",
+    ctaHref: "https://wa.me/5491123957479",
     imagePlaceholder: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827835/hero_hlzyig.png",
     timeline: [
       {
@@ -150,7 +150,7 @@ export const siteConfig = {
       "Resultados reales"
     ],
     ctaText: "QUIERO COMENZAR",
-    ctaHref: "https://wa.me/541160218709",
+    ctaHref: "https://wa.me/5491123957479",
     image: "https://res.cloudinary.com/do87isqjr/image/upload/v1772827320/16-removebg-preview_mhhg74.png",
   },
   
@@ -160,12 +160,12 @@ export const siteConfig = {
     subtitle: "PLANES DE ENTRENAMIENTO Y ARANCELES 2026",
     contactInfo: {
       instagram: "@PABLO_ASOREY",
-      whatsapp: "+541160218709"
+      whatsapp: "+54 9 11 2395-7479"
     },
     recommendedLabel: "RECOMENDADO",
     priceSuffix: "ARS / MENSUAL",
     ctaText: "ELEGIR PLAN",
-    ctaHref: "https://wa.me/541160218709",
+    ctaHref: "https://wa.me/5491123957479",
     followLabel: "SÍGUENOS EN",
     writeLabel: "ESCRIBIME AL",
     items: [
@@ -239,7 +239,7 @@ export const siteConfig = {
     subtitle: "ANTES Y DESPUÉS",
     title: "TRABAJO REAL.\nRESULTADOS REALES.",
     ctaText: "CONTACTANOS",
-    ctaHref: "https://wa.me/541160218709",
+    ctaHref: "https://wa.me/5491123957479",
     imageAlts: ["Transformación Alumno 1", "Transformación Alumno 2"],
     images: [
       "/transformacion1.png",
@@ -294,8 +294,8 @@ export const siteConfig = {
   // Contacto (Usado principalmente en el Footer)
   contact: {
     email: "info@pabloasorey.com",
-    phoneDisplay: "+54 9 11 6021-8709",
-    phoneLink: "+541160218709",
+    phoneDisplay: "+54 9 11 2395-7479",
+    phoneLink: "+5491123957479",
     address: "Buenos Aires, Argentina"
   },
   
@@ -331,7 +331,7 @@ export const siteConfig = {
 
   // Botón flotante
   floatingWhatsApp: {
-    href: "https://wa.me/541160218709",
+    href: "https://wa.me/5491123957479",
     tooltip: "¡HABLEMOS!",
     ariaLabel: "Contactar por WhatsApp",
   },
