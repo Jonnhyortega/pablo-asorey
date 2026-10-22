@@ -4,8 +4,8 @@ import { getSiteContent } from '@/lib/content';
 import { Button } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 
-export default function UniteAhoraSection() {
-  const { uniteAhora, planes } = getSiteContent();
+export default async function UniteAhoraSection() {
+  const { uniteAhora, planes } = await getSiteContent();
   const whatsappUrl = `https://wa.me/${planes.contactInfo.whatsapp.replace(/\D/g, '')}`;
 
   return (

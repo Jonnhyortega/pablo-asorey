@@ -1,7 +1,9 @@
-import { getSiteContent } from '@/lib/content';
+'use client';
+
+import { useSiteContent } from '@/components/SiteContentProvider';
 
 export default function FloatingWhatsApp() {
-  const { floatingWhatsApp } = getSiteContent();
+  const { floatingWhatsApp } = useSiteContent();
 
   return (
     <a

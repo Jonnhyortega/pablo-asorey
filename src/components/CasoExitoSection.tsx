@@ -3,8 +3,8 @@ import { getSiteContent } from '@/lib/content';
 import { SectionLabel } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 
-export default function CasoExitoSection() {
-  const { casoExito } = getSiteContent();
+export default async function CasoExitoSection() {
+  const { casoExito } = await getSiteContent();
 
   return (
     <section className="border-t border-line bg-bg py-24 md:py-32">

@@ -151,3 +151,15 @@ model StudentBadge {
   badgeId   String
   earnedAt  DateTime @default(now())
 }
+
+// Datos de contacto y textos de la landing editables desde /admin/settings.
+// Fila única (id = 1); los campos vacíos usan los valores de src/config/site.ts.
+model SiteSettings {
+  id        Int      @id @default(1)
+  whatsapp  String?
+  email     String?
+  instagram String?
+  youtube   String?
+  tagline   String?
+  updatedAt DateTime @updatedAt
+}

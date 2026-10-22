@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getSiteContent } from '@/lib/content';
+import { useSiteContent } from '@/components/SiteContentProvider';
 import { Button, Wordmark } from '@/components/ui';
 import { useFocusTrap } from '@/components/ui/useFocusTrap';
 import { cn } from '@/lib/cn';
 
 export default function Navbar() {
-  const { nav, hero } = getSiteContent();
+  const { nav, hero } = useSiteContent();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);

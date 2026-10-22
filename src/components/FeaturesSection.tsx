@@ -1,8 +1,8 @@
 import { getSiteContent } from '@/lib/content';
 import FadeIn from './animations/FadeIn';
 
-export default function FeaturesSection() {
-  const { features } = getSiteContent();
+export default async function FeaturesSection() {
+  const { features } = await getSiteContent();
 
   return (
     <section className="border-t border-line bg-bg">

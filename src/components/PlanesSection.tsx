@@ -26,8 +26,8 @@ const iconMap: Record<string, LucideIcon> = {
   calendar: Calendar,
 };
 
-export default function PlanesSection() {
-  const { planes, social } = getSiteContent();
+export default async function PlanesSection() {
+  const { planes, social } = await getSiteContent();
   const whatsappUrl = `https://wa.me/${planes.contactInfo.whatsapp.replace(/\D/g, '')}`;
 
   return (

@@ -4,14 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getSiteContent } from '@/lib/content';
+import { useSiteContent } from '@/components/SiteContentProvider';
 import { SectionLabel, Wordmark } from '@/components/ui';
 import LazyLogo3D from './LazyLogo3D';
 
 const linkClass = 'text-sm text-muted transition-colors hover:text-text';
 
 export default function Footer() {
-  const { name, tagline, footer, contact, planes, social, newsletter } = getSiteContent();
+  const { name, tagline, footer, contact, planes, social, newsletter } = useSiteContent();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const whatsappUrl = `https://wa.me/${planes.contactInfo.whatsapp.replace(/\D/g, '')}`;

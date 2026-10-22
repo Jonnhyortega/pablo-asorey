@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { getSiteContent } from '@/lib/content';
+import { useSiteContent } from '@/components/SiteContentProvider';
 import { Button, Input, SectionLabel, Textarea } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 
 export default function ContactSection() {
-  const { contactForm, contact, footer, planes } = getSiteContent();
+  const { contactForm, contact, footer, planes } = useSiteContent();
   const whatsappUrl = `https://wa.me/${planes.contactInfo.whatsapp.replace(/\D/g, '')}`;
 
   const [contactData, setContactData] = useState({ name: '', email: '', message: '' });

@@ -5,8 +5,8 @@ import { Button, SectionLabel } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import FadeIn from "./animations/FadeIn";
 
-export default function HistoriaTimeline() {
-  const { historia } = getSiteContent();
+export default async function HistoriaTimeline() {
+  const { historia } = await getSiteContent();
 
   return (
     <section className="bg-bg pb-24 md:pb-32">

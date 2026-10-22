@@ -4,8 +4,8 @@ import { getSiteContent } from '@/lib/content';
 import { Button, SectionLabel } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 
-export default function AntesDespuesSection() {
-  const { antesYDespues } = getSiteContent();
+export default async function AntesDespuesSection() {
+  const { antesYDespues } = await getSiteContent();
 
   return (
     <section id="antes-despues" className="border-t border-line bg-bg py-24 md:py-32">

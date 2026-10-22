@@ -4,8 +4,8 @@ import { getSiteContent } from '@/lib/content';
 import { Button, SectionLabel } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 
-export default function ValoresSection() {
-  const { valores } = getSiteContent();
+export default async function ValoresSection() {
+  const { valores } = await getSiteContent();
 
   return (
     <section id="valores" className="relative overflow-hidden border-t border-line bg-bg py-24 md:py-32">

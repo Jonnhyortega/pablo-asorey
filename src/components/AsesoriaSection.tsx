@@ -4,8 +4,8 @@ import { Button, SectionLabel } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 import LiteYouTube from './LiteYouTube';
 
-export default function AsesoriaSection() {
-  const { entrena, video } = getSiteContent();
+export default async function AsesoriaSection() {
+  const { entrena, video } = await getSiteContent();
 
   return (
     <section id="empresa" className="relative overflow-hidden border-t border-line bg-bg py-24 md:py-32">

@@ -4,8 +4,8 @@ import { getSiteContent } from '@/lib/content';
 import { Button, SectionLabel } from '@/components/ui';
 import FadeIn from './animations/FadeIn';
 
-export default function Hero() {
-  const { hero, name } = getSiteContent();
+export default async function Hero() {
+  const { hero, name } = await getSiteContent();
 
   return (
     <section className="relative flex min-h-[100svh] w-full items-end overflow-hidden bg-bg md:items-center">
